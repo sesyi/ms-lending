@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: ms-lending
+  cloud:
+    config:
+      enabled: true
+      uri: http://localhost:9296
+#      prod
+#      uri: http://13.228.13.152:9296
+#      dev
+#      uri: http://13.214.107.212:9296
+
+#  jpa:
+#    generate-ddl: true
+#    hibernate:
+#      ddl-auto: update
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQL55Dialect
+#        format_sql: false
+#        jdbc:
+#          batch_size: 50
+#    show-sql: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh

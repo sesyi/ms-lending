@@ -1,0 +1,4 @@
+server:
+  port: 9014
+  servlet:
+    context-path: "/ms-lending"
