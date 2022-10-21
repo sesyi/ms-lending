@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.qisstpay</groupId>
-	<artifactId>shopwithus</artifactId>
+	<artifactId>lending-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>shopwithus</name>
-	<description>Shop with us service to provide shops and categories apis.</description>
+	<description>Lending service</description>
 	<properties>
 		<java.version>11</java.version>
 		<spring-cloud.version>2021.0.0</spring-cloud.version>
@@ -203,7 +203,7 @@
 	</dependencyManagement>
 
 	<build>
-		<finalName>shopwithus</finalName>
+		<finalName>lending-service</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
