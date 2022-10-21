@@ -11,7 +11,7 @@
 	<groupId>com.qisstpay</groupId>
 	<artifactId>lending-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>shopwithus</name>
+	<name>lending-service</name>
 	<description>Lending service</description>
 	<properties>
 		<java.version>11</java.version>

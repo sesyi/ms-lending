@@ -1,7 +1,7 @@
 FROM adoptopenjdk/openjdk11:jre-11.0.15_10-debianslim
 
 WORKDIR /opt/app
-ARG JAR_FILE=target/shopwithus.jar
+ARG JAR_FILE=target/lending-service.jar
 
 ARG ARCH
 ARG HOST
