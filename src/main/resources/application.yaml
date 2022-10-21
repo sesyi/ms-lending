@@ -1,4 +1,15 @@
 server:
-  port: 9014
+  port: 9015
   servlet:
     context-path: "/ms-lending"
+
+
+ep:
+  endpoints:
+    login: "https://api.eu-de.apiconnect.appdomain.cloud/easypaisaapigw-telenorbankpk-tmbdev/dev-catalog/CorporateLogin"
+    inquiry: "https://api.eu-de.apiconnect.appdomain.cloud/easypaisaapigw-telenorbankpk-tmbdev/dev-catalog/MaToMA/Inquiry"
+    transfer: "https://api.eu-de.apiconnect.appdomain.cloud/easypaisaapigw-telenorbankpk-tmbdev/dev-catalog/MaToMA/Transfer"
+  config:
+    msisdn: "923009510819"
+    pin: "43981"
+

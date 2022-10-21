@@ -9,10 +9,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class InquiryRequestDto {
+public class TransferRequestDto {
 
     private String userName;
     private String identityNumber;
     private String phoneNumber;
-    private String amount;
+    private double amount;
 }

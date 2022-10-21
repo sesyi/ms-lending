@@ -1,9 +1,11 @@
 package com.qisstpay.lendingservice.service;
 
-import com.qisstpay.lendingservice.dto.internal.request.InquiryRequestDto;
-import com.qisstpay.lendingservice.dto.internal.response.InquiryResponseDto;
+import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
+import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
+import org.springframework.stereotype.Service;
 
+@Service
 public interface LendingService {
-    InquiryResponseDto maToMaInquiry(InquiryRequestDto inquiryRequestDto);
+    TransferResponseDto transfer(TransferRequestDto transferRequestDto);
 }
 

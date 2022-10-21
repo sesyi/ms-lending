@@ -24,5 +24,4 @@ public class EPInquiryResponseDto {
     String fee;
     @JsonProperty("Name")
     String name;
-
 }

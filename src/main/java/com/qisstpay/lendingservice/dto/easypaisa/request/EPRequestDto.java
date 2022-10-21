@@ -7,10 +7,10 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EPInquiryRequestDto {
+public class EPRequestDto {
 
     @JsonProperty("Amount")
-    String amount;
+    Double amount;
     @JsonProperty("MSISDN")
     String subscriberMSISDN;
     @JsonProperty("ReceiverMSISDN")

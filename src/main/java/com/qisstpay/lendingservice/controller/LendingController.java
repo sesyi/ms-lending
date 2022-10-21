@@ -1,8 +1,8 @@
 package com.qisstpay.lendingservice.controller;
 
 import com.qisstpay.commons.response.CustomResponse;
-import com.qisstpay.lendingservice.dto.internal.request.InquiryRequestDto;
-import com.qisstpay.lendingservice.dto.internal.response.InquiryResponseDto;
+import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
+import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.service.LendingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.*;
 public class LendingController {
 
 
-    private static final String INQUIRY = "/matoma/inquiry";
+    private static final String TRANSFER = "/transfer";
 
     private final LendingService lendingService;
 
-    @GetMapping(INQUIRY)
-    public CustomResponse<InquiryResponseDto> maToMaInquiry(@RequestBody InquiryRequestDto inquiryRequestDto) {
-        return CustomResponse.CustomResponseBuilder.<InquiryResponseDto>builder()
-                .body(lendingService.maToMaInquiry(inquiryRequestDto)).build();
+    @PostMapping(TRANSFER)
+    public CustomResponse<TransferResponseDto> transfer(@RequestBody TransferRequestDto transferRequestDto) {
+        return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
+                .body(lendingService.transfer(transferRequestDto)).build();
     }
 }
