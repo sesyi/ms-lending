@@ -1,0 +1,29 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  
+  <servers>
+    <server>
+    <id>common-utilities-dev</id>
+    <username>${env.NEXUS_USERNAME}</username>
+    <password>${env.NEXUS_PASSWORD}</password>
+    </server>
+  </servers>
+
+
+  <mirrors>
+
+    <mirror>
+    <id>common-utilities-dev</id>
+    <mirrorOf>external:http:*</mirrorOf>
+    <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+    <url>https://dev.nexus.qisstpay.com/repository/common-utilities-dev/</url>
+    <blocked>false</blocked>
+    </mirror>
+  </mirrors>
+
+  <activeProfiles>
+    <activeProfile>common-utilities-dev</activeProfile>
+  </activeProfiles>
+
+</settings>
