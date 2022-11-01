@@ -8,12 +8,7 @@ import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.service.LendingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -23,7 +18,7 @@ public class LendingController {
 
 
     private static final String TRANSFER = "/transfer";
-    private static final String STATUS = "/status/{transactionId}";
+    private static final String STATUS   = "/status/{transactionId}";
 
     private final LendingService lendingService;
 
@@ -34,7 +29,7 @@ public class LendingController {
     }
 
     @GetMapping(STATUS)
-    public CustomResponse<TransactionStateResponse> status(@PathVariable("transactionId") String transactionId){
+    public CustomResponse<TransactionStateResponse> status(@PathVariable("transactionId") String transactionId) {
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
                 .body(lendingService.checkStatus(transactionId)).build();
     }
