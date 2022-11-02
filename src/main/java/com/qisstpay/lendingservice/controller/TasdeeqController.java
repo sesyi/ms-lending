@@ -11,11 +11,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TasdeeqController {
 
-    private static final String CREDIT_SCORE = "/score";
 
-//    @PostMapping(CREDIT_SCORE)
-//    public CustomResponse<TransferResponseDto> getScore(@RequestBody TransferRequestDto transferRequestDto) {
-//        return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
-//                .body(lendingService.transfer(transferRequestDto)).build();
-//    }
 }

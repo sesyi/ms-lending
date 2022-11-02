@@ -191,6 +191,13 @@ public class LendingServiceImpl implements LendingService {
         throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "transaction not found.");
     }
 
+    @Override
+    public TransferResponseDto checkCredirScore(TransferRequestDto transferRequestDto) {
+        return null;
+    }
+
+
+
     public EPLoginResponseDto epLogin(EPLoginRequestDto epLoginResponseDto){
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
