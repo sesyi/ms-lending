@@ -32,7 +32,7 @@ public class LenderUserController {
             @RequestBody LenderUserRequestDto lenderUserRequestDto) {
         Boolean check = ApiKeyAuth.verifyApiKey(apiKey, qpayApiKey);
         if (check.equals(Boolean.FALSE)) {
-            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
+            throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
         }
         return CustomResponse.CustomResponseBuilder.<MessageResponseDto>builder()
                 .body(lenderService.saveLender(lenderUserRequestDto)).build();

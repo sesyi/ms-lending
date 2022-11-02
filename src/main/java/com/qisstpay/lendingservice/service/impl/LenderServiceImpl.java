@@ -62,4 +62,9 @@ public class LenderServiceImpl implements LenderService {
         }
         throw new ServiceException(UserErrorType.USER_NOT_FOUND);
     }
+
+    @Override
+    public Lender getLender(Long userId) {
+        return null;
+    }
 }

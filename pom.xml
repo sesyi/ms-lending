@@ -188,7 +188,15 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.15.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20220320</version>
+		</dependency>
+
 	</dependencies>
+
 
 	<dependencyManagement>
 		<dependencies>
