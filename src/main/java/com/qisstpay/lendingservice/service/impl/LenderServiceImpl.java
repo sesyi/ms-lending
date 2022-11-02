@@ -64,7 +64,7 @@ public class LenderServiceImpl implements LenderService {
     }
 
     @Override
-    public Lender getLender(Long userId) {
-        return null;
+    public Optional<Lender> getLender(Long userId) {
+        return lenderRepository.getByUserId(userId);
     }
 }

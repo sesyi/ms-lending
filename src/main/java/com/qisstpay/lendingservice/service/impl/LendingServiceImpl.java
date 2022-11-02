@@ -20,22 +20,15 @@ import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
 import com.qisstpay.lendingservice.service.LendingService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class LendingServiceImpl implements LendingService {
@@ -58,13 +51,13 @@ public class LendingServiceImpl implements LendingService {
 
     private static final String SUCCESS_STATUS_CODE = "0";
 
-    private final String xChanelHeaderKey = "X-Channel";
-    private final String xChanelHeaderVal = "subgateway";
-    private final String xClientIdHeaderKey = "X-IBM-Client-Id";
-    private final String xClientIdHeaderVal = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
+    private final String xChanelHeaderKey       = "X-Channel";
+    private final String xChanelHeaderVal       = "subgateway";
+    private final String xClientIdHeaderKey     = "X-IBM-Client-Id";
+    private final String xClientIdHeaderVal     = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
     private final String xClientSecretHeaderKey = "X-IBM-Client-Secret";
     private final String xClientSecretHeaderVal = "I4lR4yW0uP4yW3eQ7rR4vL0bK0pX6mV5cS7cN4iL7rC6pG2cA1";
-    private final String xHashValueKey = "X-Hash-Value";
+    private final String xHashValueKey          = "X-Hash-Value";
 
     @Autowired
     private LendingTransactionRepository lendingTransactionRepository;
@@ -80,7 +73,7 @@ public class LendingServiceImpl implements LendingService {
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto) throws JsonProcessingException {
 
-        if ( StringUtils.isBlank(transferRequestDto.getPhoneNumber()) ) {
+        if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
         }
 
@@ -108,7 +101,7 @@ public class LendingServiceImpl implements LendingService {
 
         //  ep login call
         EPLoginRequestDto epLoginRequestDto = new EPLoginRequestDto();
-        epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload( msisdn + ":" + pin ) );
+        epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload(msisdn + ":" + pin));
         EPLoginResponseDto epLoginResponse = epLogin(epLoginRequestDto);
         if (!epLoginResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
@@ -121,7 +114,7 @@ public class LendingServiceImpl implements LendingService {
         }
 
         // ep inquiry call
-        final String xHashValueVal = encryptionUtil.getEncryptedPayload( msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin );
+        final String xHashValueVal = encryptionUtil.getEncryptedPayload(msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin);
         EPRequestDto epRequestDto = new EPRequestDto();
         epRequestDto.setAmount(transferRequestDto.getAmount());
         epRequestDto.setSubscriberMSISDN(msisdn);
@@ -163,8 +156,7 @@ public class LendingServiceImpl implements LendingService {
 //                    .epResult(epTransferResponse)
                     .transactionId(finalSavedLendingTransaction.getId().toString())
                     .build();
-        }
-        else {
+        } else {
             return TransferResponseDto
                     .builder()
                     .qpResponseCode(QPResponseCode.EP_TRANSFER_FAILED.getCode())
@@ -197,8 +189,7 @@ public class LendingServiceImpl implements LendingService {
     }
 
 
-
-    public EPLoginResponseDto epLogin(EPLoginRequestDto epLoginResponseDto){
+    public EPLoginResponseDto epLogin(EPLoginRequestDto epLoginResponseDto) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -213,7 +204,7 @@ public class LendingServiceImpl implements LendingService {
         return epLoginResponse.getBody();
     }
 
-    public EPInquiryResponseDto epInquiry(EPRequestDto epRequestDto, String xHashValueVal){
+    public EPInquiryResponseDto epInquiry(EPRequestDto epRequestDto, String xHashValueVal) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -229,7 +220,7 @@ public class LendingServiceImpl implements LendingService {
         return epInquiryResponse.getBody();
     }
 
-    public EPTransferResposneDto epTransfer(EPRequestDto epRequestDto, String xHashValueVal){
+    public EPTransferResposneDto epTransfer(EPRequestDto epRequestDto, String xHashValueVal) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);

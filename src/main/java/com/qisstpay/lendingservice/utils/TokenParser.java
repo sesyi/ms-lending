@@ -1,6 +1,6 @@
 package com.qisstpay.lendingservice.utils;
 
-import com.qisstpay.commons.error.errortype.MerchantErrorType;
+import com.qisstpay.commons.error.errortype.UserErrorType;
 import com.qisstpay.commons.exception.ServiceException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,13 +16,13 @@ public class TokenParser {
         try {
             String jsonSecondPart = new String(Base64.getDecoder().decode(jwtSplitted[1]));
             JSONObject secondPart = new JSONObject(jsonSecondPart);
-            if(secondPart.has("user_id")) {
+            if (secondPart.has("user_id")) {
                 return Long.parseLong(secondPart.get("user_id").toString());
             } else {
-                throw new ServiceException(MerchantErrorType.MERCHANT_NOT_FOUND);
+                throw new ServiceException(UserErrorType.USER_NOT_FOUND);
             }
-    } catch (JSONException err){
-            throw new ServiceException(MerchantErrorType.MERCHANT_NOT_FOUND);
+        } catch (JSONException err) {
+            throw new ServiceException(UserErrorType.USER_NOT_FOUND);
         }
     }
 }
