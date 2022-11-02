@@ -1,29 +1,41 @@
 package com.qisstpay.lendingservice.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPLoginRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
+import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
+import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
 import com.qisstpay.lendingservice.enums.QPResponseCode;
+import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
 import com.qisstpay.lendingservice.service.LendingService;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class LendingServiceImpl implements LendingService {
@@ -60,17 +72,38 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private EncryptionUtil encryptionUtil;
 
+    @Autowired
+    private ConsumerRepository consumerRepository;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public TransferResponseDto transfer(TransferRequestDto transferRequestDto) {
+    public TransferResponseDto transfer(TransferRequestDto transferRequestDto) throws JsonProcessingException {
+
+        if ( StringUtils.isBlank(transferRequestDto.getPhoneNumber()) ) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
+        }
+
+        // Consumer sign-up, if not already
+        Consumer savedConsumer = null;
+        Optional<Consumer> existingConsumer = consumerRepository.findByPhoneNumber(transferRequestDto.getPhoneNumber());
+        if (!existingConsumer.isPresent()) {
+            Consumer newConsumer = new Consumer();
+            newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
+            savedConsumer = consumerRepository.saveAndFlush(newConsumer);
+        }
 
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
         lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
-        lendingTransaction.setPhoneNumber(transferRequestDto.getPhoneNumber());
+        if (savedConsumer == null) {
+            lendingTransaction.setConsumer(existingConsumer.get());
+        } else {
+            lendingTransaction.setConsumer(savedConsumer);
+        }
         lendingTransaction.setUserName(transferRequestDto.getUserName());
+        lendingTransaction.setTransactionState(TransactionState.RECEIVED);
         LendingTransaction savedLendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
 
         //  ep login call
@@ -83,41 +116,52 @@ public class LendingServiceImpl implements LendingService {
                     .builder()
                     .qpResponseCode(QPResponseCode.EP_LOGIN_FAILED.getCode())
                     .result(QPResponseCode.EP_LOGIN_FAILED.getDescription())
-                    .epResult(epLoginResponse)
+//                    .epResult(epLoginResponse)
                     .build();
         }
 
-        final String xHashValueVal = encryptionUtil.getEncryptedPayload( msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin );
         // ep inquiry call
+        final String xHashValueVal = encryptionUtil.getEncryptedPayload( msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin );
         EPRequestDto epRequestDto = new EPRequestDto();
         epRequestDto.setAmount(transferRequestDto.getAmount());
         epRequestDto.setSubscriberMSISDN(msisdn);
         epRequestDto.setReceiverMSISDN(transferRequestDto.getPhoneNumber());
         EPInquiryResponseDto epInquiryResponse = epInquiry(epRequestDto, xHashValueVal);
+
+        // update lending transaction
+        savedLendingTransaction.setEpInquiryResponse(new ObjectMapper().writeValueAsString(epInquiryResponse));
+        savedLendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
+        lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
+
         if (!epInquiryResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
             return TransferResponseDto
                     .builder()
                     .qpResponseCode(QPResponseCode.EP_INQUIRY_FAILED.getCode())
                     .result(QPResponseCode.EP_INQUIRY_FAILED.getDescription())
-                    .epResult(epInquiryResponse)
+//                    .epResult(epInquiryResponse)
                     .build();
         }
 
         // ep transfer call
         EPTransferResposneDto epTransferResponse = epTransfer(epRequestDto, xHashValueVal);
+
+        // update lending transaction
+        savedLendingTransaction.setEpTransferResponse((new ObjectMapper().writeValueAsString(epTransferResponse)));
+        lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
+
         if (epTransferResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
-            // update lending transaction
-            savedLendingTransaction.setTransactionId(epTransferResponse.getTransactionReference());
-            lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
+            savedLendingTransaction.setEpTransactionId(epTransferResponse.getTransactionReference());
+            savedLendingTransaction.setTransactionState(TransactionState.COMPLETED);
+            LendingTransaction finalSavedLendingTransaction = lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
 
             return TransferResponseDto
                     .builder()
                     .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
                     .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-                    .epResult(epTransferResponse)
-                    .transactionId(epTransferResponse.getTransactionReference())
+//                    .epResult(epTransferResponse)
+                    .transactionId(finalSavedLendingTransaction.getId().toString())
                     .build();
         }
         else {
@@ -129,6 +173,22 @@ public class LendingServiceImpl implements LendingService {
                     .build();
         }
 
+    }
+
+    @Override
+    public TransactionStateResponse checkStatus(String transactionId) {
+        Optional<LendingTransaction> lendingTransaction = lendingTransactionRepository.findById(Long.valueOf(transactionId));
+        if (lendingTransaction.isPresent()) {
+            TransactionStateResponse transactionStateResponse = new TransactionStateResponse();
+            transactionStateResponse.setState(lendingTransaction.get().getTransactionState().toString());
+            transactionStateResponse.setAmount(lendingTransaction.get().getAmount());
+            transactionStateResponse.setIdentityNumber(lendingTransaction.get().getIdentityNumber());
+            transactionStateResponse.setPhoneNumber(lendingTransaction.get().getConsumer().getPhoneNumber());
+            transactionStateResponse.setTransactionId(lendingTransaction.get().getId().toString());
+            transactionStateResponse.setUserName(lendingTransaction.get().getUserName());
+            return transactionStateResponse;
+        }
+        throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "transaction not found.");
     }
 
     public EPLoginResponseDto epLogin(EPLoginRequestDto epLoginResponseDto){
