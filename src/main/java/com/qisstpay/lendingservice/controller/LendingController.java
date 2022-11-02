@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @Slf4j
 @RestController
 @RequestMapping("/lending/v1")
@@ -43,10 +45,14 @@ public class LendingController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) throws JsonProcessingException {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Lender lender = lenderService.getLender(userId);
-        Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.getApiKey());
-        if (check.equals(Boolean.FALSE)) {
-            throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+        Optional<Lender> lender = lenderService.getLender(userId);
+        if (lender.isPresent()) {
+            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
+            if (check.equals(Boolean.FALSE)) {
+                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+            }
+        } else {
+            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
         }
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
                 .body(lendingService.transfer(transferRequestDto)).build();
@@ -59,10 +65,14 @@ public class LendingController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Lender lender = lenderService.getLender(userId);
-        Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.getApiKey());
-        if (check.equals(Boolean.FALSE)) {
-            throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+        Optional<Lender> lender = lenderService.getLender(userId);
+        if (lender.isPresent()) {
+            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
+            if (check.equals(Boolean.FALSE)) {
+                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+            }
+        } else {
+            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
         }
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
                 .body(lendingService.checkStatus(transactionId)).build();
@@ -75,10 +85,14 @@ public class LendingController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Lender lender = lenderService.getLender(userId);
-        Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.getApiKey());
-        if (check.equals(Boolean.FALSE)) {
-            throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+        Optional<Lender> lender = lenderService.getLender(userId);
+        if (lender.isPresent()) {
+            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
+            if (check.equals(Boolean.FALSE)) {
+                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+            }
+        } else {
+            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
         }
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
                 .body(lendingService.checkCredirScore(transferRequestDto)).build();

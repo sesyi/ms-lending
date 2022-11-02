@@ -5,12 +5,14 @@ import com.qisstpay.lendingservice.dto.internal.response.MessageResponseDto;
 import com.qisstpay.lendingservice.entity.Lender;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public interface LenderService {
     MessageResponseDto saveLender(LenderUserRequestDto lenderUserRequestDto);
 
     MessageResponseDto verifyUser(Long userId, String apiKey);
 
-    Lender getLender(Long userId);
+    Optional<Lender> getLender(Long userId);
 }
 
