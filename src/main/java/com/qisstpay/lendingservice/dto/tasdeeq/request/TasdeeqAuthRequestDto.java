@@ -1,21 +1,18 @@
 package com.qisstpay.lendingservice.dto.tasdeeq.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@ToString
 public class TasdeeqAuthRequestDto {
 
-    @JsonProperty("Amount")
-    Double amount;
-    @JsonProperty("MSISDN")
-    String subscriberMSISDN;
-    @JsonProperty("ReceiverMSISDN")
-    String receiverMSISDN;
+    @JsonProperty("UserName")
+    String userName;
+
+    @JsonProperty("Password")
+    String password;
+
 }

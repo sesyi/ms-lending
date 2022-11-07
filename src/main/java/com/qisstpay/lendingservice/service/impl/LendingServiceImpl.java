@@ -8,29 +8,40 @@ import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
+import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
+import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
 import com.qisstpay.lendingservice.enums.QPResponseCode;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.repository.ConsumerRepository;
+import com.qisstpay.lendingservice.repository.LenderCallRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
+import com.qisstpay.lendingservice.service.ConsumerService;
+import com.qisstpay.lendingservice.service.CreditScoreService;
 import com.qisstpay.lendingservice.service.LendingService;
+import com.qisstpay.lendingservice.service.TasdeeqService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Service
+@Slf4j
 public class LendingServiceImpl implements LendingService {
 
 
@@ -51,13 +62,14 @@ public class LendingServiceImpl implements LendingService {
 
     private static final String SUCCESS_STATUS_CODE = "0";
 
-    private final String xChanelHeaderKey       = "X-Channel";
-    private final String xChanelHeaderVal       = "subgateway";
-    private final String xClientIdHeaderKey     = "X-IBM-Client-Id";
-    private final String xClientIdHeaderVal     = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
-    private final String xClientSecretHeaderKey = "X-IBM-Client-Secret";
-    private final String xClientSecretHeaderVal = "I4lR4yW0uP4yW3eQ7rR4vL0bK0pX6mV5cS7cN4iL7rC6pG2cA1";
-    private final String xHashValueKey          = "X-Hash-Value";
+    private final String xChanelHeaderKey        = "X-Channel";
+    private final String xChanelHeaderVal        = "subgateway";
+    private final String xClientIdHeaderKey      = "X-IBM-Client-Id";
+    private final String xClientIdHeaderVal      = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
+    private final String xClientSecretHeaderKey  = "X-IBM-Client-Secret";
+    private final String xClientSecretHeaderVal  = "I4lR4yW0uP4yW3eQ7rR4vL0bK0pX6mV5cS7cN4iL7rC6pG2cA1";
+    private final String xHashValueKey           = "X-Hash-Value";
+    private final String CALLING_LENDING_SERVICE = "Calling lending Service";
 
     @Autowired
     private LendingTransactionRepository lendingTransactionRepository;
@@ -67,6 +79,18 @@ public class LendingServiceImpl implements LendingService {
 
     @Autowired
     private ConsumerRepository consumerRepository;
+
+    @Autowired
+    private TasdeeqService tasdeeqService;
+
+    @Autowired
+    private ConsumerService consumerService;
+
+    @Autowired
+    private CreditScoreService creditScoreService;
+
+    @Autowired
+    private LenderCallRepository lenderCallRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -184,10 +208,48 @@ public class LendingServiceImpl implements LendingService {
     }
 
     @Override
-    public TransferResponseDto checkCredirScore(TransferRequestDto transferRequestDto) {
-        return null;
+    public CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, Long lenderCallId) throws JsonProcessingException {
+        log.info(CALLING_LENDING_SERVICE);
+        log.info("checkCreditScore -> CreditScoreRequestDto: {}", creditScoreRequestDto);
+        Long authId = tasdeeqService.getLastAuthTokenId();
+        TasdeeqAuthResponseDto authentication = tasdeeqService.authentication(authId != null ? tasdeeqService.getLastAuthTokenId() : 0);
+        TasdeeqReportDataRequestDto consumerReportRequestDto = createTasdeeqReportDataRequestDto(creditScoreRequestDto);
+        TasdeeqConsumerReportResponseDto tasdeeqConsumerReportResponseDto = tasdeeqService.getConsumerReport(consumerReportRequestDto, authentication != null ? authentication.getAuth_token() : "bearer token", lenderCallId);
+        Consumer consumer = consumerService.getOrCreateConsumer(tasdeeqConsumerReportResponseDto.getPersonalInformation(), creditScoreRequestDto.getPhoneNumber());
+        if (tasdeeqConsumerReportResponseDto.getCreditScoreData() != null) {
+            creditScoreService.save(tasdeeqConsumerReportResponseDto.getCreditScoreData(), consumer.getCnic());
+            return CreditScoreResponseDto.builder()
+                    .score(tasdeeqConsumerReportResponseDto.getCreditScoreData().getScore())
+                    .month(tasdeeqConsumerReportResponseDto.getCreditScoreData().getMonth())
+                    .remarks(tasdeeqConsumerReportResponseDto.getCreditScoreData().getRemarks()).build();
+        }
+        return CreditScoreResponseDto.builder().remarks("No Score Available").build();
     }
 
+    private TasdeeqReportDataRequestDto createTasdeeqReportDataRequestDto(CreditScoreRequestDto creditScoreRequestDto){
+        TasdeeqReportDataRequestDto consumerReportRequestDto = new TasdeeqReportDataRequestDto();
+        consumerReportRequestDto.setCnic(creditScoreRequestDto.getCnic());
+        consumerReportRequestDto.setLoanAmount(String.valueOf(creditScoreRequestDto.getLoanAmount()));
+        if(creditScoreRequestDto.getGender()!=null){
+            consumerReportRequestDto.setGender(creditScoreRequestDto.getGender().getCode());
+        }
+        if(creditScoreRequestDto.getCity()!=null){
+            consumerReportRequestDto.setCity(creditScoreRequestDto.getCity());
+        }
+        if(creditScoreRequestDto.getCurrentAddress()!=null){
+            consumerReportRequestDto.setCurrentAddress(creditScoreRequestDto.getCurrentAddress());
+        }
+        if(creditScoreRequestDto.getDateOfBirth()!=null){
+            consumerReportRequestDto.setDateOfBirth(creditScoreRequestDto.getDateOfBirth());
+        }
+        if(creditScoreRequestDto.getFullName()!=null){
+            consumerReportRequestDto.setFullName(creditScoreRequestDto.getFullName());
+        }
+        if(creditScoreRequestDto.getFatherHusbandName()!=null){
+            consumerReportRequestDto.setFatherHusbandName(creditScoreRequestDto.getFatherHusbandName());
+        }
+        return consumerReportRequestDto;
+    }
 
     public EPLoginResponseDto epLogin(EPLoginRequestDto epLoginResponseDto) {
         HttpHeaders headers = new HttpHeaders();
