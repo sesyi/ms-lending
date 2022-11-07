@@ -1,22 +1,44 @@
 package com.qisstpay.lendingservice.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerPersonalInformationResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqCreditScoreDataResponseDto;
+import com.qisstpay.lendingservice.entity.Consumer;
+import com.qisstpay.lendingservice.entity.CreditScoreData;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class ModelConverter {
-    private final ModelMapper modelMapper;
+    private final ModelMapper  modelMapper;
+    private final ObjectMapper objectMapper;
 
-//    public Category convertToCategoryEntity(CategoryDto categoryDto) {
-//        return modelMapper.map(categoryDto, Category.class);
-//    }
 
+    public Consumer convertToConsumer(TasdeeqConsumerPersonalInformationResponseDto consumerInfo) {
+        return modelMapper.map(consumerInfo, Consumer.class);
+    }
+
+    public TasdeeqAuthResponseDto convertTOTasdeeqAuthResponseDto(Object object) {
+        return modelMapper.map(object, TasdeeqAuthResponseDto.class);
+    }
+
+
+    public TasdeeqConsumerReportResponseDto convertTOTasdeeqConsumerReportResponseDto(Object object) throws JsonProcessingException {
+        return modelMapper.map(object, TasdeeqConsumerReportResponseDto.class);
+    }
+
+    public CreditScoreData convertToCreditScoreData(TasdeeqCreditScoreDataResponseDto creditScoreDataResponseDto) {
+        return modelMapper.map(creditScoreDataResponseDto, CreditScoreData.class);
+    }
+
+    public TasdeeqReportDataRequestDto convertToTasdeeqReportDataRequestDto(CreditScoreRequestDto creditScoreRequestDto){
+        return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
+    }
 }

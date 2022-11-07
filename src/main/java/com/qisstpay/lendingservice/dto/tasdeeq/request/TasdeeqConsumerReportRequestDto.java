@@ -1,23 +1,18 @@
-
 package com.qisstpay.lendingservice.dto.tasdeeq.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-import javax.annotation.Generated;
-
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
+@Getter
+@Setter
+@Builder
+@ToString
 public class TasdeeqConsumerReportRequestDto {
 
-    @JsonProperty("LoginPayload")
-    private String loginPayload;
-
-    public String getLoginPayload() {
-        return loginPayload;
-    }
-
-    public void setLoginPayload(String loginPayload) {
-        this.loginPayload = loginPayload;
-    }
+    @JsonProperty("reportDataObj")
+    TasdeeqReportDataRequestDto reportDataObj;
 
 }

@@ -3,6 +3,7 @@ package com.qisstpay.lendingservice.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "lenders")
@@ -27,4 +28,7 @@ public class Lender {
 
     @Column(name = "credential_file_url")
     private String credentialFileUrl;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "lender")
+    private List<LenderCallsHistory> lenderCallsHistories;
 }

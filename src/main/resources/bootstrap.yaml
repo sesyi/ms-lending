@@ -4,7 +4,7 @@ spring:
   cloud:
     config:
       enabled: true
-#      uri: http://localhost:9296
+      uri: http://localhost:9296
 #      prod
 #      uri: http://13.228.13.152:9296
 #      stag
@@ -12,17 +12,17 @@ spring:
 #      dev
 #      uri: http://52.76.98.234:9296
 
-#  jpa:
-#    generate-ddl: true
-#    hibernate:
-#      ddl-auto: update
-#    properties:
-#      hibernate:
-#        dialect: org.hibernate.dialect.MySQL55Dialect
-#        format_sql: false
-#        jdbc:
-#          batch_size: 50
-#    show-sql: false
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL55Dialect
+        format_sql: false
+        jdbc:
+          batch_size: 50
+    show-sql: false
 
 management:
   endpoints:
