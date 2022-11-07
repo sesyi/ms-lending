@@ -12,11 +12,11 @@ import com.qisstpay.lendingservice.enums.ServiceType;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface LendingService {
-    TransferResponseDto transfer(TransferRequestDto transferRequestDto) throws JsonProcessingException;
+public interface LendingCallService {
+    LenderCallsHistory saveLenderCall(Lender lender, String request, ServiceType serviceType);
 
-    TransactionStateResponse checkStatus(String transactionId);
+    void saveLenderCall(LenderCallsHistory lenderCallsHistory);
 
-    CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, Long lenderCallId) throws JsonProcessingException;
+    LenderCallsHistory getLendingCall(Long lenderCallId);
 }
 

@@ -4,13 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qisstpay.commons.error.errortype.AuthenticationErrorType;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.commons.response.CustomResponse;
+import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
+import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.Lender;
+import com.qisstpay.lendingservice.entity.LenderCallsHistory;
+import com.qisstpay.lendingservice.enums.CallStatusType;
+import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.repository.LenderRepository;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.LenderService;
+import com.qisstpay.lendingservice.service.LendingCallService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.utils.TokenParser;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Optional;
 
 @Slf4j
@@ -26,17 +33,29 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LendingController {
 
+    @Autowired
+    private LendingService lendingService;
 
-    private static final String TRANSFER     = "/transfer";
-    private static final String STATUS       = "/status/{transactionId}";
-    private static final String CREDIT_SCORE = "/score";
+    @Autowired
+    private TokenParser tokenParser;
 
-    private final LendingService lendingService;
-    private final TokenParser    tokenParser;
-    private final LenderService  lenderService;
+    @Autowired
+    private LenderService lenderService;
+
+    @Autowired
+    private LendingCallService lendingCallService;
 
     @Autowired
     private LenderRepository lenderRepository;
+
+    private static final String TRANSFER     = "/transfer";
+    private static final String STATUS       = "/status/{transactionId}";
+    private static final String CREDIT_SCORE = "/credit/score";
+
+
+    private static final String CALLING_LENDING_CONTROLLER = "Calling LendingController";
+    private static final String RESPONSE                   = "Success Response: {}";
+
 
     @PostMapping(TRANSFER)
     public CustomResponse<TransferResponseDto> transfer(
@@ -79,22 +98,39 @@ public class LendingController {
     }
 
     @PostMapping(CREDIT_SCORE)
-    public CustomResponse<TransferResponseDto> getScore(
+    public CustomResponse<CreditScoreResponseDto> getScore(
             @RequestHeader(value = "x-api-key") String apiKey,
-            @RequestBody TransferRequestDto transferRequestDto,
+            @Valid @RequestBody CreditScoreRequestDto creditScoreRequestDto,
             @RequestHeader(value = "Authorization") String authorizationHeader
-    ) {
+    ) throws JsonProcessingException {
+        log.info(CALLING_LENDING_CONTROLLER);
+        log.info("getScore creditScoreRequestDto: {}", creditScoreRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
+                log.error(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
                 throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
             }
         } else {
+            log.error(AuthenticationErrorType.INVALID_TOKEN.getErrorMessage());
             throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
         }
-        return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
-                .body(lendingService.checkCredirScore(transferRequestDto)).build();
+        LenderCallsHistory lenderCallsHistory = lendingCallService.saveLenderCall(lender.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
+        try {
+            CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallsHistory.getId());
+            log.info(RESPONSE, response);
+            return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
+                    .body(response).build();
+        } catch (Exception ex) {
+            lenderCallsHistory = lendingCallService.getLendingCall(lenderCallsHistory.getId());
+            if (lenderCallsHistory.getTasdeeqCall() == null) {
+                lenderCallsHistory.setStatus(CallStatusType.FAILURE);
+                lenderCallsHistory.setError(ex.toString());
+                lendingCallService.saveLenderCall(lenderCallsHistory);
+            }
+            throw ex;
+        }
     }
 }
