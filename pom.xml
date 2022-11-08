@@ -180,7 +180,7 @@
 		<dependency>
 			<groupId>com.qisstpay</groupId>
 			<artifactId>commons</artifactId>
-			<version>0.0.4</version>
+			<version>0.0.7</version>
 		</dependency>
 
 		<dependency>
@@ -188,7 +188,21 @@
 			<artifactId>jsoup</artifactId>
 			<version>1.15.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20220320</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.slack.api</groupId>
+			<artifactId>slack-api-client</artifactId>
+			<version>1.22.1</version>
+		</dependency>
+
 	</dependencies>
+
 
 	<dependencyManagement>
 		<dependencies>

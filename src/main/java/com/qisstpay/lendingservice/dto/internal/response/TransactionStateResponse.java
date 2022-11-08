@@ -13,10 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransferResponseDto {
-
-    String result;
-    String qpResponseCode;
-    Object epResult;
-    String transactionId;
+public class TransactionStateResponse {
+    private String userName;
+    private String identityNumber;
+    private String phoneNumber;
+    private double amount;
+    private String transactionId;
+    private String state;
 }
