@@ -5,14 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 
 /**/@Data
 public class CacheProperties {
-//
-//    @Value("${cache.timeout.orderservice.findCompletedOrder}")
-//    private String completedOrderTimeout;
-//
-//    @Value("${cache.timeout.categoryservice.getAllCategories}")
-//    private String allCategoriesTimeout;
-//
-//    @Value("${cache.timeout.merchantservice.getAllByCountryStateCityId}")
-//    private String allByCountryStateCityIdTimeout;
+
+
+    @Value("${cache.timeout.tasdeeq.auth-token}")
+    private String getAuthToken;
 
 }

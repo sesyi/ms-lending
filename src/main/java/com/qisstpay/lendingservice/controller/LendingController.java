@@ -10,7 +10,7 @@ import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.Lender;
-import com.qisstpay.lendingservice.entity.LenderCallsHistory;
+import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.repository.LenderRepository;
@@ -117,20 +117,11 @@ public class LendingController {
             log.error(AuthenticationErrorType.INVALID_TOKEN.getErrorMessage());
             throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
         }
-        LenderCallsHistory lenderCallsHistory = lendingCallService.saveLenderCall(lender.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
-        try {
-            CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallsHistory.getId());
-            log.info(RESPONSE, response);
-            return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
-                    .body(response).build();
-        } catch (Exception ex) {
-            lenderCallsHistory = lendingCallService.getLendingCall(lenderCallsHistory.getId());
-            if (lenderCallsHistory.getTasdeeqCall() == null) {
-                lenderCallsHistory.setStatus(CallStatusType.FAILURE);
-                lenderCallsHistory.setError(ex.toString());
-                lendingCallService.saveLenderCall(lenderCallsHistory);
-            }
-            throw ex;
-        }
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
+        CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallLog.getId());
+        log.info(RESPONSE, response);
+        return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
+                .body(response).build();
+
     }
 }

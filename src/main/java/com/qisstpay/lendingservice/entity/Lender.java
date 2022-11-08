@@ -30,5 +30,5 @@ public class Lender {
     private String credentialFileUrl;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "lender")
-    private List<LenderCallsHistory> lenderCallsHistories;
+    private List<LenderCallLog> lenderCallsHistories;
 }
