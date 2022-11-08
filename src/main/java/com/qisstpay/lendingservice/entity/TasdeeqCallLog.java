@@ -1,10 +1,7 @@
 package com.qisstpay.lendingservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.EndPointType;
-import com.qisstpay.lendingservice.enums.ServiceType;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,14 +10,14 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "tasdeeq_calls_history")
+@Table(name = "tasdeeq_calls_logs")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-public class TasdeeqCallsHistory {
+public class TasdeeqCallLog {
 
     @Id
     @Column(name = "id")
@@ -55,7 +52,8 @@ public class TasdeeqCallsHistory {
     @Column(name = "response_at")
     private Timestamp responseAt;
 
-    @OneToOne(cascade=CascadeType.ALL,mappedBy="tasdeeqCall")
-    private LenderCallsHistory lenderCallsHistory;
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="lender_call_id")
+    private LenderCallLog lenderCall;
 
 }

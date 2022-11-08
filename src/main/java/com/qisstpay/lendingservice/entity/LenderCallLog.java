@@ -10,14 +10,14 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "lender_calls_history")
+@Table(name = "lender_calls_logs")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-public class LenderCallsHistory {
+public class LenderCallLog {
 
     @Id
     @Column(name = "id")
@@ -47,8 +47,7 @@ public class LenderCallsHistory {
     @Column(name = "created_at")
     private Timestamp createdAt;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name="tasdeeq_call_id")
-    private TasdeeqCallsHistory tasdeeqCall;
+    @OneToOne(cascade=CascadeType.ALL,mappedBy="lenderCall")
+    private TasdeeqCallLog tasdeeqCall;
 
 }
