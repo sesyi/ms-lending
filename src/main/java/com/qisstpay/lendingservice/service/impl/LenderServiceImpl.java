@@ -5,6 +5,7 @@ import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.dto.internal.request.LenderUserRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.MessageResponseDto;
 import com.qisstpay.lendingservice.entity.Lender;
+import com.qisstpay.lendingservice.enums.StatusType;
 import com.qisstpay.lendingservice.repository.LenderRepository;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.LenderService;
@@ -34,6 +35,7 @@ public class LenderServiceImpl implements LenderService {
                 newLender = Lender.builder()
                         .apiKey(lenderUserRequestDto.getApiKey())
                         .userId(lenderUserRequestDto.getUserId())
+                        .status(StatusType.PENDING)
                         .credentialFileUrl(lenderUserRequestDto.getCredentialFileUrl()).build();
             }
             lenderRepository.save(newLender);
@@ -54,6 +56,15 @@ public class LenderServiceImpl implements LenderService {
     public MessageResponseDto verifyUser(Long userId, String apiKey) {
         Optional<Lender> lender = lenderRepository.getByUserId(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
+            if (lender.get().getStatus().equals(StatusType.PENDING)) {
+                lender.get().setStatus(StatusType.ACTIVE);
+                lenderRepository.save(lender.get());
+            } else if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.USER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             return MessageResponseDto.builder()
                     .message(check ? "User Verification Success" : "User Verification Failed")

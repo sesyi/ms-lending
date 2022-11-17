@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qisstpay.commons.error.errortype.AuthenticationErrorType;
+import com.qisstpay.commons.error.errortype.UserErrorType;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.commons.response.CustomResponse;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
@@ -11,8 +12,8 @@ import com.qisstpay.lendingservice.dto.internal.response.TransactionStateRespons
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.Lender;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
-import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.ServiceType;
+import com.qisstpay.lendingservice.enums.StatusType;
 import com.qisstpay.lendingservice.repository.LenderRepository;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.LenderService;
@@ -66,6 +67,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
                 throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
@@ -86,6 +90,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
                 throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
@@ -108,6 +115,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
                 log.error(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
@@ -124,4 +134,5 @@ public class LendingController {
                 .body(response).build();
 
     }
+
 }
