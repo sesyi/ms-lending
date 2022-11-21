@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qisstpay.commons.error.errortype.AuthenticationErrorType;
+import com.qisstpay.commons.error.errortype.UserErrorType;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.commons.response.CustomResponse;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
@@ -10,9 +11,9 @@ import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.Lender;
-import com.qisstpay.lendingservice.entity.LenderCallsHistory;
-import com.qisstpay.lendingservice.enums.CallStatusType;
+import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.ServiceType;
+import com.qisstpay.lendingservice.enums.StatusType;
 import com.qisstpay.lendingservice.repository.LenderRepository;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.LenderService;
@@ -66,6 +67,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
                 throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
@@ -86,6 +90,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
                 throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
@@ -108,6 +115,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<Lender> lender = lenderService.getLender(userId);
         if (lender.isPresent()) {
+            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
             Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
             if (check.equals(Boolean.FALSE)) {
                 log.error(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
@@ -117,20 +127,12 @@ public class LendingController {
             log.error(AuthenticationErrorType.INVALID_TOKEN.getErrorMessage());
             throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
         }
-        LenderCallsHistory lenderCallsHistory = lendingCallService.saveLenderCall(lender.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
-        try {
-            CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallsHistory.getId());
-            log.info(RESPONSE, response);
-            return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
-                    .body(response).build();
-        } catch (Exception ex) {
-            lenderCallsHistory = lendingCallService.getLendingCall(lenderCallsHistory.getId());
-            if (lenderCallsHistory.getTasdeeqCall() == null) {
-                lenderCallsHistory.setStatus(CallStatusType.FAILURE);
-                lenderCallsHistory.setError(ex.toString());
-                lendingCallService.saveLenderCall(lenderCallsHistory);
-            }
-            throw ex;
-        }
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
+        CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallLog.getId());
+        log.info(RESPONSE, response);
+        return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
+                .body(response).build();
+
     }
+
 }

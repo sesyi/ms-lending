@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.qisstpay.lendingservice.enums.StatusType;
 import lombok.*;
 
 import javax.persistence.*;
@@ -30,5 +31,9 @@ public class Lender {
     private String credentialFileUrl;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "lender")
-    private List<LenderCallsHistory> lenderCallsHistories;
+    private List<LenderCallLog> lenderCallsHistories;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private StatusType status;
 }

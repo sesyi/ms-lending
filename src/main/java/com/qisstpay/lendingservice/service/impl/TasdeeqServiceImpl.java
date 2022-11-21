@@ -12,17 +12,19 @@ import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestD
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqResponseDto;
-import com.qisstpay.lendingservice.entity.LenderCallsHistory;
-import com.qisstpay.lendingservice.entity.TasdeeqCallsHistory;
+import com.qisstpay.lendingservice.entity.LenderCallLog;
+import com.qisstpay.lendingservice.entity.TasdeeqCallLog;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.EndPointType;
 import com.qisstpay.lendingservice.repository.TasdeeqCallRepository;
 import com.qisstpay.lendingservice.service.LendingCallService;
 import com.qisstpay.lendingservice.service.TasdeeqService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -33,6 +35,8 @@ import java.util.Objects;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
+@RefreshScope
 public class TasdeeqServiceImpl implements TasdeeqService {
 
     @Autowired
@@ -72,11 +76,11 @@ public class TasdeeqServiceImpl implements TasdeeqService {
     private final String CALLING_TASDEEQ_SERVICE = "Calling Tasdeeq Service";
 
     @Override
-    @CustomCache(expiration = "30 * 1000")
+    @CustomCache(expiration = "@cacheProperties.getAuthToken()", cacheManager = "@redisCacheManager")
     public TasdeeqAuthResponseDto authentication(Long requestId) {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("Authentication");
-        if (environment.equals("dev") || environment.equals("local")) {
+        if (!environment.equals("prod")) {
             return TasdeeqAuthResponseDto.builder().auth_token("kSuRgfFYV8482nOdAc2QYAQsCKodUY").build();
         }
         TasdeeqAuthRequestDto tasdeeqAuthRequestDto =
@@ -87,20 +91,20 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<TasdeeqAuthRequestDto> requestEntity = new HttpEntity<>(tasdeeqAuthRequestDto, headers);
         String requestUrl = String.format(REQUEST_URL, baseUrl, authUrl);
-        TasdeeqCallsHistory tasdeeqCallsHistory;
+        TasdeeqCallLog tasdeeqCallLog;
         if (requestId.equals(0L)) {
-            tasdeeqCallsHistory =
+            tasdeeqCallLog =
                     tasdeeqCallRepository.save(
-                            TasdeeqCallsHistory.builder()
+                            TasdeeqCallLog.builder()
                                     .id(requestId)
                                     .request(Objects.requireNonNull(requestEntity.getBody()).toString())
                                     .endPoint(EndPointType.AUTH)
                                     .requestedAt(Timestamp.valueOf(LocalDateTime.now()))
                                     .build());
         } else {
-            tasdeeqCallsHistory =
+            tasdeeqCallLog =
                     tasdeeqCallRepository.save(
-                            TasdeeqCallsHistory.builder()
+                            TasdeeqCallLog.builder()
                                     .request(Objects.requireNonNull(requestEntity.getBody()).toString())
                                     .endPoint(EndPointType.AUTH)
                                     .build());
@@ -109,100 +113,116 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         try {
             response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
         } catch (Exception ex) {
-            log.error("{} Request : {}", ex.getMessage(), tasdeeqCallsHistory.getRequest());
-            tasdeeqCallsHistory.setStatus(CallStatusType.FAILURE);
-            tasdeeqCallRepository.save(tasdeeqCallsHistory);
+            log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
+            tasdeeqCallLog.setMessage(ex.getMessage());
+            tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
+            tasdeeqCallRepository.save(tasdeeqCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
         if (response.getBody().getMessageCode().equals("00170017")) {
-            tasdeeqCallsHistory.setStatus(CallStatusType.SUCCESS);
-            tasdeeqCallsHistory.setMessage(response.getBody().getMessage());
-            tasdeeqCallsHistory.setMessageCode(response.getBody().getMessageCode());
-            tasdeeqCallsHistory.setStatusCode(response.getBody().getStatusCode());
-            tasdeeqCallRepository.save(tasdeeqCallsHistory);
+            tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
+            tasdeeqCallLog.setMessage(response.getBody().getMessage());
+            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+            tasdeeqCallRepository.save(tasdeeqCallLog);
             return modelConverter.convertTOTasdeeqAuthResponseDto(response.getBody().getData());
         }
-        tasdeeqCallsHistory.setStatus(CallStatusType.EXCEPTION);
-        tasdeeqCallsHistory.setMessage(response.getBody().getMessage());
-        tasdeeqCallsHistory.setMessageCode(response.getBody().getMessageCode());
-        tasdeeqCallsHistory.setStatusCode(response.getBody().getStatusCode());
-        tasdeeqCallRepository.save(tasdeeqCallsHistory);
+        tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
+        tasdeeqCallLog.setMessage(response.getBody().getMessage());
+        tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+        tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+        tasdeeqCallRepository.save(tasdeeqCallLog);
         throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG);
     }
 
     @Override
-    public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, String authToken, Long lenderCallId) throws JsonProcessingException {
+    public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, Long lenderCallId) throws JsonProcessingException {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("getConsumerReport tasdeeqConsumerReportRequestDto: {}", tasdeeqReportDataRequestDto);
-        LenderCallsHistory lenderCallsHistory = lendingCallService.getLendingCall(lenderCallId);
+        LenderCallLog lenderCallLog = lendingCallService.getLendingCall(lenderCallId);
+        if (!environment.equals("prod")) {
+            lenderCallLog.setStatus(CallStatusType.SUCCESS);
+            lendingCallService.saveLenderCall(lenderCallLog);
+            return TasdeeqConsumerReportResponseDto.builder().build();
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(authToken);
+        Long authId = getLastAuthTokenId();
+        TasdeeqAuthResponseDto authentication;
+        try {
+            authentication = authentication(authId != null ? authId : 0);
+        } catch (Exception ex){
+            lenderCallLog.setStatus(CallStatusType.FAILURE);
+            lenderCallLog.setError(ex.toString());
+            lendingCallService.saveLenderCall(lenderCallLog);
+            throw ex;
+        }
+        headers.setBearerAuth(authentication.getAuth_token());
         TasdeeqConsumerReportRequestDto requestBody = TasdeeqConsumerReportRequestDto.builder().reportDataObj(tasdeeqReportDataRequestDto).build();
         HttpEntity<TasdeeqConsumerReportRequestDto> requestEntity = new HttpEntity<>(requestBody, headers);
         String requestUrl = String.format(REQUEST_URL, baseUrl, consumerReportUrl);
-        TasdeeqCallsHistory tasdeeqCallsHistory =
+        TasdeeqCallLog tasdeeqCallLog =
                 tasdeeqCallRepository.save(
-                        TasdeeqCallsHistory.builder()
+                        TasdeeqCallLog.builder()
                                 .request(Objects.requireNonNull(requestEntity.getBody()).toString())
+                                .lenderCall(lenderCallLog)
                                 .endPoint(EndPointType.CONSUMER_REPORT)
                                 .build());
         ResponseEntity<TasdeeqResponseDto> response;
         try {
             response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
         } catch (Exception ex) {
-            log.error("{} Request : {}", ex.getMessage(), tasdeeqCallsHistory.getRequest());
-            tasdeeqCallsHistory.setStatus(CallStatusType.FAILURE);
-            tasdeeqCallRepository.save(tasdeeqCallsHistory);
+            log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
+            tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
+            tasdeeqCallRepository.save(tasdeeqCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
         if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("111")) {
-            tasdeeqCallsHistory.setStatus(CallStatusType.SUCCESS);
-            tasdeeqCallsHistory.setMessage(response.getBody().getMessage());
-            tasdeeqCallsHistory.setMessageCode(response.getBody().getMessageCode());
-            tasdeeqCallsHistory.setStatusCode(response.getBody().getStatusCode());
-            tasdeeqCallRepository.save(tasdeeqCallsHistory);
-            lenderCallsHistory.setStatus(CallStatusType.SUCCESS);
-            lenderCallsHistory.setTasdeeqCall(tasdeeqCallsHistory);
-            lendingCallService.saveLenderCall(lenderCallsHistory);
+            lenderCallLog.setStatus(CallStatusType.SUCCESS);
+            lenderCallLog.setTasdeeqCall(tasdeeqCallLog);
+            tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
+            tasdeeqCallLog.setMessage(response.getBody().getMessage());
+            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+            tasdeeqCallLog.setLenderCall(lenderCallLog);
+            tasdeeqCallRepository.save(tasdeeqCallLog);
             return modelConverter.convertTOTasdeeqConsumerReportResponseDto(response.getBody().getData());
         } else if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("112") || Objects.requireNonNull(response.getBody()).getMessageCode().equals("113")) {
-            tasdeeqCallsHistory.setStatus(CallStatusType.EXCEPTION);
-            tasdeeqCallsHistory.setMessage(response.getBody().getMessage());
-            tasdeeqCallsHistory.setMessageCode(response.getBody().getMessageCode());
-            tasdeeqCallsHistory.setStatusCode(response.getBody().getStatusCode());
-            tasdeeqCallRepository.save(tasdeeqCallsHistory);
+            tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
+            tasdeeqCallLog.setMessage(response.getBody().getMessage());
+            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+            tasdeeqCallRepository.save(tasdeeqCallLog);
             TasdeeqAuthResponseDto authResponseDto = authentication(0L);
             headers.setBearerAuth(authResponseDto.getAuth_token());
             try {
                 response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
             } catch (Exception ex) {
-                log.error("{} Request : {}", ex.getMessage(), tasdeeqCallsHistory.getRequest());
-                tasdeeqCallsHistory.setStatus(CallStatusType.FAILURE);
-                tasdeeqCallRepository.save(tasdeeqCallsHistory);
+                log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
+                tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
+                tasdeeqCallLog.setMessage(ex.getMessage());
+                tasdeeqCallRepository.save(tasdeeqCallLog);
                 throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
             }
             if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("111")) {
-                tasdeeqCallsHistory.setStatus(CallStatusType.SUCCESS);
-                tasdeeqCallsHistory.setMessage(response.getBody().getMessage());
-                tasdeeqCallsHistory.setMessageCode(response.getBody().getMessageCode());
-                tasdeeqCallsHistory.setStatusCode(response.getBody().getStatusCode());
-                tasdeeqCallRepository.save(tasdeeqCallsHistory);
-                lenderCallsHistory.setStatus(CallStatusType.SUCCESS);
-                lenderCallsHistory.setTasdeeqCall(tasdeeqCallsHistory);
-                lendingCallService.saveLenderCall(lenderCallsHistory);
+                lenderCallLog.setStatus(CallStatusType.SUCCESS);
+                tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
+                tasdeeqCallLog.setMessage(response.getBody().getMessage());
+                tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+                tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+                tasdeeqCallLog.setLenderCall(lenderCallLog);
+                tasdeeqCallRepository.save(tasdeeqCallLog);
                 return modelConverter.convertTOTasdeeqConsumerReportResponseDto(response.getBody().getData());
 
             }
         }
-        tasdeeqCallsHistory.setStatus(CallStatusType.EXCEPTION);
-        tasdeeqCallsHistory.setMessage(response.getBody().getMessage());
-        tasdeeqCallsHistory.setMessageCode(response.getBody().getMessageCode());
-        tasdeeqCallsHistory.setStatusCode(response.getBody().getStatusCode());
-        tasdeeqCallRepository.save(tasdeeqCallsHistory);
-        lenderCallsHistory.setStatus(CallStatusType.EXCEPTION);
-        lenderCallsHistory.setTasdeeqCall(tasdeeqCallsHistory);
-        lendingCallService.saveLenderCall(lenderCallsHistory);
+        lenderCallLog.setStatus(CallStatusType.EXCEPTION);
+        tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
+        tasdeeqCallLog.setMessage(response.getBody().getMessage());
+        tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+        tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+        tasdeeqCallLog.setLenderCall(lenderCallLog);
+        tasdeeqCallRepository.save(tasdeeqCallLog);
         throw new CustomException(response.getBody().getMessageCode(), response.getBody().getMessage());
     }
 
