@@ -1,6 +1,6 @@
 package com.qisstpay.lendingservice.service.impl;
 
-import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerPersonalInformationResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.enums.GenderType;
 import com.qisstpay.lendingservice.repository.ConsumerRepository;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -28,38 +29,18 @@ public class ConsumerServiceImpl implements ConsumerService {
     private final String CALLING_CONSUMER_SERVICE = "Calling Consumer Service";
 
     @Override
-    public Consumer getOrCreateConsumer(TasdeeqConsumerPersonalInformationResponseDto consumerInfo, String phoneNumber) {
+    public Consumer getOrCreateConsumerDetails(TasdeeqConsumerReportResponseDto tasdeeqConsumerReportResponseDto, String phoneNumber) {
         log.info(CALLING_CONSUMER_SERVICE);
-        log.info("getOrCreateConsumer cnic: {} phoneNumber: {}", consumerInfo.getCnic(), phoneNumber);
-        Optional<Consumer> consumer;
-        if (phoneNumber == null) {
-            consumer = consumerRepository.findByCnic(consumerInfo.getCnic());
-        } else {
-            consumer = consumerRepository.findByPhoneNumber(phoneNumber);
-            if (consumer.isPresent()) {
-                if (consumer.get().getCnic() == null) {
-                    Consumer newConsumer = modelConverter.convertToConsumer(consumerInfo);
-                    newConsumer.setPhoneNumber(phoneNumber);
-                    if (GenderType.MALE.getCode().equals(consumerInfo.getGender().toUpperCase(Locale.ROOT))) {
-                        newConsumer.setGender(GenderType.MALE);
-                    } else {
-                        newConsumer.setGender(GenderType.FEMALE);
-                    }
-                    save(newConsumer);
-                    return newConsumer;
-                }
-            } else {
-                consumer = consumerRepository.findByCnicAndPhoneNumber(consumerInfo.getCnic(), phoneNumber);
-            }
-        }
-        Consumer newConsumer = modelConverter.convertToConsumer(consumerInfo);
+        log.info("getOrCreateConsumerDetails cnic: {} phoneNumber: {}", tasdeeqConsumerReportResponseDto.getPersonalInformation().getCnic(), phoneNumber);
+        Optional<Consumer> consumer = findByCnicOrPhonenumber(tasdeeqConsumerReportResponseDto.getPersonalInformation().getCnic(), phoneNumber);
+        Consumer newConsumer = modelConverter.convertToConsumer(tasdeeqConsumerReportResponseDto.getPersonalInformation());
         newConsumer.setPhoneNumber(phoneNumber);
-        if (GenderType.MALE.getCode().equals(consumerInfo.getGender().toUpperCase(Locale.ROOT))) {
+        if (GenderType.MALE.getCode().equals(tasdeeqConsumerReportResponseDto.getPersonalInformation().getGender().toUpperCase(Locale.ROOT))) {
             newConsumer.setGender(GenderType.MALE);
         } else {
             newConsumer.setGender(GenderType.FEMALE);
         }
-        newConsumer.setDateOfBirth(consumerInfo.getDob());
+        newConsumer.setDateOfBirth(tasdeeqConsumerReportResponseDto.getPersonalInformation().getDob());
         if (consumer.isPresent()) {
             if (compareData(consumer.get(), newConsumer)) {
                 return consumer.get();
@@ -68,7 +49,6 @@ public class ConsumerServiceImpl implements ConsumerService {
                 save(consumer.get());
             }
         }
-        save(newConsumer);
         return newConsumer;
     }
 
@@ -76,6 +56,35 @@ public class ConsumerServiceImpl implements ConsumerService {
     public Consumer save(Consumer consumer) {
         log.info(CALLING_CONSUMER_SERVICE);
         return consumerRepository.save(consumer);
+    }
+
+    public Optional<Consumer> findByCnicOrPhonenumber(String cnic, String phoneNumber) {
+        List<Consumer> consumerList = consumerRepository.findByCnicOrPhoneNumber(cnic, phoneNumber);
+        if (consumerList.size() > 1) {
+            Optional<Consumer> consumer = consumerList.stream().filter(x -> (cnic.equals(x.getCnic()) && phoneNumber.equals(x.getPhoneNumber()))).findFirst();
+            if (consumer.isPresent()) {
+                return consumer;
+            }
+            consumer = consumerList.stream().filter(x -> cnic.equals(x.getCnic())).findFirst();
+            if (consumer.isPresent()) {
+                consumer.get().setPhoneNumber(phoneNumber);
+                return consumer;
+            }
+            consumer = consumerList.stream().filter(x -> phoneNumber.equals(x.getPhoneNumber())).findFirst();
+            if (consumer.isPresent()) {
+                consumer.get().setCnic(cnic);
+                return consumer;
+            }
+        } else if (consumerList.size() == 1) {
+            if (consumerList.get(0).getPhoneNumber() == null || consumerList.get(0).getPhoneNumber().equals("")) {
+                consumerList.get(0).setPhoneNumber(phoneNumber);
+            }
+            if (consumerList.get(0).getCnic() == null || consumerList.get(0).getCnic().equals("")) {
+                consumerList.get(0).setCnic(cnic);
+            }
+            return Optional.ofNullable(consumerList.get(0));
+        }
+        return Optional.empty();
     }
 
     private Boolean compareData(Consumer consumer1, Consumer consumer2) {
@@ -97,7 +106,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             return Boolean.FALSE;
         } else if (!consumer1.getEmployerOrBusiness().equals(consumer2.getEmployerOrBusiness())) {
             return Boolean.FALSE;
-        }  else if (!consumer1.getFatherOrHusbandName().equals(consumer2.getFatherOrHusbandName())) {
+        } else if (!consumer1.getFatherOrHusbandName().equals(consumer2.getFatherOrHusbandName())) {
             return Boolean.FALSE;
         } else if (!consumer1.getNationality().equals(consumer2.getNationality())) {
             return Boolean.FALSE;
@@ -107,7 +116,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             return Boolean.FALSE;
         } else if (!consumer1.getDateOfBirth().equals(consumer2.getDateOfBirth())) {
             return Boolean.FALSE;
-        }else if (!consumer1.getNtn().equals(consumer2.getNtn())) {
+        } else if (!consumer1.getNtn().equals(consumer2.getNtn())) {
             return Boolean.FALSE;
         }
         return Boolean.TRUE;

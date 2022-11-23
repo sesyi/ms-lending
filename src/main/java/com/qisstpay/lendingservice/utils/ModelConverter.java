@@ -9,7 +9,7 @@ import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerPersonalI
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqCreditScoreDataResponseDto;
 import com.qisstpay.lendingservice.entity.Consumer;
-import com.qisstpay.lendingservice.entity.CreditScoreData;
+import com.qisstpay.lendingservice.entity.ConsumerCreditScoreData;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -34,8 +34,8 @@ public class ModelConverter {
         return modelMapper.map(object, TasdeeqConsumerReportResponseDto.class);
     }
 
-    public CreditScoreData convertToCreditScoreData(TasdeeqCreditScoreDataResponseDto creditScoreDataResponseDto) {
-        return modelMapper.map(creditScoreDataResponseDto, CreditScoreData.class);
+    public ConsumerCreditScoreData convertToCreditScoreData(TasdeeqCreditScoreDataResponseDto creditScoreDataResponseDto) {
+        return modelMapper.map(creditScoreDataResponseDto, ConsumerCreditScoreData.class);
     }
 
     public TasdeeqReportDataRequestDto convertToTasdeeqReportDataRequestDto(CreditScoreRequestDto creditScoreRequestDto){
