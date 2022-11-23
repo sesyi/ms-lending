@@ -42,30 +42,30 @@ public class TasdeeqConsumerReportResponseDto {
     @JsonProperty("creditScoreData")
     private TasdeeqCreditScoreDataResponseDto creditScoreData;
 
-//    @JsonProperty("summaryOverdue_24M")
-//    private List<TasdeeqSummaryOverdue24MResponseDto> summaryOverdue_24M;
-//
-//    @JsonProperty("detailsOfStatusCreditApplication")
-//    private List<TasdeeqDetailsOfStatusCreditApplicationResponseDto> detailsOfStatusCreditApplication;
-//
-//    @JsonProperty("detailsOfLoansSettlement")
-//    private List<TasdeeqDetailsOfLoansSettlementResponseDto> detailsOfLoansSettlement;
-//
-//    @JsonProperty("personalGuarantees")
-//    private List<TasdeeqPersonalGuaranteesResponseDto> personalGuarantees;
-//
-//    @JsonProperty("coborrowerDetail")
-//    private List<TasdeeqCoborrowerDetailResponseDto> coborrowerDetail;
-//
-//    @JsonProperty("detailsOfBankruptcyCases")
-//    private List<TasdeeqDetailsOfBankruptcyCasesResponseDto> detailsOfBankruptcyCases;
-//
-//    @JsonProperty("creditEnquiry")
-//    private List<TasdeeqCreditEnquiryResponseDto> creditEnquiry;
-//
-//    @JsonProperty("loanDetails")
-//    private List<TasdeeqLoanDetailsResponseDto> loanDetails;
-//
-//    @JsonProperty("creditHistory")
-//    private List<TasdeeqCreditHistoryResponseDto> creditHistory;
+    @JsonProperty("summaryOverdue_24M")
+    private List<TasdeeqSummaryOverdue24MResponseDto> summaryOverdue_24M;
+
+    @JsonProperty("detailsOfStatusCreditApplication")
+    private List<TasdeeqDetailsOfStatusCreditApplicationResponseDto> detailsOfStatusCreditApplication;
+
+    @JsonProperty("detailsOfLoansSettlement")
+    private List<TasdeeqDetailsOfLoansSettlementResponseDto> detailsOfLoansSettlement;
+
+    @JsonProperty("personalGuarantees")
+    private List<TasdeeqPersonalGuaranteesResponseDto> personalGuarantees;
+
+    @JsonProperty("coborrowerDetail")
+    private List<TasdeeqCoborrowerDetailResponseDto> coborrowerDetail;
+
+    @JsonProperty("detailsOfBankruptcyCases")
+    private List<TasdeeqDetailsOfBankruptcyCasesResponseDto> detailsOfBankruptcyCases;
+
+    @JsonProperty("creditEnquiry")
+    private List<TasdeeqCreditEnquiryResponseDto> creditEnquiry;
+
+    @JsonProperty("loanDetails")
+    private List<TasdeeqLoanDetailsResponseDto> loanDetails;
+
+    @JsonProperty("creditHistory")
+    private List<TasdeeqCreditHistoryResponseDto> creditHistory;
 }

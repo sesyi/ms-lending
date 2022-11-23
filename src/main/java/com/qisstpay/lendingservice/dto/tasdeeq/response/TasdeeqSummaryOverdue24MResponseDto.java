@@ -11,7 +11,7 @@ import lombok.*;
 public class TasdeeqSummaryOverdue24MResponseDto {
 
     @JsonProperty("PLUS_30_24M")
-    private Integer plus_30_24M;
+    private String plus_30_24M;
 
     @JsonProperty("PLUS_60_24M")
     private String plus_60_24M;
@@ -20,7 +20,7 @@ public class TasdeeqSummaryOverdue24MResponseDto {
     private String plus_90_24M;
 
     @JsonProperty("PLUS_120_24M")
-    private Integer plus_120_24M;
+    private String plus_120_24M;
 
     @JsonProperty("PLUS_150_24M")
     private String plus_150_24M;
