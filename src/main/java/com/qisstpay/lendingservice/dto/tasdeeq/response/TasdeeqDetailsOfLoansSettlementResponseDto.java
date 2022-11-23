@@ -22,12 +22,12 @@ public class TasdeeqDetailsOfLoansSettlementResponseDto {
     private String approvalDate;
 
     @JsonProperty("RELATIONSHIP_DATE")
-    private Integer relationshipDate;
+    private String relationshipDate;
 
     @JsonProperty("MATURITY_DATE")
     private String maturityDate;
 
     @JsonProperty("DATE_OF_SETTLEMENT")
-    private Integer dateOfSettlement;
+    private String dateOfSettlement;
 
 }

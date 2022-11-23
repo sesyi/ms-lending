@@ -20,12 +20,12 @@ public class TasdeeqPersonalGuaranteesResponseDto {
     private String principalBorrowerCnic;
 
     @JsonProperty("DATE_OF_INVOCATION")
-    private Integer dateOfInvocation;
+    private String dateOfInvocation;
 
     @JsonProperty("GUARANTEE_DATE")
     private String guaranteeDate;
 
     @JsonProperty("GUARANTEE_AMOUNT")
-    private Integer guaranteeAmount;
+    private String guaranteeAmount;
 
 }

@@ -15,6 +15,7 @@ import com.qisstpay.lendingservice.dto.internal.response.TransactionStateRespons
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqCreditScoreDataResponseDto;
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
@@ -24,7 +25,7 @@ import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
 import com.qisstpay.lendingservice.service.ConsumerService;
-import com.qisstpay.lendingservice.service.CreditScoreService;
+import com.qisstpay.lendingservice.service.ConsumerCreditScoreService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.service.TasdeeqService;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +87,7 @@ public class LendingServiceImpl implements LendingService {
     private ConsumerService consumerService;
 
     @Autowired
-    private CreditScoreService creditScoreService;
+    private ConsumerCreditScoreService consumerCreditScoreService;
 
     @Autowired
     private LenderCallRepository lenderCallRepository;
@@ -213,8 +214,9 @@ public class LendingServiceImpl implements LendingService {
         TasdeeqReportDataRequestDto consumerReportRequestDto = createTasdeeqReportDataRequestDto(creditScoreRequestDto);
         TasdeeqConsumerReportResponseDto tasdeeqConsumerReportResponseDto = tasdeeqService.getConsumerReport(consumerReportRequestDto, lenderCallId);
         if (tasdeeqConsumerReportResponseDto.getCreditScoreData() != null) {
-            Consumer consumer = consumerService.getOrCreateConsumer(tasdeeqConsumerReportResponseDto.getPersonalInformation(), creditScoreRequestDto.getPhoneNumber());
-            creditScoreService.save(tasdeeqConsumerReportResponseDto.getCreditScoreData(), consumer.getCnic());
+            Consumer consumer = consumerService.getOrCreateConsumerDetails(tasdeeqConsumerReportResponseDto, creditScoreRequestDto.getPhoneNumber());
+            consumer.getConsumerCreditScoreData().add(consumerCreditScoreService.create(tasdeeqConsumerReportResponseDto.getCreditScoreData(), consumer, consumer.getCnic()));
+            consumerService.save(consumer);
             return CreditScoreResponseDto.builder()
                     .score(tasdeeqConsumerReportResponseDto.getCreditScoreData().getScore())
                     .month(tasdeeqConsumerReportResponseDto.getCreditScoreData().getMonth())
@@ -227,24 +229,6 @@ public class LendingServiceImpl implements LendingService {
         TasdeeqReportDataRequestDto consumerReportRequestDto = new TasdeeqReportDataRequestDto();
         consumerReportRequestDto.setCnic(creditScoreRequestDto.getCnic());
         consumerReportRequestDto.setLoanAmount(String.valueOf(creditScoreRequestDto.getLoanAmount()));
-        if (creditScoreRequestDto.getGender() != null) {
-            consumerReportRequestDto.setGender(creditScoreRequestDto.getGender().getCode());
-        }
-        if (creditScoreRequestDto.getCity() != null) {
-            consumerReportRequestDto.setCity(creditScoreRequestDto.getCity());
-        }
-        if (creditScoreRequestDto.getCurrentAddress() != null) {
-            consumerReportRequestDto.setCurrentAddress(creditScoreRequestDto.getCurrentAddress());
-        }
-        if (creditScoreRequestDto.getDateOfBirth() != null) {
-            consumerReportRequestDto.setDateOfBirth(creditScoreRequestDto.getDateOfBirth());
-        }
-        if (creditScoreRequestDto.getFullName() != null) {
-            consumerReportRequestDto.setFullName(creditScoreRequestDto.getFullName());
-        }
-        if (creditScoreRequestDto.getFatherHusbandName() != null) {
-            consumerReportRequestDto.setFatherHusbandName(creditScoreRequestDto.getFatherHusbandName());
-        }
         return consumerReportRequestDto;
     }
 

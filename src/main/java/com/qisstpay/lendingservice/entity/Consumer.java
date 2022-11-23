@@ -1,6 +1,5 @@
 package com.qisstpay.lendingservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qisstpay.lendingservice.enums.GenderType;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,7 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "consumer")
@@ -95,4 +94,34 @@ public class Consumer {
 
     @Column(name = "deleted_at")
     private Timestamp deletedAt;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerCreditScoreData> consumerCreditScoreData;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerSummaryOverdue24M> summaryOverdue24Ms;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerDetailsOfStatusCreditApplication> detailsOfStatusCreditApplications;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerDetailsOfLoansSettlement> detailsOfLoansSettlements;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerPersonalGuarantees> personalGuarantees;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerCoborrowerDetail> coborrowerDetails;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerDetailsOfBankruptcyCases> detailsOfBankruptcyCases;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerCreditEnquiry> creditEnquiries;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerLoanDetails> loanDetails;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerCreditHistory> creditHistories;
 }

@@ -11,7 +11,7 @@ import lombok.*;
 public class TasdeeqLoanDetailsResponseDto {
 
     @JsonProperty("LOAN_SERIAL_NUMBER")
-    private Integer loanSerialNumber;
+    private String loanSerialNumber;
 
     @JsonProperty("PRODUCT")
     private String product;
@@ -98,13 +98,13 @@ public class TasdeeqLoanDetailsResponseDto {
     private String recoveryDate;
 
     @JsonProperty("PLUS_30")
-    private String pluse30;
+    private String plus30;
 
     @JsonProperty("PLUS_60")
     private String plus60;
 
     @JsonProperty("PLUS_90")
-    private String pluse90;
+    private String plus90;
 
     @JsonProperty("PLUS_120")
     private String plus120;
