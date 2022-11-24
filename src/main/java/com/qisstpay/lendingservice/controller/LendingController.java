@@ -10,13 +10,13 @@ import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
-import com.qisstpay.lendingservice.entity.Lender;
+import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.enums.StatusType;
-import com.qisstpay.lendingservice.repository.LenderRepository;
+import com.qisstpay.lendingservice.repository.UserRepository;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
-import com.qisstpay.lendingservice.service.LenderService;
+import com.qisstpay.lendingservice.service.UserService;
 import com.qisstpay.lendingservice.service.LendingCallService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.utils.TokenParser;
@@ -41,13 +41,13 @@ public class LendingController {
     private TokenParser tokenParser;
 
     @Autowired
-    private LenderService lenderService;
+    private UserService userService;
 
     @Autowired
     private LendingCallService lendingCallService;
 
     @Autowired
-    private LenderRepository lenderRepository;
+    private UserRepository userRepository;
 
     private static final String TRANSFER     = "/transfer";
     private static final String STATUS       = "/status/{transactionId}";
@@ -65,18 +65,8 @@ public class LendingController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) throws JsonProcessingException {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<Lender> lender = lenderService.getLender(userId);
-        if (lender.isPresent()) {
-            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
-                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
-            }
-            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
-            if (check.equals(Boolean.FALSE)) {
-                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
-            }
-        } else {
-            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
-        }
+        Optional<User> user = userService.getUser(userId);
+        ApiKeyAuth.verifyApiKey(user, apiKey);
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
                 .body(lendingService.transfer(transferRequestDto)).build();
     }
@@ -88,18 +78,8 @@ public class LendingController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<Lender> lender = lenderService.getLender(userId);
-        if (lender.isPresent()) {
-            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
-                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
-            }
-            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
-            if (check.equals(Boolean.FALSE)) {
-                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
-            }
-        } else {
-            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
-        }
+        Optional<User> user = userService.getUser(userId);
+        ApiKeyAuth.verifyApiKey(user, apiKey);
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
                 .body(lendingService.checkStatus(transactionId)).build();
     }
@@ -113,26 +93,15 @@ public class LendingController {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("getScore creditScoreRequestDto: {}", creditScoreRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<Lender> lender = lenderService.getLender(userId);
-        if (lender.isPresent()) {
-            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
-                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
-            }
-            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
-            if (check.equals(Boolean.FALSE)) {
-                log.error(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
-                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
-            }
-        } else {
-            log.error(AuthenticationErrorType.INVALID_TOKEN.getErrorMessage());
-            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
-        }
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
+        Optional<User> user = userService.getUser(userId);
+        ApiKeyAuth.verifyApiKey(user, apiKey);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
         CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallLog.getId());
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
                 .body(response).build();
 
     }
+    
 
 }

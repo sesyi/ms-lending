@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.dto.internal.request;
 
+import com.qisstpay.lendingservice.enums.UserType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,8 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LenderUserRequestDto {
+public class UserRequestDto {
     private Long   userId;
     private String apiKey;
     private String credentialFileUrl;
+    private UserType userType;
+    private String userName;
 }
