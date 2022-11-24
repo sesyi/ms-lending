@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 @Component
 @RequiredArgsConstructor
 public class ModelConverter {
@@ -22,7 +24,18 @@ public class ModelConverter {
 
 
     public Consumer convertToConsumer(TasdeeqConsumerPersonalInformationResponseDto consumerInfo) {
-        return modelMapper.map(consumerInfo, Consumer.class);
+        Consumer consumer = modelMapper.map(consumerInfo, Consumer.class);
+        consumer.setConsumerCreditScoreData(new ArrayList<>());
+        consumer.setSummaryOverdue24Ms(new ArrayList<>());
+        consumer.setDetailsOfStatusCreditApplications(new ArrayList<>());
+        consumer.setDetailsOfLoansSettlements(new ArrayList<>());
+        consumer.setPersonalGuarantees(new ArrayList<>());
+        consumer.setCoborrowerDetails(new ArrayList<>());
+        consumer.setDetailsOfBankruptcyCases(new ArrayList<>());
+        consumer.setCreditEnquiries(new ArrayList<>());
+        consumer.setLoanDetails(new ArrayList<>());
+        consumer.setCreditHistories(new ArrayList<>());
+        return consumer;
     }
 
     public TasdeeqAuthResponseDto convertTOTasdeeqAuthResponseDto(Object object) {
@@ -38,7 +51,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreDataResponseDto, ConsumerCreditScoreData.class);
     }
 
-    public TasdeeqReportDataRequestDto convertToTasdeeqReportDataRequestDto(CreditScoreRequestDto creditScoreRequestDto){
+    public TasdeeqReportDataRequestDto convertToTasdeeqReportDataRequestDto(CreditScoreRequestDto creditScoreRequestDto) {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 }

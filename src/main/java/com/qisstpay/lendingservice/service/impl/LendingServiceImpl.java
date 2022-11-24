@@ -15,7 +15,6 @@ import com.qisstpay.lendingservice.dto.internal.response.TransactionStateRespons
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
-import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqCreditScoreDataResponseDto;
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
@@ -24,8 +23,8 @@ import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
-import com.qisstpay.lendingservice.service.ConsumerService;
 import com.qisstpay.lendingservice.service.ConsumerCreditScoreService;
+import com.qisstpay.lendingservice.service.ConsumerService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.service.TasdeeqService;
 import lombok.extern.slf4j.Slf4j;
