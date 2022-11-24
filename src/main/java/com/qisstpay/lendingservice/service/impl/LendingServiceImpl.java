@@ -92,6 +92,9 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private LenderCallRepository lenderCallRepository;
 
+    @Autowired
+    HMBPaymentServiceImpl hmbPaymentService;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
@@ -109,6 +112,15 @@ public class LendingServiceImpl implements LendingService {
     }
 
     private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto){
+        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
+        }
+        LendingTransaction lendingTransaction = new LendingTransaction();
+        lendingTransaction.setAmount(transferRequestDto.getAmount());
+        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
+
+        hmbPaymentService.getToken();
+
         return null;
     }
 
