@@ -8,6 +8,8 @@ import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
+import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
@@ -20,6 +22,7 @@ import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
 import com.qisstpay.lendingservice.enums.QPResponseCode;
 import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.enums.TransferType;
 import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
@@ -27,6 +30,7 @@ import com.qisstpay.lendingservice.service.ConsumerCreditScoreService;
 import com.qisstpay.lendingservice.service.ConsumerService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.service.TasdeeqService;
+import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,11 +95,53 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private LenderCallRepository lenderCallRepository;
 
+    @Autowired
+    private ModelConverter modelConverter;
+
+    @Autowired
+    HMBPaymentServiceImpl hmbPaymentService;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto) throws JsonProcessingException {
 
+        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)){
+            return transferThroughEP(transferRequestDto);
+        }
+        else if(transferRequestDto.getType().equals(TransferType.HMB)){
+            return transferThroughHMB(transferRequestDto);
+
+        }
+
+        return null;
+    }
+
+    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto){
+        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
+        }
+        LendingTransaction lendingTransaction = new LendingTransaction();
+        lendingTransaction.setAmount(transferRequestDto.getAmount());
+        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
+
+        LendingTransaction lendingTransaction1 = lendingTransactionRepository.findFirstByOrderByIdDesc();
+
+        Long prevId = 1l;
+        if(lendingTransaction!=null){
+            lendingTransaction.getId();
+        }
+
+         String newId = "L"+String.valueOf(prevId+1);
+
+        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
+
+        SubmitTransactionResponseDto submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), newId, transferRequestDto.getAmount()));
+
+        return null;
+    }
+
+    private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto) throws JsonProcessingException {
         if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
         }
@@ -187,7 +233,6 @@ public class LendingServiceImpl implements LendingService {
                     .epResult(epTransferResponse)
                     .build();
         }
-
     }
 
     @Override
