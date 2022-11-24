@@ -9,6 +9,7 @@ import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
@@ -29,6 +30,7 @@ import com.qisstpay.lendingservice.service.ConsumerCreditScoreService;
 import com.qisstpay.lendingservice.service.ConsumerService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.service.TasdeeqService;
+import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +96,9 @@ public class LendingServiceImpl implements LendingService {
     private LenderCallRepository lenderCallRepository;
 
     @Autowired
+    private ModelConverter modelConverter;
+
+    @Autowired
     HMBPaymentServiceImpl hmbPaymentService;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -120,9 +125,18 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setAmount(transferRequestDto.getAmount());
         lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
 
+        LendingTransaction lendingTransaction1 = lendingTransactionRepository.findFirstByOrderByIdDesc();
+
+        Long prevId = 1l;
+        if(lendingTransaction!=null){
+            lendingTransaction.getId();
+        }
+
+         String newId = "L"+String.valueOf(prevId+1);
+
         GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
 
-        hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), );
+        SubmitTransactionResponseDto submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), newId, transferRequestDto.getAmount()));
 
         return null;
     }
