@@ -1,6 +1,6 @@
 package com.qisstpay.lendingservice.service.impl;
 
-import com.qisstpay.lendingservice.entity.Lender;
+import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
@@ -18,8 +18,8 @@ public class LendingCallServiceImpl implements LendingCallService {
     private LenderCallRepository lenderCallRepository;
 
     @Override
-    public LenderCallLog saveLenderCall(Lender lender, String request, ServiceType serviceType){
-        return  lenderCallRepository.save(LenderCallLog.builder().lender(lender).request(request).serviceType(serviceType).build());
+    public LenderCallLog saveLenderCall(User user, String request, ServiceType serviceType){
+        return  lenderCallRepository.save(LenderCallLog.builder().user(user).request(request).serviceType(serviceType).build());
     }
 
     @Override

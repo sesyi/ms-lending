@@ -3,6 +3,7 @@ package com.qisstpay.lendingservice.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.ServiceType;
+import com.qisstpay.lendingservice.enums.UserType;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -10,14 +11,14 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "lender_calls_logs")
+@Table(name = "mfb_calls_logs")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-public class LenderCallLog {
+public class MFBCallLog {
 
     @Id
     @Column(name = "id")
@@ -25,7 +26,7 @@ public class LenderCallLog {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.MERGE)
-    @JoinColumn(name="lender_id", referencedColumnName = "id")
+    @JoinColumn(name="mfb_id", referencedColumnName = "id")
     @JsonIgnore
     private User user;
 
@@ -37,6 +38,10 @@ public class LenderCallLog {
     @Enumerated(EnumType.STRING)
     private CallStatusType status;
 
+    @Column(name = "user_type")
+    @Enumerated(EnumType.STRING)
+    private UserType userType;
+
     @Column(name = "request")
     private String request;
 
@@ -46,8 +51,5 @@ public class LenderCallLog {
     @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp createdAt;
-
-    @OneToOne(cascade=CascadeType.ALL,mappedBy="lenderCall")
-    private TasdeeqCallLog tasdeeqCall;
 
 }
