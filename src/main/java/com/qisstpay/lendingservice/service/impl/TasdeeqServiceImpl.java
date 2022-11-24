@@ -151,7 +151,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         TasdeeqAuthResponseDto authentication;
         try {
             authentication = authentication(authId != null ? authId : 0);
-        } catch (Exception ex){
+        } catch (Exception ex) {
             lenderCallLog.setStatus(CallStatusType.FAILURE);
             lenderCallLog.setError(ex.toString());
             lendingCallService.saveLenderCall(lenderCallLog);
