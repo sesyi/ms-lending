@@ -8,6 +8,7 @@ import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
+import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
@@ -119,7 +120,9 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setAmount(transferRequestDto.getAmount());
         lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
 
-        hmbPaymentService.getToken();
+        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
+
+        hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), );
 
         return null;
     }
