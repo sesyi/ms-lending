@@ -1,4 +1,4 @@
-package com.qisstpay.lendingservice.dto.hmb.request;
+package com.qisstpay.lendingservice.dto.hmb.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubmitIFTTransactionRequestDto {
+public class SubmitTransactionResponseDto {
     private String channelID;
     private String productCode;
 }

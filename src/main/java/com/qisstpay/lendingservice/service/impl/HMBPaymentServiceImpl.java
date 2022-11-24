@@ -1,14 +1,12 @@
 package com.qisstpay.lendingservice.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qisstpay.lendingservice.dto.hmb.request.SubmitIFTTransactionRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitIBFTTransactionResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitIFTTransactionResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -55,46 +53,46 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     }
 
     @Override
-    public SubmitIFTTransactionResponseDto submitIFTTransaction(String authToken, SubmitIFTTransactionRequestDto submitIFTTransactionRequestDto) {
+    public SubmitTransactionResponseDto submitIFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("UserId", "EFAPI");
         headers.add("Password", "CRA");
         headers.add("Authorization", "Bearer "+authToken);
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<SubmitTransactionRequestDto>(submitTransactionRequestDto, headers);
 
-        SubmitIFTTransactionResponseDto submitIFTTransactionResponseDto = null;
+        SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
         try{
             String response = restTemplate.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
-            submitIFTTransactionResponseDto =  objectMapper.readValue(response, SubmitIFTTransactionResponseDto.class);
+            submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
         }catch (Exception e){
 
         }
 
-        return submitIFTTransactionResponseDto;
+        return submitTransactionResponseDto;
     }
 
     @Override
-    public SubmitIBFTTransactionResponseDto submitIBFTTransaction(String authToken, SubmitIBFTTransactionResponseDto submitIBFTTransactionResponseDto) {
+    public SubmitTransactionResponseDto submitIBFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("UserId", "EFAPI");
         headers.add("Password", "CRA");
         headers.add("Authorization", "Bearer "+authToken);
-        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+        HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<>(submitTransactionRequestDto, headers);
 
-        SubmitIBFTTransactionResponseDto submitIFTTransactionResponseDto = null;
+        SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
         try{
             String response = restTemplate.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
-            submitIBFTTransactionResponseDto =  objectMapper.readValue(response, SubmitIBFTTransactionResponseDto.class);
+            submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
         }catch (Exception e){
 
         }
 
-        return submitIBFTTransactionResponseDto;
+        return submitTransactionResponseDto;
     }
 }

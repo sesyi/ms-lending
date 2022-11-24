@@ -1,14 +1,13 @@
 package com.qisstpay.lendingservice.service;
 
-import com.qisstpay.lendingservice.dto.hmb.request.SubmitIFTTransactionRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitIBFTTransactionResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitIFTTransactionResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 
 public interface HMBPaymentService {
 
     GetTokenResponseDto getToken();
-    SubmitIFTTransactionResponseDto submitIFTTransaction(String token, SubmitIFTTransactionRequestDto submitIFTTransactionRequestDto);
-    SubmitIBFTTransactionResponseDto submitIBFTTransaction(String token, SubmitIBFTTransactionResponseDto submitIBFTTransactionResponseDto);
+    SubmitTransactionResponseDto submitIFTTransaction(String token, SubmitTransactionRequestDto submitTransactionRequestDto);
+    SubmitTransactionResponseDto submitIBFTTransaction(String token, SubmitTransactionRequestDto submitTransactionRequestDto);
 
 }
