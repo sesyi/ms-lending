@@ -20,6 +20,7 @@ import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
 import com.qisstpay.lendingservice.enums.QPResponseCode;
 import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.enums.TransferType;
 import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
@@ -96,6 +97,22 @@ public class LendingServiceImpl implements LendingService {
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto) throws JsonProcessingException {
 
+        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)){
+            return transferThroughEP(transferRequestDto);
+        }
+        else if(transferRequestDto.getType().equals(TransferType.HMB)){
+            return transferThroughHMB(transferRequestDto);
+
+        }
+
+        return null;
+    }
+
+    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto){
+        return null;
+    }
+
+    private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto) throws JsonProcessingException {
         if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
         }
@@ -187,7 +204,6 @@ public class LendingServiceImpl implements LendingService {
                     .epResult(epTransferResponse)
                     .build();
         }
-
     }
 
     @Override
