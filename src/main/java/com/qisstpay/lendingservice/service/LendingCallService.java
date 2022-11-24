@@ -1,13 +1,13 @@
 package com.qisstpay.lendingservice.service;
 
-import com.qisstpay.lendingservice.entity.Lender;
+import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface LendingCallService {
-    LenderCallLog saveLenderCall(Lender lender, String request, ServiceType serviceType);
+    LenderCallLog saveLenderCall(User user, String request, ServiceType serviceType);
 
     void saveLenderCall(LenderCallLog lenderCallLog);
 
