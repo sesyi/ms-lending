@@ -5,6 +5,7 @@ import com.qisstpay.commons.enums.SlackTagType;
 import com.qisstpay.commons.error.errortype.CommunicationErrorType;
 import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.commons.exception.ServiceException;
+import com.qisstpay.lendingservice.dto.communication.PhoneNumberResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPLoginRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
@@ -18,30 +19,25 @@ import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
+import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.EPCallLog;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
-import com.qisstpay.lendingservice.enums.CallStatusType;
-import com.qisstpay.lendingservice.enums.EndPointType;
-import com.qisstpay.lendingservice.enums.QPResponseCode;
-import com.qisstpay.lendingservice.enums.TransactionState;
-import com.qisstpay.lendingservice.enums.TransferType;
+import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.ConsumerRepository;
 import com.qisstpay.lendingservice.repository.EPCallLogRepository;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
 import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
-import com.qisstpay.lendingservice.service.ConsumerCreditScoreService;
-import com.qisstpay.lendingservice.service.ConsumerService;
-import com.qisstpay.lendingservice.service.LendingService;
-import com.qisstpay.lendingservice.service.TasdeeqService;
+import com.qisstpay.lendingservice.service.*;
 import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -52,8 +48,8 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@RefreshScope
 public class LendingServiceImpl implements LendingService {
-
 
     @Value("${ep.endpoints.login}")
     private String epLoginUrl;
@@ -117,6 +113,12 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private EPCallLogRepository epCallLogRepository;
 
+    @Autowired
+    private CommunicationService communicationService;
+
+    @Autowired
+    private LendingCallService lendingCallService;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
@@ -124,10 +126,9 @@ public class LendingServiceImpl implements LendingService {
 
         log.info("In LendingServiceImpl class...");
 
-        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)){
+        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
             return transferThroughEP(transferRequestDto, lenderCallLog);
-        }
-        else if(transferRequestDto.getType().equals(TransferType.HMB)){
+        } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
             return transferThroughHMB(transferRequestDto);
 
         }
@@ -135,7 +136,7 @@ public class LendingServiceImpl implements LendingService {
         return null;
     }
 
-    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto){
+    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto) {
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
         }
@@ -146,11 +147,11 @@ public class LendingServiceImpl implements LendingService {
         LendingTransaction lendingTransaction1 = lendingTransactionRepository.findFirstByOrderByIdDesc();
 
         Long prevId = 1l;
-        if(lendingTransaction!=null){
+        if (lendingTransaction != null) {
             lendingTransaction.getId();
         }
 
-         String newId = "L"+String.valueOf(prevId+1);
+        String newId = "L" + String.valueOf(prevId + 1);
 
         GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
 
@@ -194,7 +195,7 @@ public class LendingServiceImpl implements LendingService {
         epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload(msisdn + ":" + pin));
 
         // add ep call logs
-        EPCallLog savedEpLoginCallLog =  addEPCalLog(
+        EPCallLog savedEpLoginCallLog = addEPCalLog(
                 EndPointType.LOGIN,
                 epLoginRequestDto.toString(),
                 savedLendingTransaction);
@@ -240,7 +241,7 @@ public class LendingServiceImpl implements LendingService {
 
         /**
          *  ep inquiry call
-          */
+         */
         final String xHashValueVal = encryptionUtil.getEncryptedPayload(msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin);
         EPRequestDto epRequestDto = new EPRequestDto();
         epRequestDto.setAmount(transferRequestDto.getAmount());
@@ -248,7 +249,7 @@ public class LendingServiceImpl implements LendingService {
         epRequestDto.setReceiverMSISDN(transferRequestDto.getPhoneNumber());
 
         // add ep call logs
-        EPCallLog savedEpInquiryCallLog =  addEPCalLog(
+        EPCallLog savedEpInquiryCallLog = addEPCalLog(
                 EndPointType.INQUIRY,
                 epRequestDto.toString(),
                 savedLendingTransaction);
@@ -300,7 +301,7 @@ public class LendingServiceImpl implements LendingService {
          * ep transfer call
          */
         // add ep call logs
-        EPCallLog savedEpTransferCallLog =  addEPCalLog(
+        EPCallLog savedEpTransferCallLog = addEPCalLog(
                 EndPointType.TRANSFER,
                 epRequestDto.toString(),
                 savedLendingTransaction);
@@ -408,11 +409,40 @@ public class LendingServiceImpl implements LendingService {
     }
 
     @Override
-    public CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, Long lenderCallId) throws JsonProcessingException {
+    public CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
         log.info(CALLING_LENDING_SERVICE);
         log.info("checkCreditScore -> CreditScoreRequestDto: {}", creditScoreRequestDto);
+        if (StringUtils.isNotBlank(creditScoreRequestDto.getPhoneNumber())) {
+            if (creditScoreRequestDto.getPhoneNumber().charAt(0) == '0') {
+                creditScoreRequestDto.setPhoneNumber("92" + creditScoreRequestDto.getPhoneNumber().substring(1));
+            }
+            PhoneNumberResponseDto phoneNumberResponseDto = null;
+            try {
+                phoneNumberResponseDto = communicationService.phoneFormat(creditScoreRequestDto.getPhoneNumber());
+            } catch (Exception ex) {
+                log.error(ex.getMessage());
+                lenderCallLog.setStatus(CallStatusType.FAILURE);
+                lenderCallLog.setError(ex.toString());
+                throw new ServiceException(CommunicationErrorType.COUNTRY_NOT_SUPPORTED);
+            } finally {
+                lenderCallRepository.save(lenderCallLog);
+            }
+            creditScoreRequestDto.setPhoneNumber(phoneNumberResponseDto.getBody().getCountryCode() + phoneNumberResponseDto.getBody().getNationalNumber());
+        }
         TasdeeqReportDataRequestDto consumerReportRequestDto = createTasdeeqReportDataRequestDto(creditScoreRequestDto);
-        TasdeeqConsumerReportResponseDto tasdeeqConsumerReportResponseDto = tasdeeqService.getConsumerReport(consumerReportRequestDto, lenderCallId);
+        Long authId = tasdeeqService.getLastAuthTokenId();
+        TasdeeqAuthResponseDto authentication;
+        try {
+            authentication = tasdeeqService.authentication(authId != null ? authId : 0);
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+            lenderCallLog.setStatus(CallStatusType.FAILURE);
+            lenderCallLog.setError(ex.toString());
+            throw ex;
+        } finally {
+            lendingCallService.saveLenderCall(lenderCallLog);
+        }
+        TasdeeqConsumerReportResponseDto tasdeeqConsumerReportResponseDto = tasdeeqService.getConsumerReport(consumerReportRequestDto, lenderCallLog, authentication);
         if (tasdeeqConsumerReportResponseDto.getCreditScoreData() != null) {
             Consumer consumer = consumerService.getOrCreateConsumerDetails(tasdeeqConsumerReportResponseDto, creditScoreRequestDto.getPhoneNumber());
             consumer.getConsumerCreditScoreData().add(consumerCreditScoreService.create(tasdeeqConsumerReportResponseDto.getCreditScoreData(), consumer, consumer.getCnic()));

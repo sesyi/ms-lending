@@ -3,7 +3,8 @@ package com.qisstpay.lendingservice.config.cache;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 
-/**/@Data
+/**/
+@Data
 public class CacheProperties {
 
 

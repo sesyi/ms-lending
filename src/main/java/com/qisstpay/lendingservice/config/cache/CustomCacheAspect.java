@@ -3,7 +3,8 @@ package com.qisstpay.lendingservice.config.cache;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,9 +25,9 @@ import java.util.stream.Collectors;
 @Aspect
 @Component
 public class CustomCacheAspect {
+
     @Autowired
     public BeanFactory beanFactory;
-//    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private HashMap<String, Long> entryTime = new HashMap<>();
 
@@ -44,18 +45,18 @@ public class CustomCacheAspect {
     CacheManager cacheManager;
 
     @Around("@annotation(customCache)")
-    public Object customcache(ProceedingJoinPoint proceedingJoinPoint, CustomCache customCache) throws Throwable{
+    public Object customcache(ProceedingJoinPoint proceedingJoinPoint, CustomCache customCache) throws Throwable {
         StandardEvaluationContext context = new StandardEvaluationContext();
         context.setBeanResolver(new BeanFactoryResolver(this.beanFactory));
 
         CacheManager cacheManagerToUse = cacheManager;
-        if(!customCache.cacheManager().equals("")){
+        if (!customCache.cacheManager().equals("")) {
             Expression cacheManagerExpression = expressionParser.parseExpression(customCache.cacheManager());
             cacheManager = (CacheManager) cacheManagerExpression.getValue(context);
         }
 
         String prefix = customCache.prefix();
-        prefix = customCache.prefix().equals("")? proceedingJoinPoint.getSignature().getName() : prefix;
+        prefix = customCache.prefix().equals("") ? proceedingJoinPoint.getSignature().getName() : prefix;
 
         StringBuilder stringBuilder = new StringBuilder(prefix);
 
@@ -65,11 +66,12 @@ public class CustomCacheAspect {
         }
         String key = stringBuilder.toString();
 
-        CacheEntry cacheEntry = objectMapper.convertValue(cacheManager.getCache(prefix).get(key)!=null ? cacheManager.getCache(prefix).get(key).get() : null, new TypeReference<CacheEntry>() { });
+        CacheEntry cacheEntry = objectMapper.convertValue(cacheManager.getCache(prefix).get(key) != null ? cacheManager.getCache(prefix).get(key).get() : null, new TypeReference<CacheEntry>() {
+        });
 
-        if(cacheEntry!=null && !cacheEntry.getExpiresAt().isBefore(LocalDateTime.now())){
+        if (cacheEntry != null && !cacheEntry.getExpiresAt().isBefore(LocalDateTime.now())) {
 
-            if(cacheEntry.getObject() instanceof List<?>){
+            if (cacheEntry.getObject() instanceof List<?>) {
                 return ((ArrayList<?>) cacheEntry.getObject()).stream().map(item -> (objectMapper).convertValue(item, cacheEntry.getListObjectClass())).collect(Collectors.toList());
             }
         }
@@ -82,18 +84,18 @@ public class CustomCacheAspect {
             timeoutExpression = expressionParser.parseExpression((String) timeoutExpression.getValue(context));
             timeout = Long.valueOf(((Integer) timeoutExpression.getValue(context)).longValue());
 
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
         Class c = null;
 
         try {
-            if(object instanceof List<?>){
-                if(((List) object).size()>0)
+            if (object instanceof List<?>) {
+                if (((List) object).size() > 0)
                     c = ((List) object).get(0).getClass();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 

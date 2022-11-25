@@ -20,7 +20,6 @@ import com.qisstpay.lendingservice.repository.TasdeeqCallRepository;
 import com.qisstpay.lendingservice.service.LendingCallService;
 import com.qisstpay.lendingservice.service.TasdeeqService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +34,6 @@ import java.util.Objects;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 @RefreshScope
 public class TasdeeqServiceImpl implements TasdeeqService {
 
@@ -112,50 +110,39 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         ResponseEntity<TasdeeqResponseDto> response;
         try {
             response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
+            if (response.getBody().getMessageCode().equals("00170017")) {
+                tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
+                tasdeeqCallLog.setMessage(response.getBody().getMessage());
+                tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+                tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+                return modelConverter.convertTOTasdeeqAuthResponseDto(response.getBody().getData());
+            }
+            tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
+            tasdeeqCallLog.setMessage(response.getBody().getMessage());
+            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG);
         } catch (Exception ex) {
             log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
             tasdeeqCallLog.setMessage(ex.getMessage());
             tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
-            tasdeeqCallRepository.save(tasdeeqCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
-        }
-        if (response.getBody().getMessageCode().equals("00170017")) {
-            tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
-            tasdeeqCallLog.setMessage(response.getBody().getMessage());
-            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
-            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+        } finally {
             tasdeeqCallRepository.save(tasdeeqCallLog);
-            return modelConverter.convertTOTasdeeqAuthResponseDto(response.getBody().getData());
         }
-        tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
-        tasdeeqCallLog.setMessage(response.getBody().getMessage());
-        tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
-        tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
-        tasdeeqCallRepository.save(tasdeeqCallLog);
-        throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG);
     }
 
     @Override
-    public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, Long lenderCallId) throws JsonProcessingException {
+    public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, LenderCallLog lenderCallLog, TasdeeqAuthResponseDto authentication) throws JsonProcessingException {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("getConsumerReport tasdeeqConsumerReportRequestDto: {}", tasdeeqReportDataRequestDto);
-        LenderCallLog lenderCallLog = lendingCallService.getLendingCall(lenderCallId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
         if (!environment.equals("prod")) {
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             lendingCallService.saveLenderCall(lenderCallLog);
             return TasdeeqConsumerReportResponseDto.builder().build();
-        }
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        Long authId = getLastAuthTokenId();
-        TasdeeqAuthResponseDto authentication;
-        try {
-            authentication = authentication(authId != null ? authId : 0);
-        } catch (Exception ex) {
-            lenderCallLog.setStatus(CallStatusType.FAILURE);
-            lenderCallLog.setError(ex.toString());
-            lendingCallService.saveLenderCall(lenderCallLog);
-            throw ex;
         }
         headers.setBearerAuth(authentication.getAuth_token());
         TasdeeqConsumerReportRequestDto requestBody = TasdeeqConsumerReportRequestDto.builder().reportDataObj(tasdeeqReportDataRequestDto).build();
@@ -171,62 +158,65 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         ResponseEntity<TasdeeqResponseDto> response;
         try {
             response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
-        } catch (Exception ex) {
-            log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
-            tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
-            tasdeeqCallRepository.save(tasdeeqCallLog);
-            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
-        }
-        if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("111")) {
-            lenderCallLog.setStatus(CallStatusType.SUCCESS);
-            lenderCallLog.setTasdeeqCall(tasdeeqCallLog);
-            tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
-            tasdeeqCallLog.setMessage(response.getBody().getMessage());
-            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
-            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
-            tasdeeqCallLog.setLenderCall(lenderCallLog);
-            tasdeeqCallRepository.save(tasdeeqCallLog);
-            return modelConverter.convertTOTasdeeqConsumerReportResponseDto(response.getBody().getData());
-        } else if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("112") || Objects.requireNonNull(response.getBody()).getMessageCode().equals("113")) {
-            tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
-            tasdeeqCallLog.setMessage(response.getBody().getMessage());
-            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
-            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
-            tasdeeqCallRepository.save(tasdeeqCallLog);
-            TasdeeqAuthResponseDto authResponseDto = authentication(0L);
-            headers.setBearerAuth(authResponseDto.getAuth_token());
-            try {
-                response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
-            } catch (Exception ex) {
-                log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
-                tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
-                tasdeeqCallLog.setMessage(ex.getMessage());
-                tasdeeqCallRepository.save(tasdeeqCallLog);
-                throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
-            }
             if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("111")) {
                 lenderCallLog.setStatus(CallStatusType.SUCCESS);
+                lenderCallLog.setTasdeeqCall(tasdeeqCallLog);
                 tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
                 tasdeeqCallLog.setMessage(response.getBody().getMessage());
                 tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
                 tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
                 tasdeeqCallLog.setLenderCall(lenderCallLog);
-                tasdeeqCallRepository.save(tasdeeqCallLog);
                 return modelConverter.convertTOTasdeeqConsumerReportResponseDto(response.getBody().getData());
-
+            } else if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("112") || Objects.requireNonNull(response.getBody()).getMessageCode().equals("113")) {
+                tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
+                tasdeeqCallLog.setMessage(response.getBody().getMessage());
+                tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+                tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+                TasdeeqAuthResponseDto authResponseDto = authentication(0L);
+                headers.setBearerAuth(authResponseDto.getAuth_token());
+                try {
+                    response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
+                } catch (Exception ex) {
+                    log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
+                    tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
+                    lenderCallLog.setStatus(CallStatusType.FAILURE);
+                    tasdeeqCallLog.setLenderCall(lenderCallLog);
+                    tasdeeqCallLog.setMessage(ex.getMessage());
+                    throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
+                } finally {
+                    tasdeeqCallRepository.save(tasdeeqCallLog);
+                }
+                if (Objects.requireNonNull(response.getBody()).getStatusCode().equals("111")) {
+                    lenderCallLog.setStatus(CallStatusType.SUCCESS);
+                    tasdeeqCallLog.setStatus(CallStatusType.SUCCESS);
+                    tasdeeqCallLog.setMessage(response.getBody().getMessage());
+                    tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+                    tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+                    tasdeeqCallLog.setLenderCall(lenderCallLog);
+                    return modelConverter.convertTOTasdeeqConsumerReportResponseDto(response.getBody().getData());
+                }
             }
+            lenderCallLog.setStatus(CallStatusType.EXCEPTION);
+            tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
+            tasdeeqCallLog.setMessage(response.getBody().getMessage());
+            tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
+            tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+            tasdeeqCallLog.setLenderCall(lenderCallLog);
+            throw new CustomException(response.getBody().getMessageCode(), response.getBody().getMessage());
+        } catch (Exception ex) {
+            log.error("{} Request : {}", ex.getMessage(), tasdeeqCallLog.getRequest());
+            tasdeeqCallLog.setStatus(CallStatusType.FAILURE);
+            tasdeeqCallLog.setMessage(ex.getMessage());
+            lenderCallLog.setStatus(CallStatusType.FAILURE);
+            tasdeeqCallLog.setLenderCall(lenderCallLog);
+            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), requestUrl, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
+        } finally {
+            tasdeeqCallRepository.save(tasdeeqCallLog);
         }
-        lenderCallLog.setStatus(CallStatusType.EXCEPTION);
-        tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
-        tasdeeqCallLog.setMessage(response.getBody().getMessage());
-        tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
-        tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
-        tasdeeqCallLog.setLenderCall(lenderCallLog);
-        tasdeeqCallRepository.save(tasdeeqCallLog);
-        throw new CustomException(response.getBody().getMessageCode(), response.getBody().getMessage());
     }
 
     @Override
+    @CustomCache(expiration = "@cacheProperties.getAuthToken()", cacheManager = "@redisCacheManager")
     public Long getLastAuthTokenId() {
         return tasdeeqCallRepository.findLastTokenId();
     }
