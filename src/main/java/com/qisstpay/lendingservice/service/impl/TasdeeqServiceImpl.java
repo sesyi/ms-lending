@@ -138,7 +138,6 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         log.info("getConsumerReport tasdeeqConsumerReportRequestDto: {}", tasdeeqReportDataRequestDto);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         if (!environment.equals("prod")) {
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             lendingCallService.saveLenderCall(lenderCallLog);
