@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.dto.hmb.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubmitTransactionResponseDto {
-    private String channelID;
-    private String productCode;
+    @JsonProperty("ResponseCode")
+    private String ResponseCode;
+    @JsonProperty("ResponseDescription")
+    private String ResponseDescription;
 }

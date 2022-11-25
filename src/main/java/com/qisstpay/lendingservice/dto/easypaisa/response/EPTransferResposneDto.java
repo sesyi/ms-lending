@@ -70,4 +70,15 @@ public class EPTransferResposneDto {
         this.transactionStatus = transactionStatus;
     }
 
+    @Override
+    public String toString() {
+        return "EPTransferResposneDto{" +
+                "balance='" + balance + '\'' +
+                ", fee='" + fee + '\'' +
+                ", responseCode='" + responseCode + '\'' +
+                ", responseMessage='" + responseMessage + '\'' +
+                ", transactionReference='" + transactionReference + '\'' +
+                ", transactionStatus='" + transactionStatus + '\'' +
+                '}';
+    }
 }

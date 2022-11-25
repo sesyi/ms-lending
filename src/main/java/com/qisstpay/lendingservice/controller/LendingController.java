@@ -23,7 +23,13 @@ import com.qisstpay.lendingservice.utils.TokenParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.Optional;
@@ -64,11 +70,17 @@ public class LendingController {
             @RequestBody TransferRequestDto transferRequestDto,
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) throws JsonProcessingException {
+        log.info(CALLING_LENDING_CONTROLLER);
+        log.info("In method" + TRANSFER + " with request {}", transferRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<User> user = userService.getUser(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
+
+        log.info("adding call log for lender {}", user.get().getId());
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), ServiceType.EP);
+
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
-                .body(lendingService.transfer(transferRequestDto)).build();
+                .body(lendingService.transfer(transferRequestDto, lenderCallLog)).build();
     }
 
     @GetMapping(STATUS)
@@ -80,8 +92,12 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<User> user = userService.getUser(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
+
+        log.info("adding call log for lender {}", user.get().getId());
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionId, ServiceType.TRXN_STATE_CHECK);
+
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
-                .body(lendingService.checkStatus(transactionId)).build();
+                .body(lendingService.checkStatus(transactionId, lenderCallLog)).build();
     }
 
     @PostMapping(CREDIT_SCORE)
@@ -102,6 +118,6 @@ public class LendingController {
                 .body(response).build();
 
     }
-    
+
 
 }

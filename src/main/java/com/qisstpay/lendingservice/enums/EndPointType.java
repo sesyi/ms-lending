@@ -2,5 +2,8 @@ package com.qisstpay.lendingservice.enums;
 
 public enum EndPointType {
     AUTH,
-    CONSUMER_REPORT
+    CONSUMER_REPORT,
+    LOGIN,
+    INQUIRY,
+    TRANSFER
 }

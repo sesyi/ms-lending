@@ -20,4 +20,5 @@ public class TransactionStateResponse {
     private double amount;
     private String transactionId;
     private String state;
+    private String description;
 }
