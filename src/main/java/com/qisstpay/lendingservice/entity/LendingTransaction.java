@@ -21,28 +21,36 @@ public class LendingTransaction {
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(name = "user_name")
     private String userName;
+
     @Column(name = "identity_number")
     private String identityNumber;
+
     @Column(name = "amount")
     private double amount;
+
     @Column(name = "ep_transaction_id")
     private String epTransactionId;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private Timestamp createdAt;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Timestamp updatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "consumer_id")
     private Consumer consumer;
+
     @Column(name = "transaction_state")
     @Enumerated(EnumType.STRING)
     private TransactionState transactionState;
-    @Column(name = "ep_inquiry_response")
-    private String epInquiryResponse;
-    @Column(name = "ep_transfer_response")
-    private String epTransferResponse;
+
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="lender_call_id")
+    private LenderCallLog lenderCall;
 }

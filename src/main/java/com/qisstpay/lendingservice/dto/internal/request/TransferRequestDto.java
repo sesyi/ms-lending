@@ -13,12 +13,19 @@ import lombok.Setter;
 public class TransferRequestDto {
 
     private String userName;
-    private double amount;
     private TransferType type;
-
     private String identityNumber;
     private String phoneNumber;
-
     private String accountNo;
+    private double amount;
 
+    @Override
+    public String toString() {
+        return "TransferRequestDto{" +
+                "userName='" + userName + '\'' +
+                ", identityNumber='" + identityNumber + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", amount=" + amount +
+                '}';
+    }
 }
