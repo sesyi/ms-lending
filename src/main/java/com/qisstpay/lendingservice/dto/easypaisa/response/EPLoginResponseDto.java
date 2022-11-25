@@ -1,10 +1,9 @@
 
 package com.qisstpay.lendingservice.dto.easypaisa.response;
 
-import javax.annotation.Generated;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
+
+import javax.annotation.Generated;
 
 @Generated("net.hexar.json2pojo")
 @SuppressWarnings("unused")
@@ -51,4 +50,13 @@ public class EPLoginResponseDto {
         this.user = user;
     }
 
+    @Override
+    public String toString() {
+        return "EPLoginResponseDto{" +
+                "responseCode='" + responseCode + '\'' +
+                ", responseMessage='" + responseMessage + '\'' +
+                ", timestamp='" + timestamp + '\'' +
+                ", user='" + user + '\'' +
+                '}';
+    }
 }

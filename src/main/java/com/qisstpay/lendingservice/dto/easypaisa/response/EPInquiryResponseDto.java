@@ -24,4 +24,17 @@ public class EPInquiryResponseDto {
     String fee;
     @JsonProperty("Name")
     String name;
+
+    @Override
+    public String toString() {
+        return "EPInquiryResponseDto{" +
+                "responseCode='" + responseCode + '\'' +
+                ", responseMessage='" + responseMessage + '\'' +
+                ", transactionReference='" + transactionReference + '\'' +
+                ", transactionStatus='" + transactionStatus + '\'' +
+                ", tax='" + tax + '\'' +
+                ", fee='" + fee + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

@@ -1,14 +1,14 @@
 
 package com.qisstpay.lendingservice.dto.easypaisa.request;
 
-import javax.annotation.Generated;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
+import org.springframework.http.HttpEntity;
+
+import javax.annotation.Generated;
 
 @Generated("net.hexar.json2pojo")
 @SuppressWarnings("unused")
-public class EPLoginRequestDto {
+public class EPLoginRequestDto extends HttpEntity {
 
     @JsonProperty("LoginPayload")
     private String loginPayload;
@@ -21,4 +21,10 @@ public class EPLoginRequestDto {
         this.loginPayload = loginPayload;
     }
 
+    @Override
+    public String toString() {
+        return "EPLoginRequestDto{" +
+                "loginPayload='" + loginPayload + '\'' +
+                '}';
+    }
 }

@@ -15,4 +15,14 @@ public class TransferRequestDto {
     private String identityNumber;
     private String phoneNumber;
     private double amount;
+
+    @Override
+    public String toString() {
+        return "TransferRequestDto{" +
+                "userName='" + userName + '\'' +
+                ", identityNumber='" + identityNumber + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", amount=" + amount +
+                '}';
+    }
 }
