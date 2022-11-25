@@ -73,23 +73,12 @@ public class LendingController {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("In method" + TRANSFER + " with request {}", transferRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<Lender> lender = lenderService.getLender(userId);
-        if (lender.isPresent()) {
-            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
-                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
-            }
-            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
-            if (check.equals(Boolean.FALSE)) {
-                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
-            }
-        } else {
-            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
-        }
-        log.info("adding call log for lender {}", lender.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), transferRequestDto.toString(), ServiceType.EP);
-
         Optional<User> user = userService.getUser(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
+
+        log.info("adding call log for lender {}", user.get().getId());
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), ServiceType.EP);
+
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
                 .body(lendingService.transfer(transferRequestDto, lenderCallLog)).build();
     }
@@ -103,21 +92,9 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<User> user = userService.getUser(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
-        Optional<Lender> lender = lenderService.getLender(userId);
-        if (lender.isPresent()) {
-            if (lender.get().getStatus().equals(StatusType.BLOCKED)) {
-                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
-            }
-            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, lender.get().getApiKey());
-            if (check.equals(Boolean.FALSE)) {
-                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
-            }
-        } else {
-            throw new ServiceException(AuthenticationErrorType.INVALID_TOKEN);
-        }
 
-        log.info("adding call log for lender {}", lender.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), transactionId, ServiceType.TRXN_STATE_CHECK);
+        log.info("adding call log for lender {}", user.get().getId());
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionId, ServiceType.TRXN_STATE_CHECK);
 
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
                 .body(lendingService.checkStatus(transactionId, lenderCallLog)).build();

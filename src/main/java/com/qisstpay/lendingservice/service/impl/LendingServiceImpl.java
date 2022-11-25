@@ -125,7 +125,7 @@ public class LendingServiceImpl implements LendingService {
         log.info("In LendingServiceImpl class...");
 
         if (transferRequestDto.getType().equals(TransferType.EASYPAISA)){
-            return transferThroughEP(transferRequestDto);
+            return transferThroughEP(transferRequestDto, lenderCallLog);
         }
         else if(transferRequestDto.getType().equals(TransferType.HMB)){
             return transferThroughHMB(transferRequestDto);
@@ -159,7 +159,7 @@ public class LendingServiceImpl implements LendingService {
         return null;
     }
 
-    private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto) throws JsonProcessingException {
+    private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
         if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
         }
