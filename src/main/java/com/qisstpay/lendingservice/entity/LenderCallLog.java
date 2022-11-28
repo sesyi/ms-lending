@@ -5,6 +5,7 @@ import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -44,8 +45,12 @@ public class LenderCallLog {
     private String error;
 
     @CreationTimestamp
-    @Column(name = "created_at")
-    private Timestamp createdAt;
+    @Column(name = "requested_at")
+    private Timestamp requestedAt;
+
+    @UpdateTimestamp
+    @Column(name = "response_at")
+    private Timestamp responseAt;
 
     @OneToOne(cascade=CascadeType.ALL,mappedBy="lenderCall")
     private TasdeeqCallLog tasdeeqCall;

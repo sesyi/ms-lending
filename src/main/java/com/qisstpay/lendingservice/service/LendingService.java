@@ -15,6 +15,6 @@ public interface LendingService {
 
     TransactionStateResponse checkStatus(String transactionId, LenderCallLog lenderCallLog);
 
-    CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, Long lenderCallId) throws JsonProcessingException;
+    CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, LenderCallLog lenderCallLogx) throws JsonProcessingException;
 }
 

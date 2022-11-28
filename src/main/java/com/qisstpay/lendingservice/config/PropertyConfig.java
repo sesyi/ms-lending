@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Data
 @Component
 @RefreshScope
-public class ConfigProperties {
+public class PropertyConfig {
 
 
     @Value("${cache.redis.hostname}")
