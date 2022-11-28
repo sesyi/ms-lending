@@ -9,6 +9,6 @@ public class CacheProperties {
 
 
     @Value("${cache.timeout.tasdeeq.auth-token}")
-    private String getAuthToken;
+    private String authToken;
 
 }

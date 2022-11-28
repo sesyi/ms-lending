@@ -3,6 +3,7 @@ package com.qisstpay.lendingservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+import com.qisstpay.lendingservice.config.cache.CacheProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -37,6 +38,11 @@ public class RedisConfig {
     @Bean
     public SpelExpressionParser spelExpressionParser() {
         return new SpelExpressionParser();
+    }
+
+    @Bean(value = "cacheProperties")
+    CacheProperties getCacheProperties() {
+        return new CacheProperties();
     }
 
     @RefreshScope

@@ -3,8 +3,10 @@ package com.qisstpay.lendingservice.config.cache;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,6 +19,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,13 +71,17 @@ public class CustomCacheAspect {
 
         CacheEntry cacheEntry = objectMapper.convertValue(cacheManager.getCache(prefix).get(key) != null ? cacheManager.getCache(prefix).get(key).get() : null, new TypeReference<CacheEntry>() {
         });
-
         if (cacheEntry != null && !cacheEntry.getExpiresAt().isBefore(LocalDateTime.now())) {
 
             if (cacheEntry.getObject() instanceof List<?>) {
                 return ((ArrayList<?>) cacheEntry.getObject()).stream().map(item -> (objectMapper).convertValue(item, cacheEntry.getListObjectClass())).collect(Collectors.toList());
+            } else {
+                Signature signature =  proceedingJoinPoint.getSignature();
+                Class returnType = ((MethodSignature) signature).getReturnType();
+               return  objectMapper.convertValue(cacheEntry.getObject(),returnType);
             }
         }
+
 
         Object object = proceedingJoinPoint.proceed(proceedingJoinPoint.getArgs());
 
@@ -99,7 +106,7 @@ public class CustomCacheAspect {
 
         }
 
-        cacheManager.getCache(prefix).put(key, CacheEntry.builder().object(object).listObjectClass(c).expiresAt(LocalDateTime.now().plusDays(timeout)).build());
+        cacheManager.getCache(prefix).put(key, CacheEntry.builder().object(object).listObjectClass(c).expiresAt(LocalDateTime.now().plus(timeout, ChronoUnit.MILLIS)).build());
 
         return object;
     }

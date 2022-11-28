@@ -5,6 +5,7 @@ import com.qisstpay.commons.enums.SlackTagType;
 import com.qisstpay.commons.error.errortype.CommunicationErrorType;
 import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.commons.exception.ServiceException;
+import com.qisstpay.lendingservice.config.cache.CacheHelper;
 import com.qisstpay.lendingservice.config.cache.CustomCache;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqAuthRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqConsumerReportRequestDto;
@@ -28,8 +29,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -45,6 +44,9 @@ public class TasdeeqServiceImpl implements TasdeeqService {
 
     @Autowired
     ModelConverter modelConverter;
+
+    @Autowired
+    CacheHelper cacheHelper;
 
     @Autowired
     private LendingCallService lendingCallService;
@@ -79,8 +81,9 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("Authentication");
         if (!environment.equals("prod")) {
-            return TasdeeqAuthResponseDto.builder().auth_token("kSuRgfFYV8482nOdAc2QYAQsCKodUY").build();
+            return TasdeeqAuthResponseDto.builder().auth_token("testToken").build();
         }
+        cacheHelper.removeAuthTokenAndIdFromCache(requestId);
         TasdeeqAuthRequestDto tasdeeqAuthRequestDto =
                 TasdeeqAuthRequestDto.builder()
                         .password(password)
@@ -89,24 +92,13 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<TasdeeqAuthRequestDto> requestEntity = new HttpEntity<>(tasdeeqAuthRequestDto, headers);
         String requestUrl = String.format(REQUEST_URL, baseUrl, authUrl);
-        TasdeeqCallLog tasdeeqCallLog;
-        if (requestId.equals(0L)) {
-            tasdeeqCallLog =
-                    tasdeeqCallRepository.save(
-                            TasdeeqCallLog.builder()
-                                    .id(requestId)
-                                    .request(Objects.requireNonNull(requestEntity.getBody()).toString())
-                                    .endPoint(EndPointType.AUTH)
-                                    .requestedAt(Timestamp.valueOf(LocalDateTime.now()))
-                                    .build());
-        } else {
-            tasdeeqCallLog =
-                    tasdeeqCallRepository.save(
-                            TasdeeqCallLog.builder()
-                                    .request(Objects.requireNonNull(requestEntity.getBody()).toString())
-                                    .endPoint(EndPointType.AUTH)
-                                    .build());
-        }
+        TasdeeqCallLog tasdeeqCallLog =
+                tasdeeqCallRepository.save(
+                        TasdeeqCallLog.builder()
+                                .request(Objects.requireNonNull(requestEntity.getBody()).toString())
+                                .endPoint(EndPointType.AUTH)
+                                .build());
+
         ResponseEntity<TasdeeqResponseDto> response;
         try {
             response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
@@ -133,7 +125,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
     }
 
     @Override
-    public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, LenderCallLog lenderCallLog, TasdeeqAuthResponseDto authentication) throws JsonProcessingException {
+    public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, LenderCallLog lenderCallLog, TasdeeqAuthResponseDto authentication, Long authTokenId) throws JsonProcessingException {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("getConsumerReport tasdeeqConsumerReportRequestDto: {}", tasdeeqReportDataRequestDto);
         HttpHeaders headers = new HttpHeaders();
@@ -171,7 +163,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
                 tasdeeqCallLog.setMessage(response.getBody().getMessage());
                 tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
                 tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
-                TasdeeqAuthResponseDto authResponseDto = authentication(0L);
+                TasdeeqAuthResponseDto authResponseDto = authentication(authTokenId);
                 headers.setBearerAuth(authResponseDto.getAuth_token());
                 try {
                     response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
