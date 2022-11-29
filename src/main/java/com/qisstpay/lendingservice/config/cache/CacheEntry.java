@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CacheEntry<T> {
-    private Object object;
-    private Class listObjectClass;
+    private Object        object;
+    private Class         listObjectClass;
     private LocalDateTime expiresAt;
 }
