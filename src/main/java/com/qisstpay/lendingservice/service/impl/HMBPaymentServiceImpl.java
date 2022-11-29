@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 @Slf4j
@@ -88,9 +89,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         try{
             String response = restTemplate.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+            log.info("HMB IBFT Response: "+response);
             submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
         }catch (Exception e){
-
+            throw e;
         }
 
         return submitTransactionResponseDto;

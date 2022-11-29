@@ -7,7 +7,7 @@ public enum QPResponseCode {
     AML_CONTROL("102", "AML control"),
     EP_LOGIN_FAILED("103","EP login failed"),
     EP_INQUIRY_FAILED("104","EP inquiry failed"),
-    EP_TRANSFER_FAILED("105","EP transfer failed"),
+    TRANSFER_FAILED("105","Transfer failed"),
     TRXN_FETCH_FAILED("106","Trxn fetch failed");
 
     private final String code;
