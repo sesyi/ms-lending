@@ -177,15 +177,16 @@ public class LendingServiceImpl implements LendingService {
                     .build();
         }
 
-        lendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
-
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
+        lendingTransaction.setLenderCall(lenderCallLog);
+
+//        lendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
 
         return TransferResponseDto
                 .builder()
                 .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
                 .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-                .transactionId(lendingTransaction.getId().toString())
+//                .transactionId(lendingTransaction.getId().toString())
                 .build();
     }
 
