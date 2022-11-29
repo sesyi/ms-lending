@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
@@ -76,7 +77,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     }
 
     @Override
-    public SubmitTransactionResponseDto submitIBFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) {
+    public SubmitTransactionResponseDto submitIBFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
