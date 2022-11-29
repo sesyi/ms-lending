@@ -79,7 +79,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
     @CustomCache(expiration = "@cacheProperties.getAuthToken()", cacheManager = "@redisCacheManager")
     public TasdeeqAuthResponseDto authentication(Long requestId) {
         log.info(CALLING_TASDEEQ_SERVICE);
-        log.info("Authentication");
+        log.info("authentication requestId: {}", requestId);
         if (!environment.equals("prod")) {
             return TasdeeqAuthResponseDto.builder().auth_token("testToken").build();
         }
@@ -209,6 +209,8 @@ public class TasdeeqServiceImpl implements TasdeeqService {
     @Override
     @CustomCache(expiration = "@cacheProperties.getAuthToken()", cacheManager = "@redisCacheManager")
     public Long getLastAuthTokenId() {
+        log.info(CALLING_TASDEEQ_SERVICE);
+        log.info("getLastAuthTokenId");
         return tasdeeqCallRepository.findLastTokenId();
     }
 }
