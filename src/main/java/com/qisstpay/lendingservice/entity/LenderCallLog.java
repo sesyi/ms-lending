@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "lender_calls_logs")
@@ -25,8 +26,8 @@ public class LenderCallLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.MERGE)
-    @JoinColumn(name="lender_id", referencedColumnName = "id")
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "lender_id", referencedColumnName = "id")
     @JsonIgnore
     private User user;
 
@@ -52,7 +53,6 @@ public class LenderCallLog {
     @Column(name = "response_at")
     private Timestamp responseAt;
 
-    @OneToOne(cascade=CascadeType.ALL,mappedBy="lenderCall")
-    private TasdeeqCallLog tasdeeqCall;
-
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "lenderCall")
+    private List<TasdeeqCallLog> tasdeeqCallLogs;
 }
