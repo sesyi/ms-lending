@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.EndPointType;
 import lombok.*;
@@ -35,13 +36,13 @@ public class TasdeeqCallLog {
     @Enumerated(EnumType.STRING)
     private EndPointType endPoint;
 
-    @Column(name ="statusCode")
+    @Column(name = "statusCode")
     private String statusCode;
 
-    @Column(name ="messageCode")
+    @Column(name = "messageCode")
     private String messageCode;
 
-    @Column(name ="message")
+    @Column(name = "message")
     private String message;
 
     @CreationTimestamp
@@ -52,8 +53,9 @@ public class TasdeeqCallLog {
     @Column(name = "response_at")
     private Timestamp responseAt;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name="lender_call_id")
-    private LenderCallLog lenderCall;
 
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "lender_call_id", referencedColumnName = "id")
+    @JsonIgnore
+    private LenderCallLog lenderCall;
 }

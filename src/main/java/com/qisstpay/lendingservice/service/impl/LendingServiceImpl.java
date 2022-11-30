@@ -5,6 +5,7 @@ import com.qisstpay.commons.enums.SlackTagType;
 import com.qisstpay.commons.error.errortype.CommunicationErrorType;
 import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.commons.exception.ServiceException;
+import com.qisstpay.lendingservice.config.cache.CacheHelper;
 import com.qisstpay.lendingservice.dto.communication.PhoneNumberResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPLoginRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
@@ -84,6 +85,9 @@ public class LendingServiceImpl implements LendingService {
     private final String CALLING_LENDING_SERVICE = "Calling lending Service";
 
     @Autowired
+    CacheHelper cacheHelper;
+
+    @Autowired
     private LendingTransactionRepository lendingTransactionRepository;
 
     @Autowired
@@ -138,8 +142,7 @@ public class LendingServiceImpl implements LendingService {
             newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
             savedConsumer = consumerRepository.saveAndFlush(newConsumer);
             consumer = savedConsumer;
-        }else
-        {
+        } else {
             consumer = existingConsumer.get();
         }
 
@@ -162,13 +165,13 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
         lendingTransaction.setConsumer(consumer);
 
-        String newId = lenderCallLog.getUser().getId()+ "-" + consumer.getId() + "-" + lenderCallLog.getId();
+        String newId = lenderCallLog.getUser().getId() + "-" + consumer.getId() + "-" + lenderCallLog.getId();
 
         GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
 
-        try{
+        try {
             SubmitTransactionResponseDto submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), newId, transferRequestDto.getAmount()));
-        }catch (Exception e){
+        } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             return TransferResponseDto
                     .builder()
@@ -442,6 +445,12 @@ public class LendingServiceImpl implements LendingService {
                 lenderCallRepository.save(lenderCallLog);
             }
             creditScoreRequestDto.setPhoneNumber(phoneNumberResponseDto.getBody().getCountryCode() + phoneNumberResponseDto.getBody().getNationalNumber());
+        }
+
+        if (!environment.equals("prod")) {
+            cacheHelper.removeAuthTokenAndIdFromCache(79L);
+
+            return null;
         }
         TasdeeqReportDataRequestDto consumerReportRequestDto = createTasdeeqReportDataRequestDto(creditScoreRequestDto);
         Long authId = tasdeeqService.getLastAuthTokenId();
