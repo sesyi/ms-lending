@@ -10,6 +10,7 @@ import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.enums.ServiceType;
+import com.qisstpay.lendingservice.enums.TransferType;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.LendingCallService;
 import com.qisstpay.lendingservice.service.LendingService;
@@ -61,7 +62,7 @@ public class LendingController {
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), ServiceType.EP);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
 
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
                 .body(lendingService.transfer(transferRequestDto, lenderCallLog)).build();

@@ -94,7 +94,7 @@ public class ModelConverter {
                 .COVERAMOUNT("")
                 .CURRENCYCODE("")
                 .EXCHANGERATE("")
-                .TRANSACTIONAMOUNT("1")
+                .TRANSACTIONAMOUNT(String.valueOf(amount))
                 .ADVISING("")
                 .PRINTLOC("")
                 .REF1("").REF2("").REF3("").REF4("").REF5("")
