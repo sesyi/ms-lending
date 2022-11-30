@@ -128,14 +128,14 @@ public class TasdeeqServiceImpl implements TasdeeqService {
     public TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, LenderCallLog lenderCallLog, TasdeeqAuthResponseDto authentication, Long authTokenId) throws JsonProcessingException {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("getConsumerReport tasdeeqConsumerReportRequestDto: {}", tasdeeqReportDataRequestDto);
+        log.info("authentication: {}", authentication);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        if (!environment.equals("prod")) {
-            log.info("authentication: {}", authentication);
-            lenderCallLog.setStatus(CallStatusType.SUCCESS);
-            lendingCallService.saveLenderCall(lenderCallLog);
-            return TasdeeqConsumerReportResponseDto.builder().build();
-        }
+//        if (!environment.equals("prod")) {
+//            lenderCallLog.setStatus(CallStatusType.SUCCESS);
+//            lendingCallService.saveLenderCall(lenderCallLog);
+//            return TasdeeqConsumerReportResponseDto.builder().build();
+//        }
         headers.setBearerAuth(authentication.getAuth_token());
         TasdeeqConsumerReportRequestDto requestBody = TasdeeqConsumerReportRequestDto.builder().reportDataObj(tasdeeqReportDataRequestDto).build();
         HttpEntity<TasdeeqConsumerReportRequestDto> requestEntity = new HttpEntity<>(requestBody, headers);
