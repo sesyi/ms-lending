@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface TasdeeqService {
-    TasdeeqAuthResponseDto authentication(Long requestId);
+    TasdeeqAuthResponseDto authentication(Long requestId, Boolean clearCache);
 
     TasdeeqConsumerReportResponseDto getConsumerReport(TasdeeqReportDataRequestDto tasdeeqReportDataRequestDto, LenderCallLog lenderCallLog, TasdeeqAuthResponseDto authentication, Long authTokenId) throws JsonProcessingException;
 

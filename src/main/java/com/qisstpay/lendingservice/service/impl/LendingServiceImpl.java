@@ -450,7 +450,7 @@ public class LendingServiceImpl implements LendingService {
         Long authId = tasdeeqService.getLastAuthTokenId();
         TasdeeqAuthResponseDto authentication;
         try {
-            authentication = tasdeeqService.authentication(authId != null ? authId : 0);
+            authentication = tasdeeqService.authentication(authId != null ? authId : 0, Boolean.FALSE);
         } catch (Exception ex) {
             log.error(ex.getMessage());
             lenderCallLog.setStatus(CallStatusType.FAILURE);
