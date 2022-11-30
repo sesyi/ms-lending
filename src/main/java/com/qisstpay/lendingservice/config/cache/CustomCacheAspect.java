@@ -89,7 +89,7 @@ public class CustomCacheAspect {
 
         Object object = proceedingJoinPoint.proceed(proceedingJoinPoint.getArgs());
 
-        Long timeout = Long.valueOf(60000);
+        Long timeout = 60000L;
         try {
             Expression timeoutExpression = expressionParser.parseExpression(customCache.expiration());
             timeoutExpression = expressionParser.parseExpression((String) timeoutExpression.getValue(context));
