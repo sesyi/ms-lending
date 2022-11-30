@@ -123,66 +123,80 @@ public class LendingServiceImpl implements LendingService {
 
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
-
         log.info("In LendingServiceImpl class...");
 
-        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
-            return transferThroughEP(transferRequestDto, lenderCallLog);
-        } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
-            return transferThroughHMB(transferRequestDto);
-
-        }
-
-        return null;
-    }
-
-    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto) {
-        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
-        }
-        LendingTransaction lendingTransaction = new LendingTransaction();
-        lendingTransaction.setAmount(transferRequestDto.getAmount());
-        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
-
-        LendingTransaction lendingTransaction1 = lendingTransactionRepository.findFirstByOrderByIdDesc();
-
-        Long prevId = 1l;
-        if (lendingTransaction != null) {
-            lendingTransaction.getId();
-        }
-
-        String newId = "L" + String.valueOf(prevId + 1);
-
-        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
-
-        SubmitTransactionResponseDto submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), newId, transferRequestDto.getAmount()));
-
-        return null;
-    }
-
-    private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
         if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
         }
 
         // Consumer sign-up, if not already
         Consumer savedConsumer = null;
+        Consumer consumer = null;
         Optional<Consumer> existingConsumer = consumerRepository.findByPhoneNumber(transferRequestDto.getPhoneNumber());
         if (!existingConsumer.isPresent()) {
             Consumer newConsumer = new Consumer();
             newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
             savedConsumer = consumerRepository.saveAndFlush(newConsumer);
+            consumer = savedConsumer;
+        }else
+        {
+            consumer = existingConsumer.get();
         }
+
+        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
+            return transferThroughEP(transferRequestDto, lenderCallLog, consumer);
+        } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
+            return transferThroughHMB(transferRequestDto, lenderCallLog, consumer);
+
+        }
+
+        return null;
+    }
+
+    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
+        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
+        }
+        LendingTransaction lendingTransaction = new LendingTransaction();
+        lendingTransaction.setAmount(transferRequestDto.getAmount());
+        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
+        lendingTransaction.setConsumer(consumer);
+
+        String newId = lenderCallLog.getUser().getId()+ "-" + consumer.getId() + "-" + lenderCallLog.getId();
+
+        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
+
+        try{
+            SubmitTransactionResponseDto submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), newId, transferRequestDto.getAmount()));
+        }catch (Exception e){
+            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
+            return TransferResponseDto
+                    .builder()
+                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
+                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
+                    .build();
+        }
+
+        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
+        lendingTransaction.setLenderCall(lenderCallLog);
+
+//        lendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
+
+        return TransferResponseDto
+                .builder()
+                .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
+                .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
+//                .transactionId(lendingTransaction.getId().toString())
+                .build();
+    }
+
+    private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) throws JsonProcessingException {
 
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
         lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
-        if (savedConsumer == null) {
-            lendingTransaction.setConsumer(existingConsumer.get());
-        } else {
-            lendingTransaction.setConsumer(savedConsumer);
-        }
+        lendingTransaction.setConsumer(consumer);
         lendingTransaction.setUserName(transferRequestDto.getUserName());
         lendingTransaction.setTransactionState(TransactionState.RECEIVED);
         lendingTransaction.setLenderCall(lenderCallLog);
@@ -312,7 +326,7 @@ public class LendingServiceImpl implements LendingService {
         } catch (Exception e) {
             log.error("Exception Occurred in EP Transfer for consumer: {}", transferRequestDto.getPhoneNumber());
             updateEpCallLog(savedEpTransferCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
-            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_TRANSFER_FAILED.getDescription(), lenderCallLog);
+            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), epTransferUrl, epRequestDto, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
         if (epTransferResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
@@ -351,12 +365,12 @@ public class LendingServiceImpl implements LendingService {
                     epTransferResponse.toString());
 
             //  update lender call log
-            updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_TRANSFER_FAILED.getDescription(), lenderCallLog);
+            updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
 
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.EP_TRANSFER_FAILED.getDescription())
+                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
+                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
 //                    .epResult(epTransferResponse)
                     .build();
         }

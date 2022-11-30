@@ -10,7 +10,7 @@ spring:
 #      stag
       uri: http://13.214.107.212:9296
 #      dev
-#      uri: http://52.76.98.234:9296
+      uri: http://52.76.98.234:9296
 
   jpa:
     generate-ddl: true
