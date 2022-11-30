@@ -77,13 +77,12 @@ public class TasdeeqServiceImpl implements TasdeeqService {
 
     @Override
     @CustomCache(expiration = "@cacheProperties.getAuthToken()", cacheManager = "@redisCacheManager")
-    public TasdeeqAuthResponseDto authentication(Long requestId) {
+    public TasdeeqAuthResponseDto authentication(Long requestId, Boolean clearCache) {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("authentication requestId: {}", requestId);
-//        if (!environment.equals("prod")) {
-//            return TasdeeqAuthResponseDto.builder().auth_token("testToken").build();
-//        }
-        cacheHelper.removeAuthTokenAndIdFromCache(requestId);
+        if (!environment.equals("prod")) {
+            return TasdeeqAuthResponseDto.builder().auth_token("testToken").build();
+        }
         TasdeeqAuthRequestDto tasdeeqAuthRequestDto =
                 TasdeeqAuthRequestDto.builder()
                         .password(password)
@@ -98,7 +97,6 @@ public class TasdeeqServiceImpl implements TasdeeqService {
                                 .request(Objects.requireNonNull(requestEntity.getBody()).toString())
                                 .endPoint(EndPointType.AUTH)
                                 .build());
-
         ResponseEntity<TasdeeqResponseDto> response;
         try {
             response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
@@ -107,6 +105,10 @@ public class TasdeeqServiceImpl implements TasdeeqService {
                 tasdeeqCallLog.setMessage(response.getBody().getMessage());
                 tasdeeqCallLog.setMessageCode(response.getBody().getMessageCode());
                 tasdeeqCallLog.setStatusCode(response.getBody().getStatusCode());
+                if (clearCache.equals(Boolean.TRUE)) {
+                    cacheHelper.removeAuthTokenAndIdFromCache(requestId);
+                    cacheHelper.addAuthIdToCache(tasdeeqCallLog.getId());
+                }
                 return modelConverter.convertTOTasdeeqAuthResponseDto(response.getBody().getData());
             }
             tasdeeqCallLog.setStatus(CallStatusType.EXCEPTION);
@@ -131,11 +133,11 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         log.info("authentication: {}", authentication);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-//        if (!environment.equals("prod")) {
-//            lenderCallLog.setStatus(CallStatusType.SUCCESS);
-//            lendingCallService.saveLenderCall(lenderCallLog);
-//            return TasdeeqConsumerReportResponseDto.builder().build();
-//        }
+        if (!environment.equals("prod")) {
+            lenderCallLog.setStatus(CallStatusType.SUCCESS);
+            lendingCallService.saveLenderCall(lenderCallLog);
+            return TasdeeqConsumerReportResponseDto.builder().build();
+        }
         headers.setBearerAuth(authentication.getAuth_token());
         TasdeeqConsumerReportRequestDto requestBody = TasdeeqConsumerReportRequestDto.builder().reportDataObj(tasdeeqReportDataRequestDto).build();
         HttpEntity<TasdeeqConsumerReportRequestDto> requestEntity = new HttpEntity<>(requestBody, headers);
@@ -163,7 +165,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
                                         .lenderCall(lenderCallLog)
                                         .endPoint(EndPointType.CONSUMER_REPORT)
                                         .build());
-                TasdeeqAuthResponseDto authResponseDto = authentication(authTokenId);
+                TasdeeqAuthResponseDto authResponseDto = authentication(authTokenId,Boolean.TRUE);
                 headers.setBearerAuth(authResponseDto.getAuth_token());
                 try {
                     response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
@@ -205,7 +207,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
                                         .lenderCall(lenderCallLog)
                                         .endPoint(EndPointType.CONSUMER_REPORT)
                                         .build());
-                TasdeeqAuthResponseDto authResponseDto = authentication(authTokenId);
+                TasdeeqAuthResponseDto authResponseDto = authentication(authTokenId,Boolean.TRUE);
                 headers.setBearerAuth(authResponseDto.getAuth_token());
                 try {
                     response = restTemplate.postForEntity(requestUrl, requestEntity, TasdeeqResponseDto.class);
