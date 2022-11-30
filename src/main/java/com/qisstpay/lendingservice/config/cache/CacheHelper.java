@@ -31,14 +31,13 @@ public class CacheHelper {
 
     public void removeAuthTokenAndIdFromCache(Long id) {
         log.info("removeAuthTokenAndIdFromCache id: {}", id);
-        if (cacheManager.getCache(AUTH).get(String.format(KEY, AUTH, id)).get().toString() != null) {
+        if (cacheManager.getCache(AUTH).get(String.format(KEY, AUTH, id)) != null) {
             log.info(cacheManager.getCache(AUTH).get(String.format(KEY, AUTH, id)).get().toString());
         }
         cacheManager.getCache(AUTH).evictIfPresent(String.format(KEY, AUTH, id));
-        if (cacheManager.getCache(AUTH_TOKEN_ID).get(AUTH_TOKEN_ID).get().toString() != null) {
+        if (cacheManager.getCache(AUTH_TOKEN_ID).get(AUTH_TOKEN_ID) != null) {
             log.info(cacheManager.getCache(AUTH_TOKEN_ID).get(AUTH_TOKEN_ID).get().toString());
         }
         cacheManager.getCache(AUTH_TOKEN_ID).evictIfPresent(AUTH_TOKEN_ID);
     }
-
 }
