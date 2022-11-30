@@ -446,12 +446,6 @@ public class LendingServiceImpl implements LendingService {
             }
             creditScoreRequestDto.setPhoneNumber(phoneNumberResponseDto.getBody().getCountryCode() + phoneNumberResponseDto.getBody().getNationalNumber());
         }
-
-        if (!environment.equals("prod")) {
-            cacheHelper.removeAuthTokenAndIdFromCache(79L);
-
-            return null;
-        }
         TasdeeqReportDataRequestDto consumerReportRequestDto = createTasdeeqReportDataRequestDto(creditScoreRequestDto);
         Long authId = tasdeeqService.getLastAuthTokenId();
         TasdeeqAuthResponseDto authentication;

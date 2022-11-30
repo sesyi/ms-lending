@@ -80,9 +80,9 @@ public class TasdeeqServiceImpl implements TasdeeqService {
     public TasdeeqAuthResponseDto authentication(Long requestId) {
         log.info(CALLING_TASDEEQ_SERVICE);
         log.info("authentication requestId: {}", requestId);
-        if (!environment.equals("prod")) {
-            return TasdeeqAuthResponseDto.builder().auth_token("testToken").build();
-        }
+//        if (!environment.equals("prod")) {
+//            return TasdeeqAuthResponseDto.builder().auth_token("testToken").build();
+//        }
         cacheHelper.removeAuthTokenAndIdFromCache(requestId);
         TasdeeqAuthRequestDto tasdeeqAuthRequestDto =
                 TasdeeqAuthRequestDto.builder()
@@ -131,6 +131,7 @@ public class TasdeeqServiceImpl implements TasdeeqService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         if (!environment.equals("prod")) {
+            log.info("authentication: {}", authentication);
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             lendingCallService.saveLenderCall(lenderCallLog);
             return TasdeeqConsumerReportResponseDto.builder().build();
