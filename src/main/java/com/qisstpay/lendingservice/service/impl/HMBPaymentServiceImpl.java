@@ -8,6 +8,7 @@ import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,7 +23,8 @@ import java.util.logging.Logger;
 @Slf4j
 public class HMBPaymentServiceImpl implements HMBPaymentService {
 
-    private String hmbserviceBaseUrl = "http://172.27.81.112";
+    @Value("${base-url.hmb-service}")
+    private String hmbserviceBaseUrl;
     
     private String getTokenAPIBasePath = "/TransPaymentAPI/Transaction/GetToken";
     private String submitIFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
@@ -89,6 +91,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
         try{
+            log.info("HMB IBFT Transfer URL : "+hmbserviceBaseUrl + submitIFTTransactionBasePath);
             String response = restTemplate.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             log.info("HMB IBFT Response: "+response);
             submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
