@@ -28,7 +28,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     @Value("${base-url.hmb-service}")
     private String hmbserviceBaseUrl;
 
-    @Value("${credential.hmb-service.username}")
+    @Value("${credential.hmb-service.userid}")
     private String userId;
 
     @Value("${credential.hmb-service.password}")
