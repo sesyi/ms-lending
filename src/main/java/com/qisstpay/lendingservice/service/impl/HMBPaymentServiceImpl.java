@@ -101,6 +101,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         try{
             log.info("HMB IBFT Transfer URL : "+hmbserviceBaseUrl + submitIFTTransactionBasePath);
+            log.info("HMB IBFT Transfer Request Payload : "+objectMapper.writeValueAsString(submitTransactionRequestDto));
             String response = restTemplate.exchange(hmbserviceBaseUrl + submitIBFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             log.info("HMB IBFT Response: "+response);
             submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
@@ -125,6 +126,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         try{
             log.info("HMB Transaction Status URL : "+hmbserviceBaseUrl + getTransactionBasePath);
+            log.info("HMB Transaction Status Request Payload : "+objectMapper.writeValueAsString(getTransactionStatusRequestDto));
+
             String response = restTemplate.exchange(hmbserviceBaseUrl + getTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             log.info("HMB Transaction Status Response: "+response);
             getTransactionStatusResponseDto =  objectMapper.readValue(response, GetTransactionStatusResponseDto.class);
