@@ -2,12 +2,15 @@ package com.qisstpay.lendingservice.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.response.GetTransactionStatusResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,11 +25,19 @@ import java.util.logging.Logger;
 @Slf4j
 public class HMBPaymentServiceImpl implements HMBPaymentService {
 
-    private String hmbserviceBaseUrl = "http://172.27.81.112";
+    @Value("${base-url.hmb-service}")
+    private String hmbserviceBaseUrl;
+
+    @Value("${credential.hmb-service.username}")
+    private String userId;
+
+    @Value("${credential.hmb-service.password}")
+    private String password;
     
-    private String getTokenAPIBasePath = "/TransPaymentAPI/Transaction/GetToken";
-    private String submitIFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
-    private String submitIBFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
+    private String getTokenAPIBasePath              = "/TransPaymentAPI/Transaction/GetToken";
+    private String submitIFTTransactionBasePath     = "/TransPaymentAPI/Transaction/TransSubmit";
+    private String submitIBFTTransactionBasePath    = "/TransPaymentAPI/Transaction/TransSubmit";
+    private String getTransactionBasePath           = "/TransPaymentAPI/Transaction/GetStatus";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -39,8 +50,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("UserId", "EFAPI");
-        headers.add("Password", "CRA");
+        headers.add("UserId", userId);
+        headers.add("Password", password);
         HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
         GetTokenResponseDto getTokenResponseDto = null;
@@ -59,8 +70,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("UserId", "EFAPI");
-        headers.add("Password", "CRA");
+        headers.add("UserId", userId);
+        headers.add("Password", password);
         headers.add("Authorization", "Bearer "+authToken);
         HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<SubmitTransactionRequestDto>(submitTransactionRequestDto, headers);
 
@@ -81,15 +92,16 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("UserId", "EFAPI");
-        headers.add("Password", "CRA");
+        headers.add("UserId", userId);
+        headers.add("Password", password);
         headers.add("Authorization", "Bearer "+authToken);
         HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<>(submitTransactionRequestDto, headers);
 
         SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
         try{
-            String response = restTemplate.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+            log.info("HMB IBFT Transfer URL : "+hmbserviceBaseUrl + submitIFTTransactionBasePath);
+            String response = restTemplate.exchange(hmbserviceBaseUrl + submitIBFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             log.info("HMB IBFT Response: "+response);
             submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
         }catch (Exception e){
@@ -97,5 +109,29 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         return submitTransactionResponseDto;
+    }
+
+    @Override
+    public GetTransactionStatusResponseDto getStatus(String authToken, GetTransactionStatusRequestDto getTransactionStatusRequestDto) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(List.of(MediaType.ALL));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("UserId", userId);
+        headers.add("Password", password);
+        headers.add("Authorization", "Bearer "+authToken);
+        HttpEntity<GetTransactionStatusRequestDto> requestEntity = new HttpEntity<>(getTransactionStatusRequestDto, headers);
+
+        GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
+
+        try{
+            log.info("HMB Transaction Status URL : "+hmbserviceBaseUrl + getTransactionBasePath);
+            String response = restTemplate.exchange(hmbserviceBaseUrl + getTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+            log.info("HMB Transaction Status Response: "+response);
+            getTransactionStatusResponseDto =  objectMapper.readValue(response, GetTransactionStatusResponseDto.class);
+        }catch (Exception e){
+            throw e;
+        }
+
+        return getTransactionStatusResponseDto;
     }
 }
