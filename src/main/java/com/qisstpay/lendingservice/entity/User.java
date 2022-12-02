@@ -51,6 +51,9 @@ public class User {
     @Column(name = "user_name", unique = true)
     private String userName;
 
+    @Column(name = "ucid", unique = true)
+    private String ucid;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp createdAt;

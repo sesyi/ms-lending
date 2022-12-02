@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qisstpay.lendingservice.enums.CallStatusType;
+import com.qisstpay.lendingservice.enums.CallType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -38,6 +39,10 @@ public class LenderCallLog {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private CallStatusType status;
+
+    @Column(name = "call_type")
+    @Enumerated(EnumType.STRING)
+    private CallType callType;
 
     @Column(name = "request")
     private String request;
