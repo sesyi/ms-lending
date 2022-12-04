@@ -1,6 +1,7 @@
 package com.qisstpay.lendingservice.entity;
 
 import com.qisstpay.lendingservice.enums.CallStatusType;
+import com.qisstpay.lendingservice.enums.CallType;
 import com.qisstpay.lendingservice.enums.EndPointType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,6 +53,10 @@ public class EPCallLog {
     @Column(name = "end_point")
     @Enumerated(EnumType.STRING)
     private EndPointType endPoint;
+
+    @Column(name = "call_type")
+    @Enumerated(EnumType.STRING)
+    private CallType callType;
 
     @Column(name ="statusCode")
     private String statusCode;

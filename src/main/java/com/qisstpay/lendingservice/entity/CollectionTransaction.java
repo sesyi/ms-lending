@@ -1,22 +1,37 @@
 package com.qisstpay.lendingservice.entity;
 
-import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.enums.TransactionState;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "lending_transaction")
+@Table(name = "collection_transaction")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LendingTransaction {
+public class CollectionTransaction {
 
     @Id
     @Column(name = "id")
@@ -29,18 +44,20 @@ public class LendingTransaction {
     @Column(name = "identity_number")
     private String identityNumber;
 
-    @Column(name = "account_no")
-    private String accountNo;
-
     @Column(name = "amount")
     private double amount;
 
-    @Column(name = "service_type")
-    @Enumerated(EnumType.STRING)
-    private ServiceType serviceType;
+    @Column(name = "amount_after_due_date")
+    private double amountAfterDueDate;
+
+    @Column(name = "due_date")
+    private Timestamp dueDate;
+
+    @Column(name = "bill_status")
+    private String billStatus;
 
     @Column(name = "ep_transaction_id")
-    private String serviceTransactionId;
+    private String epTransactionId;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -58,7 +75,11 @@ public class LendingTransaction {
     @Enumerated(EnumType.STRING)
     private TransactionState transactionState;
 
-    @OneToOne(cascade=CascadeType.ALL)
+    @OneToOne(cascade= CascadeType.ALL)
     @JoinColumn(name="lender_call_id")
     private LenderCallLog lenderCall;
+
+    @OneToOne(cascade= CascadeType.ALL)
+    @JoinColumn(name="lender_id")
+    private User lender;
 }
