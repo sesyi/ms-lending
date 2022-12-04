@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.InvoiceDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.TransactionDto;
@@ -59,7 +60,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String accountNo, String transactionNo, double amount){
+    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String accountNo, String transactionNo, String stan, double amount){
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -111,7 +112,7 @@ public class ModelConverter {
                 .drAccountNo(accountNo)
                 .drAccTitle("TEST ACCOUNT EFOOD - 6996429311714235925")
                 .dateTime("20220523143445")
-                .stan(transactionNo)
+                .stan(stan)
                 .fileTemplate("IBFTE")
                 .makerID("EFMAK")
                 .releaserID("EFRL")
@@ -120,6 +121,16 @@ public class ModelConverter {
                 .signatory2ID("")
                 .signatory3ID("")
                 .transactions(new LinkedList<TransactionDto>(){{add(transactionDto);}})
+                .build();
+    }
+
+    public GetTransactionStatusRequestDto convertToGetTransactionStatusRequestDto(String stan, String transactionNo){
+
+        return GetTransactionStatusRequestDto.builder()
+                .stan(stan)
+                .makerID("EFMAK")
+                .refNo(transactionNo)
+                .dateTime("20220523143445")
                 .build();
     }
 }
