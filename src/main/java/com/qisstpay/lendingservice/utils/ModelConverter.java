@@ -16,16 +16,33 @@ import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.ConsumerCreditScoreData;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 @Component
+@RefreshScope
 @RequiredArgsConstructor
 public class ModelConverter {
+
     private final ModelMapper  modelMapper;
     private final ObjectMapper objectMapper;
+
+
+    @Value("${config.hmb.makerid}")
+    private String hmbMakerId;
+
+    @Value("${config.hmb.checkerid}")
+    private String hmbCheckerId;
+
+    @Value("${config.hmb.signatoryid}")
+    private String hmbSignatoryId;
+
+    @Value("${config.hmb.releaserid}")
+    private String hmbReleaserId;
 
 
     public Consumer convertToConsumer(TasdeeqConsumerPersonalInformationResponseDto consumerInfo) {
@@ -114,10 +131,10 @@ public class ModelConverter {
                 .dateTime("20220523143445")
                 .stan(stan)
                 .fileTemplate("IBFTE")
-                .makerID("EFMAK")
-                .releaserID("EFRL")
-                .checkerID("EFCHK")
-                .signatory1ID("EFSIG")
+                .makerID(hmbMakerId)
+                .releaserID(hmbReleaserId)
+                .checkerID(hmbCheckerId)
+                .signatory1ID(hmbSignatoryId)
                 .signatory2ID("")
                 .signatory3ID("")
                 .transactions(new LinkedList<TransactionDto>(){{add(transactionDto);}})
@@ -128,7 +145,7 @@ public class ModelConverter {
 
         return GetTransactionStatusRequestDto.builder()
                 .stan(stan)
-                .makerID("EFMAK")
+                .makerID(hmbMakerId)
                 .refNo(transactionNo)
                 .dateTime("20220523143445")
                 .build();
