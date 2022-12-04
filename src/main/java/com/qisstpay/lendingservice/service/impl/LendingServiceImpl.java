@@ -167,8 +167,8 @@ public class LendingServiceImpl implements LendingService {
 
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
-        String transactionNo = lenderCallLog.getUser().getId() + "-" + consumer.getId() + "-" + lenderCallLog.getId();
-        String stan = hmbCallLog.toString();
+        String transactionNo = environment.charAt(0) + "-"+ lenderCallLog.getUser().getId() + "-" + consumer.getId() + "-" + lenderCallLog.getId();
+        String stan = environment.charAt(0) + "-" + hmbCallLog.toString();
 
 
         GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
@@ -455,7 +455,8 @@ public class LendingServiceImpl implements LendingService {
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
-        String stan = hmbCallLog.toString();
+
+        String stan = environment.charAt(0) + "-" + hmbCallLog.toString();
 
         String transactionNo = lendingTransaction.getServiceTransactionId();
 
