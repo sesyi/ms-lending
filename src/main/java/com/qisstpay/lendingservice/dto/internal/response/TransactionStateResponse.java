@@ -17,6 +17,7 @@ public class TransactionStateResponse {
     private String userName;
     private String identityNumber;
     private String phoneNumber;
+    private String accountNumber;
     private double amount;
     private String transactionId;
     private String state;

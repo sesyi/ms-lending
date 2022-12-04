@@ -160,6 +160,7 @@ public class LendingServiceImpl implements LendingService {
         }
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
+        lendingTransaction.setAccountNo(transferRequestDto.getAccountNo());
         lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
         lendingTransaction.setConsumer(consumer);
 
@@ -190,8 +191,13 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setLenderCall(lenderCallLog);
         lendingTransaction.setServiceType(ServiceType.HMB);
         lendingTransaction.setServiceTransactionId(transactionNo);
-        if(submitTransactionResponseDto.getResponseDescription().equals("pending")){
-            lendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
+        lendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
+        if(!submitTransactionResponseDto.getResponseCode().equals("00")){
+            return TransferResponseDto
+                    .builder()
+                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
+                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
+                    .build();
         }
 
         lendingTransaction = lendingTransactionRepository.save(lendingTransaction);
@@ -418,7 +424,7 @@ public class LendingServiceImpl implements LendingService {
 
         LendingTransaction lendingTransaction = lendingTransactionRepository.findById(Long.valueOf(transactionId)).orElse(null);
 
-        if (lendingTransaction == null) {
+        if (lendingTransaction != null) {
             ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
             if(serviceType.equals(ServiceType.EP)){
                 return checkEPStatus(lendingTransaction, lenderCallLog);
@@ -481,6 +487,7 @@ public class LendingServiceImpl implements LendingService {
                 .amount(lendingTransaction.getAmount())
                 .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
+                .accountNumber(lendingTransaction.getAccountNo())
                 .transactionId(lendingTransaction.getId().toString())
                 .userName(lendingTransaction.getUserName())
                 .build();

@@ -29,6 +29,9 @@ public class LendingTransaction {
     @Column(name = "identity_number")
     private String identityNumber;
 
+    @Column(name = "account_no")
+    private String accountNo;
+
     @Column(name = "amount")
     private double amount;
 
