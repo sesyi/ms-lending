@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.InvoiceDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.TransactionDto;
@@ -15,16 +16,33 @@ import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.ConsumerCreditScoreData;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 @Component
+@RefreshScope
 @RequiredArgsConstructor
 public class ModelConverter {
+
     private final ModelMapper  modelMapper;
     private final ObjectMapper objectMapper;
+
+
+    @Value("${config.hmb.makerid}")
+    private String hmbMakerId;
+
+    @Value("${config.hmb.checkerid}")
+    private String hmbCheckerId;
+
+    @Value("${config.hmb.signatoryid}")
+    private String hmbSignatoryId;
+
+    @Value("${config.hmb.releaserid}")
+    private String hmbReleaserId;
 
 
     public Consumer convertToConsumer(TasdeeqConsumerPersonalInformationResponseDto consumerInfo) {
@@ -59,7 +77,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String accountNo, String transactionNo, double amount){
+    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String accountNo, String transactionNo, String stan, double amount){
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -111,15 +129,25 @@ public class ModelConverter {
                 .drAccountNo(accountNo)
                 .drAccTitle("TEST ACCOUNT EFOOD - 6996429311714235925")
                 .dateTime("20220523143445")
-                .stan(transactionNo)
+                .stan(stan)
                 .fileTemplate("IBFTE")
-                .makerID("EFMAK")
-                .releaserID("EFRL")
-                .checkerID("EFCHK")
-                .signatory1ID("EFSIG")
+                .makerID(hmbMakerId)
+                .releaserID(hmbReleaserId)
+                .checkerID(hmbCheckerId)
+                .signatory1ID(hmbSignatoryId)
                 .signatory2ID("")
                 .signatory3ID("")
                 .transactions(new LinkedList<TransactionDto>(){{add(transactionDto);}})
+                .build();
+    }
+
+    public GetTransactionStatusRequestDto convertToGetTransactionStatusRequestDto(String stan, String transactionNo){
+
+        return GetTransactionStatusRequestDto.builder()
+                .stan(stan)
+                .makerID(hmbMakerId)
+                .refNo(transactionNo)
+                .dateTime("20220523143445")
                 .build();
     }
 }
