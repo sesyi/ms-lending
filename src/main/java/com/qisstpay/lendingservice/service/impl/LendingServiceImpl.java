@@ -121,6 +121,12 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private LendingCallService lendingCallService;
 
+    @Autowired
+    private BankRepository bankRepository;
+
+    @Autowired
+    private HMBBankRepository hmbBankRepository;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
@@ -158,6 +164,10 @@ public class LendingServiceImpl implements LendingService {
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
         }
+        if (transferRequestDto.getBankId() == null) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Id is missing.");
+        }
+
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
         lendingTransaction.setAccountNo(transferRequestDto.getAccountNo());
@@ -176,8 +186,10 @@ public class LendingServiceImpl implements LendingService {
 
         SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
+        HMBBank hmbBank = hmbBankRepository.findByBankId(transferRequestDto.getBankId());
+
         try {
-            submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
+            submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(hmbBank.getCode(), transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             return TransferResponseDto
