@@ -77,7 +77,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String accountNo, String transactionNo, String stan, double amount){
+    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount){
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -100,11 +100,11 @@ public class ModelConverter {
                 .BENEADDR("")
                 .BENECELL("")
                 .BENEEMAIL("")
-                .BENEIN("").
-                BeneAccTitle("Ben Acc Title")
-                .BENEACNO("ACC No")
+                .BENEIN("")
+                .BeneAccTitle("Ben Acc Title")
+                .BENEACNO(benAccountNo)
                 .SwiftBankCode("")
-                .BANK("MDL")
+                .BANK(benAccountBankCode)
                 .BRANCH("")
                 .INSTRUMENTNO("")
                 .INSTRUMENTPrintDT("")
@@ -126,7 +126,7 @@ public class ModelConverter {
         return SubmitTransactionRequestDto.builder()
                 .channelID("CMS")
                 .productCode("IBFT")
-                .drAccountNo(accountNo)
+                .drAccountNo("6996429311714235925")
                 .drAccTitle("TEST ACCOUNT EFOOD - 6996429311714235925")
                 .dateTime("20220523143445")
                 .stan(stan)

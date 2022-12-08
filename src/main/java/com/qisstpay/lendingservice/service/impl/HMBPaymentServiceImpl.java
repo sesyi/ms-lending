@@ -7,6 +7,10 @@ import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTransactionStatusResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
+import com.qisstpay.lendingservice.entity.Bank;
+import com.qisstpay.lendingservice.entity.HMBBank;
+import com.qisstpay.lendingservice.repository.BankRepository;
+import com.qisstpay.lendingservice.repository.HMBBankRepository;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +42,12 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     private String submitIFTTransactionBasePath     = "/TransPaymentAPI/Transaction/TransSubmit";
     private String submitIBFTTransactionBasePath    = "/TransPaymentAPI/Transaction/TransSubmit";
     private String getTransactionBasePath           = "/TransPaymentAPI/Transaction/GetStatus";
+
+    @Autowired
+    private BankRepository bankRepository;
+
+    @Autowired
+    private HMBBankRepository hmbBankRepository;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -137,4 +147,5 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         return getTransactionStatusResponseDto;
     }
+
 }
