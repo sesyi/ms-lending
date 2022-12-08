@@ -6,6 +6,7 @@ import com.qisstpay.lendingservice.entity.Bank;
 import com.qisstpay.lendingservice.repository.BankRepository;
 import com.qisstpay.lendingservice.service.BankService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class BankServiceImpl implements BankService {
     @Override
     public GetBanksListResponseDto getBanks() {
         return GetBanksListResponseDto.builder().banks(
-                bankRepository.findAll().stream().map(bank -> BankResponseDto.builder().id(bank.getId()).name(bank.getName()).build()).collect(Collectors.toList())
+                bankRepository.findAll().stream().filter(bank -> StringUtils.isNotBlank(bank.getCode())).map(bank -> BankResponseDto.builder().name(bank.getName()).code(bank.getCode()).build()).collect(Collectors.toList())
         ).build();
     }
 }

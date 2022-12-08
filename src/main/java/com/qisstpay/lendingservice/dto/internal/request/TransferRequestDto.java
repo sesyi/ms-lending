@@ -16,7 +16,7 @@ public class TransferRequestDto {
     private TransferType type;
     private String identityNumber;
     private String phoneNumber;
-    private Long bankId;
+    private String bankCode;
     private String accountNo;
     private double amount;
 
