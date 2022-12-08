@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface HMBBankRepository extends JpaRepository<HMBBank, Long> {
 
-    HMBBank findByBankId(Long bankId);
+    HMBBank findByCode(String code);
 }

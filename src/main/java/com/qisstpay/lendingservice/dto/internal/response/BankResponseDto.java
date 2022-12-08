@@ -10,5 +10,5 @@ import lombok.*;
 @AllArgsConstructor
 public class BankResponseDto {
     private Long id;
-    private String name;
+    private String code;
 }

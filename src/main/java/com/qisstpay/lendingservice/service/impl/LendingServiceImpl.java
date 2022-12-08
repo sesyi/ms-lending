@@ -162,10 +162,10 @@ public class LendingServiceImpl implements LendingService {
 
     private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
-        if (transferRequestDto.getBankId() == null) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Id is missing.");
+        if (transferRequestDto.getBankCode() == null) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is missing");
         }
 
         LendingTransaction lendingTransaction = new LendingTransaction();
@@ -186,7 +186,7 @@ public class LendingServiceImpl implements LendingService {
 
         SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
-        HMBBank hmbBank = hmbBankRepository.findByBankId(transferRequestDto.getBankId());
+        HMBBank hmbBank = hmbBankRepository.findByCode(transferRequestDto.getBankCode());
 
         try {
             submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(hmbBank.getCode(), transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));

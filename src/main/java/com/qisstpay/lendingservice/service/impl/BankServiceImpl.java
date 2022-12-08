@@ -21,7 +21,7 @@ public class BankServiceImpl implements BankService {
     @Override
     public GetBanksListResponseDto getBanks() {
         return GetBanksListResponseDto.builder().banks(
-                bankRepository.findAll().stream().map(bank -> BankResponseDto.builder().id(bank.getId()).name(bank.getName()).build()).collect(Collectors.toList())
+                bankRepository.findAll().stream().map(bank -> BankResponseDto.builder().id(bank.getId()).code(bank.getCode()).build()).collect(Collectors.toList())
         ).build();
     }
 }
