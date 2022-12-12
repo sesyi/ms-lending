@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,7 +91,12 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             url = new URL("https://172.27.81.77/TransPaymentAPI/Transaction/GetToken");
 
             // Open the connection using the URL
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+            log.info("Https Client: HttpsURLConnection");
+
+            connection.setHostnameVerifier((hostname, session) -> true);
 
             // Set the request method to GET
             connection.setRequestMethod("GET");
