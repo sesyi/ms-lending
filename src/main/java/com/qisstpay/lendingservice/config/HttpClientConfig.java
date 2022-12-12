@@ -58,7 +58,7 @@ public class HttpClientConfig {
     @Bean(name = "restTemplateWithoutSSL")
     public RestTemplate restTemplateWithoutSSL() {
 
-        if(!environment.equals("PROD")){
+        if(!environment.equals("prod")){
             log.error("Configured restTemplate with SSL");
             return new RestTemplate();
         }
