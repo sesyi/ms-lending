@@ -27,4 +27,6 @@ public class Bank {
     @Column(name = "country_id")
     private Long countryId;
 
+    @OneToOne(mappedBy = "bank")
+    private ConsumerAccount consumerAccount;
 }

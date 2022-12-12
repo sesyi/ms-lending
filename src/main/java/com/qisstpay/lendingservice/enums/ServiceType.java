@@ -4,5 +4,6 @@ public enum ServiceType {
     TASDEEQ,
     EP,
     HMB,
-    TRXN_STATE_CHECK
+    TRXN_STATE_CHECK,
+    Qpay
 }

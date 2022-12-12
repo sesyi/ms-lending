@@ -5,5 +5,8 @@ public enum EndPointType {
     CONSUMER_REPORT,
     LOGIN,
     INQUIRY,
-    TRANSFER
+    TRANSFER,
+    QPAY_PAYMENT,
+    QPAY_STATUS,
+    QPAY_CAPTURE
 }
