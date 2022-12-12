@@ -85,47 +85,38 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
     @Override
     public GetTokenResponseDto getToken() {
-        // Set up the URL to send the request to
+
         URL url = null;
+        GetTokenResponseDto getTokenResponseDto = null;
+
         try {
-            url = new URL("https://172.27.81.77/TransPaymentAPI/Transaction/GetToken");
+            log.info("HMB Token URL : "+hmbserviceBaseUrl + getTokenAPIBasePath);
 
-            // Open the connection using the URL
-//            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            url = new URL(hmbserviceBaseUrl + getTokenAPIBasePath);
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
-            log.info("Https Client: HttpsURLConnection");
-
             connection.setHostnameVerifier((hostname, session) -> true);
-
-            // Set the request method to GET
-            connection.setRequestMethod("GET");
-
-            // Set the UserID and Password request headers
-            connection.setRequestProperty("UserID", "TESTAPI");
-            connection.setRequestProperty("Password", "Hmb@1");
-
-            // Set the "insecure" flag
             connection.setRequestProperty("insecure", "true");
+
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("UserId", userId);
+            connection.setRequestProperty("Password", password);
+
 
             // Send the request and get the response
             int responseCode = connection.getResponseCode();
 
-            // Check if the response is successful (200)
-            if (responseCode == 200) {
-                // If successful, read the response body
-                String responseBody = readInputStream(connection.getInputStream());
+            String responseBody = readInputStream(connection.getInputStream());
+            log.info("HMB Token Response : "+ responseBody );
 
-                // Print the response body
-                log.info("HMB Token Response : "+ responseBody );
+            if (responseCode == 200) {
+                getTokenResponseDto = objectMapper.readValue(responseBody, GetTokenResponseDto.class);
             } else {
-                // If not successful, print the error message
                 System.out.println("Error: " + connection.getResponseMessage());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return getTokenResponseDto;
 
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(List.of(MediaType.ALL));
@@ -145,6 +136,196 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 //            e.printStackTrace();
 //        }
 //        return getTokenResponseDto;
+    }
+
+    @Override
+    public SubmitTransactionResponseDto submitIFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) {
+
+        URL url = null;
+
+        SubmitTransactionResponseDto submitTransactionResponseDto = null;
+
+        try {
+            log.info("HMB Submit IFT Transaction URL : "+hmbserviceBaseUrl + submitIFTTransactionBasePath);
+            log.info("HMB Submit IFT Transaction Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
+
+            url = new URL(hmbserviceBaseUrl + submitIFTTransactionBasePath);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+//            log.info("Https Client: HttpsURLConnection");
+
+            connection.setHostnameVerifier((hostname, session) -> true);
+
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("UserId", userId);
+            connection.setRequestProperty("Password", password);
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("insecure", "true");
+
+            int responseCode = connection.getResponseCode();
+            String responseBody = readInputStream(connection.getInputStream());
+            log.info("HMB Submit IFT Transaction Response : "+ responseBody );
+
+
+            if (responseCode == 200) {
+                // If successful, read the response body
+
+                submitTransactionResponseDto = objectMapper.readValue(responseBody, SubmitTransactionResponseDto.class);
+
+            } else {
+                // If not successful, print the error message
+                System.out.println("Error: " + connection.getResponseMessage());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return submitTransactionResponseDto;
+
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setAccept(List.of(MediaType.ALL));
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.add("UserId", userId);
+//        headers.add("Password", password);
+//        headers.add("Authorization", "Bearer " + authToken);
+//        HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<SubmitTransactionRequestDto>(submitTransactionRequestDto, headers);
+//
+//        SubmitTransactionResponseDto submitTransactionResponseDto = null;
+//
+//        try {
+//            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+//            submitTransactionResponseDto = objectMapper.readValue(response, SubmitTransactionResponseDto.class);
+//        } catch (Exception e) {
+//
+//        }
+//        return submitTransactionResponseDto;
+    }
+
+    @Override
+    public SubmitTransactionResponseDto submitIBFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) throws Exception {
+
+        URL url = null;
+
+        SubmitTransactionResponseDto submitTransactionResponseDto = null;
+
+        try {
+            log.info("HMB Submit IBFT Transaction URL : "+hmbserviceBaseUrl + submitIBFTTransactionBasePath);
+            log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
+
+            url = new URL(hmbserviceBaseUrl + submitIBFTTransactionBasePath);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
+//            log.info("Https Client: HttpsURLConnection");
+
+            connection.setHostnameVerifier((hostname, session) -> true);
+
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("UserId", userId);
+            connection.setRequestProperty("Password", password);
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("insecure", "true");
+
+            int responseCode = connection.getResponseCode();
+            String responseBody = readInputStream(connection.getInputStream());
+            log.info("HMB Submit IBFT Transaction Response : "+ responseBody );
+
+
+            if (responseCode == 200) {
+                // If successful, read the response body
+
+                submitTransactionResponseDto = objectMapper.readValue(responseBody, SubmitTransactionResponseDto.class);
+
+            } else {
+                // If not successful, print the error message
+                System.out.println("Error: " + connection.getResponseMessage());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return submitTransactionResponseDto;
+
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setAccept(List.of(MediaType.ALL));
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.add("UserId", userId);
+//        headers.add("Password", password);
+//        headers.add("Authorization", "Bearer " + authToken);
+//        HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<>(submitTransactionRequestDto, headers);
+//
+//        SubmitTransactionResponseDto submitTransactionResponseDto = null;
+//
+//        try {
+//            log.info("HMB IBFT Transfer URL : " + hmbserviceBaseUrl + submitIFTTransactionBasePath);
+//            log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
+//            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + submitIBFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+//            log.info("HMB IBFT Response: " + response);
+//            submitTransactionResponseDto = objectMapper.readValue(response, SubmitTransactionResponseDto.class);
+//        } catch (Exception e) {
+//            throw e;
+//        }
+//
+//        return submitTransactionResponseDto;
+    }
+
+    @Override
+    public GetTransactionStatusResponseDto getStatus(String authToken, GetTransactionStatusRequestDto getTransactionStatusRequestDto) throws Exception {
+
+        URL url = null;
+        GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
+
+        try {
+            log.info("HMB Transaction Status Request URL : "+hmbserviceBaseUrl + getTransactionBasePath);
+            log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(getTransactionStatusRequestDto));
+
+            url = new URL(hmbserviceBaseUrl + getTransactionBasePath);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setHostnameVerifier((hostname, session) -> true);
+            connection.setRequestProperty("insecure", "true");
+
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("UserId", userId);
+            connection.setRequestProperty("Password", password);
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+
+            int responseCode = connection.getResponseCode();
+
+            String responseBody = readInputStream(connection.getInputStream());
+            log.info("HMB Transaction Status Response : "+ responseBody );
+
+            if (responseCode == 200) {
+                getTransactionStatusResponseDto = objectMapper.readValue(responseBody, GetTransactionStatusResponseDto.class);
+            } else {
+                System.out.println("Error: " + connection.getResponseMessage());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return getTransactionStatusResponseDto;
+//
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setAccept(List.of(MediaType.ALL));
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.add("UserId", userId);
+//        headers.add("Password", password);
+//        headers.add("Authorization", "Bearer " + authToken);
+//        HttpEntity<GetTransactionStatusRequestDto> requestEntity = new HttpEntity<>(getTransactionStatusRequestDto, headers);
+//
+//        GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
+//
+//        try {
+//            log.info("HMB Transaction Status URL : " + hmbserviceBaseUrl + getTransactionBasePath);
+//            log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(getTransactionStatusRequestDto));
+//
+//            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + getTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+//            log.info("HMB Transaction Status Response: " + response);
+//            getTransactionStatusResponseDto = objectMapper.readValue(response, GetTransactionStatusResponseDto.class);
+//        } catch (Exception e) {
+//            throw e;
+//        }
+//
+//        return getTransactionStatusResponseDto;
     }
 
     // Helper method to read the response body from an InputStream
@@ -169,79 +350,6 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         // Return the response body as a String
         return responseBody.toString();
-    }
-
-    @Override
-    public SubmitTransactionResponseDto submitIFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.ALL));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("UserId", userId);
-        headers.add("Password", password);
-        headers.add("Authorization", "Bearer " + authToken);
-        HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<SubmitTransactionRequestDto>(submitTransactionRequestDto, headers);
-
-        SubmitTransactionResponseDto submitTransactionResponseDto = null;
-
-        try {
-            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
-            submitTransactionResponseDto = objectMapper.readValue(response, SubmitTransactionResponseDto.class);
-        } catch (Exception e) {
-
-        }
-
-        return submitTransactionResponseDto;
-    }
-
-    @Override
-    public SubmitTransactionResponseDto submitIBFTTransaction(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.ALL));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("UserId", userId);
-        headers.add("Password", password);
-        headers.add("Authorization", "Bearer " + authToken);
-        HttpEntity<SubmitTransactionRequestDto> requestEntity = new HttpEntity<>(submitTransactionRequestDto, headers);
-
-        SubmitTransactionResponseDto submitTransactionResponseDto = null;
-
-        try {
-            log.info("HMB IBFT Transfer URL : " + hmbserviceBaseUrl + submitIFTTransactionBasePath);
-            log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
-            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + submitIBFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
-            log.info("HMB IBFT Response: " + response);
-            submitTransactionResponseDto = objectMapper.readValue(response, SubmitTransactionResponseDto.class);
-        } catch (Exception e) {
-            throw e;
-        }
-
-        return submitTransactionResponseDto;
-    }
-
-    @Override
-    public GetTransactionStatusResponseDto getStatus(String authToken, GetTransactionStatusRequestDto getTransactionStatusRequestDto) throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.ALL));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("UserId", userId);
-        headers.add("Password", password);
-        headers.add("Authorization", "Bearer " + authToken);
-        HttpEntity<GetTransactionStatusRequestDto> requestEntity = new HttpEntity<>(getTransactionStatusRequestDto, headers);
-
-        GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
-
-        try {
-            log.info("HMB Transaction Status URL : " + hmbserviceBaseUrl + getTransactionBasePath);
-            log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(getTransactionStatusRequestDto));
-
-            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + getTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
-            log.info("HMB Transaction Status Response: " + response);
-            getTransactionStatusResponseDto = objectMapper.readValue(response, GetTransactionStatusResponseDto.class);
-        } catch (Exception e) {
-            throw e;
-        }
-
-        return getTransactionStatusResponseDto;
     }
 
 }
