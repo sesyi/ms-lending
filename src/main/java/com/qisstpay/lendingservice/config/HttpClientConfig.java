@@ -59,6 +59,7 @@ public class HttpClientConfig {
     public RestTemplate restTemplateWithoutSSL() {
 
         if(!environment.equals("PROD")){
+            log.error("Configured restTemplate with SSL");
             return new RestTemplate();
         }
 
