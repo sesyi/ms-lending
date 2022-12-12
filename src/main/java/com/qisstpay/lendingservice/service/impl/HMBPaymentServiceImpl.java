@@ -74,7 +74,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Token Response : "+ response );
             getTokenResponseDto = objectMapper.readValue(response, GetTokenResponseDto.class);
         }catch (Exception e){
-
+            e.printStackTrace();
         }
         return getTokenResponseDto;
     }
