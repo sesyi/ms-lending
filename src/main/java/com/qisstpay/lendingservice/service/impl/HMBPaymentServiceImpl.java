@@ -69,7 +69,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         GetTokenResponseDto getTokenResponseDto = null;
 
         try{
+            log.info("HMB Token URL : "+hmbserviceBaseUrl + getTokenAPIBasePath);
             String response = restTemplate.exchange(hmbserviceBaseUrl + getTokenAPIBasePath, HttpMethod.GET, requestEntity, String.class).getBody();
+            log.info("HMB Token Response : "+ response );
             getTokenResponseDto = objectMapper.readValue(response, GetTokenResponseDto.class);
         }catch (Exception e){
 
