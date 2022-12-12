@@ -1,14 +1,11 @@
 package com.qisstpay.lendingservice.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTransactionStatusResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
-import com.qisstpay.lendingservice.entity.Bank;
-import com.qisstpay.lendingservice.entity.HMBBank;
 import com.qisstpay.lendingservice.repository.BankRepository;
 import com.qisstpay.lendingservice.repository.HMBBankRepository;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
@@ -24,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 @Service
 @Slf4j
@@ -50,9 +46,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     @Autowired
     private HMBBankRepository hmbBankRepository;
 
-    @Qualifier("restTemplateWithoutSSL")
+//    @Qualifier("restTemplateWithoutSSL")
     @Autowired
-    private RestTemplate restTemplate;
+    private RestTemplate restTemplateWithoutSSL;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -70,7 +66,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         try{
             log.info("HMB Token URL : "+hmbserviceBaseUrl + getTokenAPIBasePath);
-            String response = restTemplate.exchange(hmbserviceBaseUrl + getTokenAPIBasePath, HttpMethod.GET, requestEntity, String.class).getBody();
+            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + getTokenAPIBasePath, HttpMethod.GET, requestEntity, String.class).getBody();
             log.info("HMB Token Response : "+ response );
             getTokenResponseDto = objectMapper.readValue(response, GetTokenResponseDto.class);
         }catch (Exception e){
@@ -92,7 +88,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
         try{
-            String response = restTemplate.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + submitIFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
         }catch (Exception e){
 
@@ -116,7 +112,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         try{
             log.info("HMB IBFT Transfer URL : "+hmbserviceBaseUrl + submitIFTTransactionBasePath);
             log.info("HMB IBFT Transfer Request Payload : "+objectMapper.writeValueAsString(submitTransactionRequestDto));
-            String response = restTemplate.exchange(hmbserviceBaseUrl + submitIBFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + submitIBFTTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             log.info("HMB IBFT Response: "+response);
             submitTransactionResponseDto =  objectMapper.readValue(response, SubmitTransactionResponseDto.class);
         }catch (Exception e){
@@ -142,7 +138,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Transaction Status URL : "+hmbserviceBaseUrl + getTransactionBasePath);
             log.info("HMB Transaction Status Request Payload : "+objectMapper.writeValueAsString(getTransactionStatusRequestDto));
 
-            String response = restTemplate.exchange(hmbserviceBaseUrl + getTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
+            String response = restTemplateWithoutSSL.exchange(hmbserviceBaseUrl + getTransactionBasePath, HttpMethod.POST, requestEntity, String.class).getBody();
             log.info("HMB Transaction Status Response: "+response);
             getTransactionStatusResponseDto =  objectMapper.readValue(response, GetTransactionStatusResponseDto.class);
         }catch (Exception e){
