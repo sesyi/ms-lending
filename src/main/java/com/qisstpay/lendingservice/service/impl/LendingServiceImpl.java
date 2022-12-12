@@ -188,6 +188,16 @@ public class LendingServiceImpl implements LendingService {
 
         HMBBank hmbBank = hmbBankRepository.findByCode(transferRequestDto.getBankCode());
 
+        if (hmbBank.getCode() == null) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect");
+        }
+
+        String bankCode = hmbBank.getCode();
+
+        if(!environment.equals("prod")){ //in case of uat of hmb
+            bankCode = "MDL";
+        }
+
         try {
             submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(hmbBank.getCode(), transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
         } catch (Exception e) {
