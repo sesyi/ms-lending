@@ -31,64 +31,64 @@ public class HttpClientConfig {
         return new RestTemplate();
     }
 
-//    @Bean(name = "restTemplateWithoutSSL")
-//    public RestTemplate restTemplateWithoutSSL() {
-//
-//        if(!environment.equals("PROD")){
-//            return new RestTemplate();
-//        }
-//        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-//        SSLContext sslcontext = null;
-//        try {
-//            sslcontext = SSLContexts.custom() .loadTrustMaterial(null, (chain, authType) -> true) .build();
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//            log.error("Error in Configuring restTemplateWithoutSSL bean");
-//            return null;
-//        }
-//        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[]{"TLSv1"}, null, new NoopHostnameVerifier());
-//        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-//        requestFactory.setHttpClient(httpClient);
-//
-//        log.info("Configured restTemplateWithoutSSL bean");
-//        return new RestTemplate(requestFactory);
-//    }
-
     @Bean(name = "restTemplateWithoutSSL")
     public RestTemplate restTemplateWithoutSSL() {
 
         if(!environment.equals("prod")){
-            log.error("Configured restTemplate with SSL");
             return new RestTemplate();
         }
-
-        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-
-        SSLContext sslContext = null;
+        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+        SSLContext sslcontext = null;
         try {
-            sslContext = SSLContexts.custom()
-                    .loadTrustMaterial(null, acceptingTrustStrategy)
-                    .build();
-        } catch (Exception e) {
+            sslcontext = SSLContexts.custom() .loadTrustMaterial(null, (chain, authType) -> true) .build();
+        }
+        catch (Exception e) {
             e.printStackTrace();
             log.error("Error in Configuring restTemplateWithoutSSL bean");
             return null;
         }
-
-        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
-
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setSSLSocketFactory(csf)
-                .build();
-
-        HttpComponentsClientHttpRequestFactory requestFactory =
-                new HttpComponentsClientHttpRequestFactory();
-
+        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[]{"TLSv1"}, null, new NoopHostnameVerifier());
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
         requestFactory.setHttpClient(httpClient);
 
         log.info("Configured restTemplateWithoutSSL bean");
-
         return new RestTemplate(requestFactory);
     }
+
+//    @Bean(name = "restTemplateWithoutSSL")
+//    public RestTemplate restTemplateWithoutSSL() {
+//
+//        if(!environment.equals("prod")){
+//            log.error("Configured restTemplate with SSL");
+//            return new RestTemplate();
+//        }
+//
+//        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+//
+//        SSLContext sslContext = null;
+//        try {
+//            sslContext = SSLContexts.custom()
+//                    .loadTrustMaterial(null, acceptingTrustStrategy)
+//                    .build();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            log.error("Error in Configuring restTemplateWithoutSSL bean");
+//            return null;
+//        }
+//
+//        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+//
+//        CloseableHttpClient httpClient = HttpClients.custom()
+//                .setSSLSocketFactory(csf)
+//                .build();
+//
+//        HttpComponentsClientHttpRequestFactory requestFactory =
+//                new HttpComponentsClientHttpRequestFactory();
+//
+//        requestFactory.setHttpClient(httpClient);
+//
+//        log.info("Configured restTemplateWithoutSSL bean");
+//
+//        return new RestTemplate(requestFactory);
+//    }
 }
