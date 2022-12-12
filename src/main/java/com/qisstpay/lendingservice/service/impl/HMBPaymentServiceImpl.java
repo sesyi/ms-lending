@@ -14,6 +14,7 @@ import com.qisstpay.lendingservice.repository.HMBBankRepository;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -37,7 +38,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
     @Value("${credential.hmb-service.password}")
     private String password;
-    
+
     private String getTokenAPIBasePath              = "/TransPaymentAPI/Transaction/GetToken";
     private String submitIFTTransactionBasePath     = "/TransPaymentAPI/Transaction/TransSubmit";
     private String submitIBFTTransactionBasePath    = "/TransPaymentAPI/Transaction/TransSubmit";
@@ -49,6 +50,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     @Autowired
     private HMBBankRepository hmbBankRepository;
 
+    @Qualifier("restTemplateWithoutSSL")
     @Autowired
     private RestTemplate restTemplate;
 
