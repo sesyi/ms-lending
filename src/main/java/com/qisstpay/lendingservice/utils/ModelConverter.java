@@ -44,6 +44,12 @@ public class ModelConverter {
     @Value("${config.hmb.releaserid}")
     private String hmbReleaserId;
 
+    @Value("${config.hmb.donoraccountno}")
+    private String donorAccountNumber;
+
+    @Value("${config.hmb.donoraccounttitle}")
+    private String donorAccountTitle;
+
 
     public Consumer convertToConsumer(TasdeeqConsumerPersonalInformationResponseDto consumerInfo) {
         Consumer consumer = modelMapper.map(consumerInfo, Consumer.class);
@@ -126,8 +132,8 @@ public class ModelConverter {
         return SubmitTransactionRequestDto.builder()
                 .channelID("CMS")
                 .productCode("IBFT")
-                .drAccountNo("6996429311714235925")
-                .drAccTitle("TEST ACCOUNT EFOOD - 6996429311714235925")
+                .drAccountNo(donorAccountNumber)
+                .drAccTitle(donorAccountTitle)
                 .dateTime("20220523143445")
                 .stan(stan)
                 .fileTemplate("IBFTE")
