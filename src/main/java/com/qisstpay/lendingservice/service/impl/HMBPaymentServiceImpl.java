@@ -159,13 +159,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setRequestProperty("insecure", "true");
 
-            OutputStream os = connection.getOutputStream();
-            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-            osw.write(objectMapper.writeValueAsString(submitTransactionRequestDto));
-            osw.flush();
-            osw.close();
-            os.close();
-            connection.connect();
+            try(OutputStream os = connection.getOutputStream()) {
+                byte[] input = objectMapper.writeValueAsString(submitTransactionRequestDto).getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
 
             int responseCode = connection.getResponseCode();
             String responseBody = readInputStream(connection.getInputStream());
@@ -230,13 +227,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setRequestProperty("insecure", "true");
 
-            OutputStream os = connection.getOutputStream();
-            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-            osw.write(objectMapper.writeValueAsString(submitTransactionRequestDto));
-            osw.flush();
-            osw.close();
-            os.close();
-            connection.connect();
+            try(OutputStream os = connection.getOutputStream()) {
+                byte[] input = objectMapper.writeValueAsString(submitTransactionRequestDto).getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
 
             int responseCode = connection.getResponseCode();
             String responseBody = readInputStream(connection.getInputStream());
@@ -301,13 +295,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
 
-            OutputStream os = connection.getOutputStream();
-            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-            osw.write(objectMapper.writeValueAsString(getTransactionStatusRequestDto));
-            osw.flush();
-            osw.close();
-            os.close();
-            connection.connect();
+            try(OutputStream os = connection.getOutputStream()) {
+                byte[] input = objectMapper.writeValueAsString(getTransactionStatusRequestDto).getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
 
             int responseCode = connection.getResponseCode();
 
