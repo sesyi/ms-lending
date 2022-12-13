@@ -159,6 +159,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setRequestProperty("insecure", "true");
+            connection.setRequestProperty("Content-Type", "application/json");
+
 
             try(OutputStream os = connection.getOutputStream()) {
                 byte[] input = objectMapper.writeValueAsString(submitTransactionRequestDto).getBytes("utf-8");
@@ -298,6 +300,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("Content-Type", "application/json");
+
 
             try(OutputStream os = connection.getOutputStream()) {
                 byte[] input = objectMapper.writeValueAsString(getTransactionStatusRequestDto).getBytes("utf-8");
