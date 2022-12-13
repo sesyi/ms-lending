@@ -184,13 +184,17 @@ public class LendingServiceImpl implements LendingService {
 
         GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
 
+        if(getTokenResponseDto == null || getTokenResponseDto.getToken() == null){
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+        }
+
         SubmitTransactionResponseDto submitTransactionResponseDto = null;
 
-        HMBBank hmbBank = hmbBankRepository.findByCode(transferRequestDto.getBankCode());
+        Bank bank = bankRepository.findByCode(transferRequestDto.getBankCode()).orElseThrow(
+                () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
+        );
 
-        if (hmbBank == null) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect");
-        }
+        HMBBank hmbBank = hmbBankRepository.getById(bank.getId());
 
         String bankCode = hmbBank.getCode();
 
