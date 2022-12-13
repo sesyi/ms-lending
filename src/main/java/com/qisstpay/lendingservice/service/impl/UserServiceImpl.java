@@ -6,7 +6,6 @@ import com.qisstpay.lendingservice.dto.internal.request.UserRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.MessageResponseDto;
 import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.enums.StatusType;
-import com.qisstpay.lendingservice.enums.UserType;
 import com.qisstpay.lendingservice.repository.UserRepository;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.UserService;
@@ -80,6 +79,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> getUser(Long userId) {
         return userRepository.getByUserId(userId);
+    }
+
+    @Override
+    public Optional<User> getUserById(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            if (user.get().getStatus().equals(StatusType.BLOCKED)) {
+                log.error(UserErrorType.LENDER_BLOCKED.getErrorMessage());
+                throw new ServiceException(UserErrorType.LENDER_BLOCKED);
+            }
+        } else {
+            log.error(UserErrorType.USER_NOT_FOUND.getErrorMessage());
+            throw new ServiceException(UserErrorType.USER_NOT_FOUND);
+        }
+        return user;
     }
 
     @Override
