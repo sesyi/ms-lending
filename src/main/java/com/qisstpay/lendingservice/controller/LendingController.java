@@ -9,6 +9,7 @@ import com.qisstpay.lendingservice.dto.internal.response.TransactionStateRespons
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.User;
+import com.qisstpay.lendingservice.enums.CallType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.enums.TransferType;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
@@ -16,12 +17,10 @@ import com.qisstpay.lendingservice.service.LendingCallService;
 import com.qisstpay.lendingservice.service.LendingService;
 import com.qisstpay.lendingservice.service.UserService;
 import com.qisstpay.lendingservice.utils.TokenParser;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.Optional;
 
 @Slf4j
@@ -62,7 +61,7 @@ public class LendingController {
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB ? ServiceType.HMB : ServiceType.EP, CallType.RECEIVED);
 
         return CustomResponse.CustomResponseBuilder.<TransferResponseDto>builder()
                 .body(lendingService.transfer(transferRequestDto, lenderCallLog)).build();
@@ -79,7 +78,7 @@ public class LendingController {
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionId, ServiceType.TRXN_STATE_CHECK);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionId, ServiceType.TRXN_STATE_CHECK, CallType.RECEIVED);
 
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
                 .body(lendingService.checkStatus(transactionId, lenderCallLog)).build();
@@ -96,7 +95,7 @@ public class LendingController {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
         Optional<User> user = userService.getUser(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ, CallType.RECEIVED);
         CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallLog);
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()

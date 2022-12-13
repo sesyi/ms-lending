@@ -1,10 +1,11 @@
 package com.qisstpay.lendingservice.service.impl;
 
-import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
+import com.qisstpay.lendingservice.entity.User;
+import com.qisstpay.lendingservice.enums.CallType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.repository.LenderCallRepository;
-import com.qisstpay.lendingservice.service.*;
+import com.qisstpay.lendingservice.service.LendingCallService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,13 @@ public class LendingCallServiceImpl implements LendingCallService {
     private LenderCallRepository lenderCallRepository;
 
     @Override
-    public LenderCallLog saveLenderCall(User user, String request, ServiceType serviceType){
-        return  lenderCallRepository.save(LenderCallLog.builder().user(user).request(request).serviceType(serviceType).build());
+    public LenderCallLog saveLenderCall(User user, String request, ServiceType serviceType, CallType callType) {
+        return lenderCallRepository.save(LenderCallLog.builder().user(user).request(request).serviceType(serviceType).callType(callType).build());
+    }
+
+    @Override
+    public LenderCallLog saveLenderCall(String request, ServiceType serviceType, CallType callType) {
+        return lenderCallRepository.save(LenderCallLog.builder().request(request).serviceType(serviceType).callType(callType).build());
     }
 
     @Override

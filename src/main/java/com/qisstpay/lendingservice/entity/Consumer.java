@@ -26,6 +26,9 @@ public class Consumer {
     @Column(name = "phone_number")
     private String phoneNumber;
 
+    @Column(name = "email")
+    private String email;
+
     @Column(name = "name")
     private String name;
 
@@ -124,4 +127,7 @@ public class Consumer {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
     private List<ConsumerCreditHistory> creditHistories;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer")
+    private List<ConsumerAccount> consumerAccounts;
 }
