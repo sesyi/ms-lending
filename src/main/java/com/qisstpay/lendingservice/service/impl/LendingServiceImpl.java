@@ -12,9 +12,6 @@ import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
-import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.GetTransactionStatusResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
@@ -103,11 +100,6 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private LenderCallRepository lenderCallRepository;
 
-    @Autowired
-    private HMBCallLogRepository hmbCallLogRepository;
-
-    @Autowired
-    private ModelConverter modelConverter;
 
     @Autowired
     HMBPaymentServiceImpl hmbPaymentService;
@@ -153,95 +145,11 @@ public class LendingServiceImpl implements LendingService {
         if (transferRequestDto.getType() ==null || transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
             return transferThroughEP(transferRequestDto, lenderCallLog, consumer);
         } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
-            return transferThroughHMB(transferRequestDto, lenderCallLog, consumer);
+            return hmbPaymentService.transfer(transferRequestDto, lenderCallLog, consumer);
 
         }
 
         return null;
-    }
-
-    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
-        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
-        }
-        if (transferRequestDto.getBankCode() == null) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is missing");
-        }
-
-        LendingTransaction lendingTransaction = new LendingTransaction();
-        lendingTransaction.setAmount(transferRequestDto.getAmount());
-        lendingTransaction.setAccountNo(transferRequestDto.getAccountNo());
-        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
-        lendingTransaction.setConsumer(consumer);
-
-        HMBCallLog hmbCallLog = HMBCallLog.builder().build();
-
-        hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
-
-        String transactionNo = environment.charAt(0) + "-"+ lenderCallLog.getUser().getId() + "-" + consumer.getId() + "-" + lenderCallLog.getId();
-        String stan = lenderCallLog.getId().toString();
-
-        if(lenderCallLog.getId()<100000){
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i =0; i<6 - stan.length();i++){
-                stringBuilder.append("0");
-            }
-            stan = stringBuilder.append(lenderCallLog.getId()).toString();
-        }
-
-
-        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
-
-        if(getTokenResponseDto == null || getTokenResponseDto.getToken() == null){
-            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
-        }
-
-        SubmitTransactionResponseDto submitTransactionResponseDto = null;
-
-        Bank bank = bankRepository.findByCode(transferRequestDto.getBankCode()).orElseThrow(
-                () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
-        );
-
-        HMBBank hmbBank = hmbBankRepository.findByBankId(bank.getId());
-
-        String bankCode = hmbBank.getCode();
-
-        if(!environment.equals("prod")){ //in case of uat of hmb
-            bankCode = "MDL";
-        }
-
-        try {
-            submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
-        } catch (Exception e) {
-            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
-            return TransferResponseDto
-                    .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-                    .build();
-        }
-
-        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
-        lendingTransaction.setLenderCall(lenderCallLog);
-        lendingTransaction.setServiceType(ServiceType.HMB);
-        lendingTransaction.setServiceTransactionId(transactionNo);
-        lendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
-        if(!submitTransactionResponseDto.getResponseCode().equals("00")){
-            return TransferResponseDto
-                    .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-                    .build();
-        }
-
-        lendingTransaction = lendingTransactionRepository.save(lendingTransaction);
-
-        return TransferResponseDto
-                .builder()
-                .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-                .transactionId(lendingTransaction.getId().toString())
-                .build();
     }
 
     private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) throws JsonProcessingException {
@@ -463,7 +371,7 @@ public class LendingServiceImpl implements LendingService {
             if(serviceType.equals(ServiceType.EP)){
                 return checkEPStatus(lendingTransaction, lenderCallLog);
             }else if(serviceType.equals(ServiceType.HMB)){
-                return checkHMBStatus(lendingTransaction, lenderCallLog);
+                return hmbPaymentService.checkTransactionStatus(lendingTransaction, lenderCallLog);
             }
         }
 
@@ -488,51 +396,6 @@ public class LendingServiceImpl implements LendingService {
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
 
         return transactionStateResponse;
-    }
-
-    private TransactionStateResponse checkHMBStatus(LendingTransaction lendingTransaction, LenderCallLog lenderCallLog) {
-
-        HMBCallLog hmbCallLog = HMBCallLog.builder().build();
-        hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
-
-
-        String stan = lenderCallLog.getId().toString();
-
-        if(lenderCallLog.getId()<100000){
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i =0; i<6 - stan.length();i++){
-                stringBuilder.append("0");
-            }
-            stan = stringBuilder.append(lenderCallLog.getId()).toString();
-        }
-
-        String transactionNo = lendingTransaction.getServiceTransactionId();
-
-        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
-
-        GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
-        try {
-            getTransactionStatusResponseDto = hmbPaymentService.getStatus(getTokenResponseDto.getToken(), modelConverter.convertToGetTransactionStatusRequestDto(stan, transactionNo));
-        } catch (Exception e) {
-            updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRXN_FETCH_FAILED.getDescription(), lenderCallLog);
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "transaction status request failed");
-        }
-
-        hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
-
-        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
-
-        return TransactionStateResponse
-                .builder()
-                .state(getTransactionStatusResponseDto.getResponseCode())
-                .description(getTransactionStatusResponseDto.getResponseDescription())
-                .amount(lendingTransaction.getAmount())
-                .identityNumber(lendingTransaction.getIdentityNumber())
-                .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
-                .accountNumber(lendingTransaction.getAccountNo())
-                .transactionId(lendingTransaction.getId().toString())
-                .userName(lendingTransaction.getUserName())
-                .build();
     }
 
     @Override
