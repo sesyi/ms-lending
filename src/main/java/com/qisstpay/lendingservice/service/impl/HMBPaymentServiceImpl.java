@@ -154,6 +154,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setHostnameVerifier((hostname, session) -> true);
 
             connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
@@ -222,6 +223,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setHostnameVerifier((hostname, session) -> true);
 
             connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
@@ -291,6 +293,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("insecure", "true");
 
             connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
