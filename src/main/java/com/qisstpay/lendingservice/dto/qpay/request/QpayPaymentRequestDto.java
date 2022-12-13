@@ -3,11 +3,14 @@ package com.qisstpay.lendingservice.dto.qpay.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.util.HashMap;
+
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class QpayPaymentRequestDto {
     @JsonProperty("account_number")
     private String accountNumber;
@@ -34,6 +37,6 @@ public class QpayPaymentRequestDto {
     private String gateway;
 
     @JsonProperty("gateway_credentials")
-    private GatewayCredentialRequestDto gatewayCredentials;
+    private HashMap<String,String> gatewayCredentials;
 }
 

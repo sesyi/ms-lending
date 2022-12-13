@@ -10,6 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class QpayPaymentResponseDto {
     @JsonProperty("further_action")
     private Boolean furtherAction;

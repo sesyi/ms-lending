@@ -19,5 +19,5 @@ public class QpayCollectionRequestDto {
     private String             expiryYear;
     private String             bankID;
     private String             cnic;
-    private PaymentGatewayType gatewayType;
+    private PaymentGatewayType gateway;
 }

@@ -73,7 +73,7 @@ public class CollectionController {
         ApiKeyAuth.verifyApiKey(lender, apiKey);
 
         log.info("adding call log for lender {}", lender.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), billRequestDto.toString(), ServiceType.Qpay, CallType.RECEIVED);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(lender.get(), billRequestDto.toString(), ServiceType.QPAY, CallType.RECEIVED);
 
         QpayLinkResponseDto response = collectionService.getQpayLink(billRequestDto, lenderCallLog);
         log.info(RESPONSE, response);
@@ -112,7 +112,7 @@ public class CollectionController {
             throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
         }
 
-        LenderCallLog callLog = lendingCallService.saveLenderCall(collectionRequestDto.toString(), ServiceType.Qpay, CallType.RECEIVED);
+        LenderCallLog callLog = lendingCallService.saveLenderCall(collectionRequestDto.toString(), ServiceType.QPAY, CallType.RECEIVED);
 
         QpayCollectionResponseDto response = collectionService.collectTroughQpay(collectionRequestDto, callLog);
         log.info(RESPONSE, response);
@@ -134,7 +134,7 @@ public class CollectionController {
             throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
         }
 
-        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: {}, gatewayType: {}", billId, gatewayType), ServiceType.Qpay, CallType.RECEIVED);
+        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: {}, gatewayType: {}", billId, gatewayType), ServiceType.QPAY, CallType.RECEIVED);
 
         QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, gatewayType, callLog);
         log.info(RESPONSE, response);

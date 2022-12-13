@@ -10,6 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class GatewayResponseDto {
     @JsonProperty("authorized_payment")
     private Boolean authorizedPayment;

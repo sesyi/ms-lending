@@ -7,6 +7,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class GatewayCredentialRequestDto {
+    private String id;
+
 }
 

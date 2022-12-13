@@ -5,5 +5,5 @@ public enum ServiceType {
     EP,
     HMB,
     TRXN_STATE_CHECK,
-    Qpay
+    QPAY
 }

@@ -41,11 +41,11 @@ public class ConsumerAccount {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.MERGE)
     @JoinColumn(name = "bank_id", referencedColumnName = "id")
     private Bank bank;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consumer_id")
+    @JoinColumn(name = "consumer_id", referencedColumnName = "id")
     private Consumer consumer;
 }

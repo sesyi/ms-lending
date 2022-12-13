@@ -1,13 +1,20 @@
 package com.qisstpay.lendingservice.dto.qpay.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+
+import java.util.HashMap;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class MetadataRequestDto {
-    private String                      gateway;
-    private GatewayCredentialRequestDto gateway_credentials;
+    @JsonProperty("gateway")
+    private String gateway;
+
+    @JsonProperty("gateway_credentials")
+    private HashMap<String,String> gatewayCredentials;
 }
