@@ -21,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -162,6 +159,14 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setRequestProperty("insecure", "true");
 
+            OutputStream os = connection.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+            osw.write(objectMapper.writeValueAsString(submitTransactionRequestDto));
+            osw.flush();
+            osw.close();
+            os.close();
+            connection.connect();
+
             int responseCode = connection.getResponseCode();
             String responseBody = readInputStream(connection.getInputStream());
             log.info("HMB Submit IFT Transaction Response : "+ responseBody );
@@ -225,6 +230,14 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setRequestProperty("insecure", "true");
 
+            OutputStream os = connection.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+            osw.write(objectMapper.writeValueAsString(submitTransactionRequestDto));
+            osw.flush();
+            osw.close();
+            os.close();
+            connection.connect();
+
             int responseCode = connection.getResponseCode();
             String responseBody = readInputStream(connection.getInputStream());
             log.info("HMB Submit IBFT Transaction Response : "+ responseBody );
@@ -283,10 +296,18 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setHostnameVerifier((hostname, session) -> true);
             connection.setRequestProperty("insecure", "true");
 
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod("POST");
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
+
+            OutputStream os = connection.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+            osw.write(objectMapper.writeValueAsString(getTransactionStatusRequestDto));
+            osw.flush();
+            osw.close();
+            os.close();
+            connection.connect();
 
             int responseCode = connection.getResponseCode();
 
