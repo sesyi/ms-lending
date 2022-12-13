@@ -186,8 +186,7 @@ public class LendingServiceImpl implements LendingService {
             for (int i =0; i<6 - stan.length();i++){
                 stringBuilder.append("0");
             }
-            stringBuilder.append(lenderCallLog.getId());
-            stan = stringBuilder.append(stan).toString();
+            stan = stringBuilder.append(lenderCallLog.getId()).toString();
         }
 
 
@@ -504,8 +503,7 @@ public class LendingServiceImpl implements LendingService {
             for (int i =0; i<6 - stan.length();i++){
                 stringBuilder.append("0");
             }
-            stringBuilder.append(lenderCallLog.getId());
-            stan = stringBuilder.append(stan).toString();
+            stan = stringBuilder.append(lenderCallLog.getId()).toString();
         }
 
         String transactionNo = lendingTransaction.getServiceTransactionId();
