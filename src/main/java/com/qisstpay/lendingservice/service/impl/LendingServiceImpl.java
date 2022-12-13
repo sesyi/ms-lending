@@ -497,7 +497,16 @@ public class LendingServiceImpl implements LendingService {
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
 
-        String stan = environment.charAt(0) + "-" + hmbCallLog.toString();
+        String stan = lenderCallLog.getId().toString();
+
+        if(lenderCallLog.getId()<100000){
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i =0; i<6 - stan.length();i++){
+                stringBuilder.append("0");
+            }
+            stringBuilder.append(lenderCallLog.getId());
+            stan = stringBuilder.append(stan).toString();
+        }
 
         String transactionNo = lendingTransaction.getServiceTransactionId();
 
