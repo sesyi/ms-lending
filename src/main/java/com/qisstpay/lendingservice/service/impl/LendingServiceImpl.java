@@ -203,7 +203,7 @@ public class LendingServiceImpl implements LendingService {
                 () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
         );
 
-        HMBBank hmbBank = hmbBankRepository.getById(bank.getId());
+        HMBBank hmbBank = hmbBankRepository.findByBankId(bank.getId());
 
         String bankCode = hmbBank.getCode();
 
