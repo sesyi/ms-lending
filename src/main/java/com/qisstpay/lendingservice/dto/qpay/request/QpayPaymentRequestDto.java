@@ -55,6 +55,7 @@ public class QpayPaymentRequestDto {
     private String expiryMonth;
 
     @JsonProperty("expiry_year")
+    private String expiryYear;
 
     @JsonProperty("card_holder_name")
     private String cardHolderName;
