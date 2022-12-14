@@ -60,4 +60,7 @@ public class LenderCallLog {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "lenderCall")
     private List<TasdeeqCallLog> tasdeeqCallLogs;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "lenderCall")
+    private List<QPayPaymentCallLog> qPayPaymentCallLogs;
 }

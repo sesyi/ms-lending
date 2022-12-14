@@ -1,27 +1,12 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.qisstpay.lendingservice.enums.BillStatusType;
 import com.qisstpay.lendingservice.enums.TransactionState;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
@@ -45,18 +30,22 @@ public class CollectionTransaction {
     private String identityNumber;
 
     @Column(name = "amount")
-    private double amount;
+    private Double amount;
 
     @Column(name = "amount_after_due_date")
-    private double amountAfterDueDate;
+    private Double amountAfterDueDate;
 
     @Column(name = "due_date")
     private Timestamp dueDate;
 
     @Column(name = "bill_status")
-    private String billStatus;
+    private BillStatusType billStatus;
 
-    @Column(name = "service_transaction_id")
+    @Column(name = "transaction_state")
+    @Enumerated(EnumType.STRING)
+    private TransactionState transactionState;
+
+    @Column(name = "transaction_id")
     private String serviceTransactionId;
 
     @Column(name = "created_at")
@@ -71,11 +60,7 @@ public class CollectionTransaction {
     @JoinColumn(name = "consumer_id")
     private Consumer consumer;
 
-    @Column(name = "transaction_state")
-    @Enumerated(EnumType.STRING)
-    private TransactionState transactionState;
-
-    @OneToOne(cascade= CascadeType.ALL)
-    @JoinColumn(name="lender_call_id")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "lender_call_id")
     private LenderCallLog lenderCall;
 }

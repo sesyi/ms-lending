@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,11 +29,18 @@ public class LendingTransaction {
     @Column(name = "identity_number")
     private String identityNumber;
 
+    @Column(name = "account_no")
+    private String accountNo;
+
     @Column(name = "amount")
     private double amount;
 
+    @Column(name = "service_type")
+    @Enumerated(EnumType.STRING)
+    private ServiceType serviceType;
+
     @Column(name = "ep_transaction_id")
-    private String epTransactionId;
+    private String serviceTransactionId;
 
     @Column(name = "created_at")
     @CreationTimestamp

@@ -12,8 +12,6 @@ import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
-import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
@@ -23,17 +21,10 @@ import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestD
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportResponseDto;
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
-import com.qisstpay.lendingservice.entity.Consumer;
-import com.qisstpay.lendingservice.entity.EPCallLog;
-import com.qisstpay.lendingservice.entity.LenderCallLog;
-import com.qisstpay.lendingservice.entity.LendingTransaction;
+import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
-import com.qisstpay.lendingservice.repository.ConsumerRepository;
-import com.qisstpay.lendingservice.repository.EPCallLogRepository;
-import com.qisstpay.lendingservice.repository.LenderCallRepository;
-import com.qisstpay.lendingservice.repository.LendingTransactionRepository;
+import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
-import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,8 +99,6 @@ public class LendingServiceImpl implements LendingService {
     @Autowired
     private LenderCallRepository lenderCallRepository;
 
-    @Autowired
-    private ModelConverter modelConverter;
 
     @Autowired
     HMBPaymentServiceImpl hmbPaymentService;
@@ -122,6 +111,12 @@ public class LendingServiceImpl implements LendingService {
 
     @Autowired
     private LendingCallService lendingCallService;
+
+    @Autowired
+    private BankRepository bankRepository;
+
+    @Autowired
+    private HMBBankRepository hmbBankRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -146,55 +141,19 @@ public class LendingServiceImpl implements LendingService {
             consumer = existingConsumer.get();
         }
 
-        if (transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
+        if (transferRequestDto.getType() ==null || transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
             return transferThroughEP(transferRequestDto, lenderCallLog, consumer);
         } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
-            return transferThroughHMB(transferRequestDto, lenderCallLog, consumer);
+            return hmbPaymentService.transfer(transferRequestDto, lenderCallLog, consumer);
 
         }
 
         return null;
     }
 
-    private TransferResponseDto transferThroughHMB(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
-        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "account no is missing.");
-        }
-        LendingTransaction lendingTransaction = new LendingTransaction();
-        lendingTransaction.setAmount(transferRequestDto.getAmount());
-        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
-        lendingTransaction.setConsumer(consumer);
-
-        String newId = lenderCallLog.getUser().getId() + "-" + consumer.getId() + "-" + lenderCallLog.getId();
-
-        GetTokenResponseDto getTokenResponseDto = hmbPaymentService.getToken();
-
-        try {
-            SubmitTransactionResponseDto submitTransactionResponseDto = hmbPaymentService.submitIBFTTransaction(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(transferRequestDto.getAccountNo(), newId, transferRequestDto.getAmount()));
-        } catch (Exception e) {
-            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
-            return TransferResponseDto
-                    .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-                    .build();
-        }
-
-        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
-        lendingTransaction.setLenderCall(lenderCallLog);
-
-//        lendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
-
-        return TransferResponseDto
-                .builder()
-                .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-//                .transactionId(lendingTransaction.getId().toString())
-                .build();
-    }
-
     private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) throws JsonProcessingException {
 
+        TransferState transferState = TransferState.EXCEPTION_OCCURRED;
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
@@ -203,6 +162,7 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setUserName(transferRequestDto.getUserName());
         lendingTransaction.setTransactionState(TransactionState.RECEIVED);
         lendingTransaction.setLenderCall(lenderCallLog);
+        lendingTransaction.setServiceType(ServiceType.EP);
         LendingTransaction savedLendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
 
         /**
@@ -241,9 +201,9 @@ public class LendingServiceImpl implements LendingService {
 
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_LOGIN_FAILED.getCode())
-                    .result(QPResponseCode.EP_LOGIN_FAILED.getDescription())
-//                    .epResult(epLoginResponse)
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -298,11 +258,12 @@ public class LendingServiceImpl implements LendingService {
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_INQUIRY_FAILED.getDescription(), lenderCallLog);
 
+            transferState = TransferState.EP_INQUIRY_FAILED;
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_INQUIRY_FAILED.getCode())
-                    .result(QPResponseCode.EP_INQUIRY_FAILED.getDescription())
-//                    .epResult(epInquiryResponse)
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -346,16 +307,18 @@ public class LendingServiceImpl implements LendingService {
             updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
 
             // update lending transaction
-            savedLendingTransaction.setEpTransactionId(epTransferResponse.getTransactionReference());
+            savedLendingTransaction.setServiceTransactionId(epTransferResponse.getTransactionReference());
             savedLendingTransaction.setTransactionState(TransactionState.COMPLETED);
             LendingTransaction finalSavedLendingTransaction = lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
 
+            transferState = TransferState.TRANSFER_SUCCESS;
+
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                    .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-//                    .epResult(epTransferResponse)
                     .transactionId(finalSavedLendingTransaction.getId().toString())
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         } else {
 
@@ -370,11 +333,12 @@ public class LendingServiceImpl implements LendingService {
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
 
+            transferState = TransferState.TRANSFER_FAILED;
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-//                    .epResult(epTransferResponse)
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
     }
@@ -403,26 +367,39 @@ public class LendingServiceImpl implements LendingService {
 
     @Override
     public TransactionStateResponse checkStatus(String transactionId, LenderCallLog lenderCallLog) {
-        Optional<LendingTransaction> lendingTransaction = lendingTransactionRepository.findById(Long.valueOf(transactionId));
-        if (lendingTransaction.isPresent()) {
-            TransactionStateResponse transactionStateResponse = new TransactionStateResponse();
-            transactionStateResponse.setState(lendingTransaction.get().getLenderCall().getStatus().toString());
-            transactionStateResponse.setDescription(lendingTransaction.get().getLenderCall().getError());
-            transactionStateResponse.setAmount(lendingTransaction.get().getAmount());
-            transactionStateResponse.setIdentityNumber(lendingTransaction.get().getIdentityNumber());
-            transactionStateResponse.setPhoneNumber(lendingTransaction.get().getConsumer().getPhoneNumber());
-            transactionStateResponse.setTransactionId(lendingTransaction.get().getId().toString());
-            transactionStateResponse.setUserName(lendingTransaction.get().getUserName());
 
-            //  update lender call log
-            updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
+        LendingTransaction lendingTransaction = lendingTransactionRepository.findById(Long.valueOf(transactionId)).orElse(null);
 
-            return transactionStateResponse;
+        if (lendingTransaction != null) {
+            ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
+            if(serviceType.equals(ServiceType.EP)){
+                return checkEPStatus(lendingTransaction, lenderCallLog);
+            }else if(serviceType.equals(ServiceType.HMB)){
+                return hmbPaymentService.checkTransactionStatus(lendingTransaction, lenderCallLog);
+            }
         }
 
         //  update lender call log
         updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRXN_FETCH_FAILED.getDescription(), lenderCallLog);
         throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "transaction not found.");
+    }
+
+    private TransactionStateResponse checkEPStatus(LendingTransaction lendingTransaction, LenderCallLog lenderCallLog) {
+
+        TransactionStateResponse transactionStateResponse = TransactionStateResponse
+                .builder()
+                .state(lendingTransaction.getLenderCall().getStatus().toString())
+                .description(lendingTransaction.getLenderCall().getError())
+                .amount(lendingTransaction.getAmount())
+                .identityNumber(lendingTransaction.getIdentityNumber())
+                .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
+                .transactionId(lendingTransaction.getId().toString())
+                .userName(lendingTransaction.getUserName())
+                .build();
+        //  update lender call log
+        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
+
+        return transactionStateResponse;
     }
 
     @Override
