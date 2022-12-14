@@ -3,6 +3,10 @@ package com.qisstpay.lendingservice.controller;
 import com.qisstpay.commons.error.errortype.AuthenticationErrorType;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.commons.response.CustomResponse;
+import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
+import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequest;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
 import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CollectionBillResponseDto;
@@ -55,8 +59,11 @@ public class CollectionController {
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
     private static final String GET_QPAY_LINK              = "/qpay/link";
     private static final String GET_BILL                   = "/get/bill";
+    private static final String INQUIRY = "bill/inquiry";
+    private static final String UPDATE = "bill/update";
 
     private static final String CALLING_CONTROLLER = "Calling CollectionController";
+    private static final String CALLING_COLLECTION_CONTROLLER = "Calling Collection Controller";
     private static final String RESPONSE           = "Success Response: {}";
 
 
@@ -140,5 +147,32 @@ public class CollectionController {
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
                 .body(response).build();
+    }
+
+    @PostMapping(INQUIRY)
+    public CustomResponse<EPCollectionInquiryResponse> inquiry(
+            @RequestHeader(value = "x-api-key") String apiKey,
+            @RequestHeader(value = "user-name") String userName,
+            @RequestBody EPCollectionInquiryRequest epCollectionInquiryRequest) {
+        log.info(CALLING_COLLECTION_CONTROLLER);
+        // mfb authentication
+        Optional<User> user = userService.getUser(userName);
+        ApiKeyAuth.verifyApiKey(user, apiKey);
+//        log.info("adding call log for lender {}", user.get().getId());
+//        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
+        return CustomResponse.CustomResponseBuilder.<EPCollectionInquiryResponse>builder().body(collectionService.billInquiry(epCollectionInquiryRequest)).build();
+    }
+    @PostMapping(UPDATE)
+    public CustomResponse<EPCollectionBillUpdateResponse> billUpdate(
+            @RequestHeader(value = "x-api-key") String apiKey,
+            @RequestHeader(value = "user-name") String userName,
+            @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) {
+        log.info(CALLING_COLLECTION_CONTROLLER);
+        // mfb authentication
+        Optional<User> user = userService.getUser(userName);
+        ApiKeyAuth.verifyApiKey(user, apiKey);
+//        log.info("adding call log for lender {}", user.get().getId());
+//        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
+        return CustomResponse.CustomResponseBuilder.<EPCollectionBillUpdateResponse>builder().body(collectionService.billUpdate(epCollectionBillUpdateRequest)).build();
     }
 }
