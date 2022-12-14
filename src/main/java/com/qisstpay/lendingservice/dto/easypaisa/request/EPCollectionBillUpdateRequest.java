@@ -1,15 +1,19 @@
 
-package com.qisstpay.lendingservice.dto.Abroad;
+package com.qisstpay.lendingservice.dto.easypaisa.request;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class AbroadBillUpdateRequest {
+public class EPCollectionBillUpdateRequest {
 
     @JsonProperty("consumer_number")
     private String consumerNumber;
+    @Expose
+    private String password;
     @JsonProperty("tran_auth_id")
     private String tranAuthId;
     @JsonProperty("tran_date")
@@ -18,4 +22,6 @@ public class AbroadBillUpdateRequest {
     private String tranTime;
     @JsonProperty("transaction_amount")
     private String transactionAmount;
+    @Expose
+    private String username;
 }

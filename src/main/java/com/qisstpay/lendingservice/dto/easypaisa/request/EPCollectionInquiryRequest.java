@@ -1,16 +1,16 @@
 
 package com.qisstpay.lendingservice.dto.easypaisa.request;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class EPCollectionInquiryRequest {
 
-    @SerializedName("consumer_number")
+    @JsonProperty("consumer_number")
     private String consumerNumber;
-    @SerializedName("password")
+    @JsonProperty("password")
     private String password;
-    @SerializedName("username")
+    @JsonProperty("username")
     private String username;
 }

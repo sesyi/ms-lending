@@ -1,32 +1,35 @@
 
 package com.qisstpay.lendingservice.dto.easypaisa.response;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@SuppressWarnings("unused")
+@Builder
 public class EPCollectionInquiryResponse {
 
-    @SerializedName("amount_after_due_date")
+    @JsonProperty("amount_after_due_date")
     private String amountAfterDueDate;
-    @SerializedName("amount_paid")
+    @JsonProperty("amount_paid")
     private String amountPaid;
-    @SerializedName("amount_within_due_date")
+    @JsonProperty("amount_within_due_date")
     private String amountWithinDueDate;
-    @SerializedName("bill_status")
+    @JsonProperty("bill_status")
     private String billStatus;
-    @SerializedName("billing_month")
+    @JsonProperty("billing_month")
     private String billingMonth;
-    @SerializedName("consumer_name")
+    @JsonProperty("consumer_name")
     private String consumerName;
-    @SerializedName("date_paid")
+    @JsonProperty("date_paid")
     private String datePaid;
-    @SerializedName("due_date")
+    @JsonProperty("due_date")
     private String dueDate;
-    @SerializedName("response_code")
+    @JsonProperty("response_code")
     private String responseCode;
-    @SerializedName("tran_auth_Id")
+    @JsonProperty("response_message")
+    private String responseMessage;
+    @JsonProperty("tran_auth_Id")
     private String tranAuthId;
 
 }

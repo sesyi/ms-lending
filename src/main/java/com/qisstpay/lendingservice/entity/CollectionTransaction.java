@@ -56,8 +56,8 @@ public class CollectionTransaction {
     @Column(name = "bill_status")
     private String billStatus;
 
-    @Column(name = "ep_transaction_id")
-    private String epTransactionId;
+    @Column(name = "service_transaction_id")
+    private String serviceTransactionId;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -78,8 +78,4 @@ public class CollectionTransaction {
     @OneToOne(cascade= CascadeType.ALL)
     @JoinColumn(name="lender_call_id")
     private LenderCallLog lenderCall;
-
-    @OneToOne(cascade= CascadeType.ALL)
-    @JoinColumn(name="lender_id")
-    private User lender;
 }
