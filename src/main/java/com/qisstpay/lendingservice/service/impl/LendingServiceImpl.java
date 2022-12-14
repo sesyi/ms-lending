@@ -25,7 +25,6 @@ import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
-import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,6 +153,7 @@ public class LendingServiceImpl implements LendingService {
 
     private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) throws JsonProcessingException {
 
+        TransferState transferState = TransferState.EXCEPTION_OCCURRED;
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
@@ -201,9 +201,9 @@ public class LendingServiceImpl implements LendingService {
 
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_LOGIN_FAILED.getCode())
-                    .result(QPResponseCode.EP_LOGIN_FAILED.getDescription())
-//                    .epResult(epLoginResponse)
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -258,11 +258,12 @@ public class LendingServiceImpl implements LendingService {
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_INQUIRY_FAILED.getDescription(), lenderCallLog);
 
+            transferState = TransferState.EP_INQUIRY_FAILED;
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_INQUIRY_FAILED.getCode())
-                    .result(QPResponseCode.EP_INQUIRY_FAILED.getDescription())
-//                    .epResult(epInquiryResponse)
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -310,12 +311,14 @@ public class LendingServiceImpl implements LendingService {
             savedLendingTransaction.setTransactionState(TransactionState.COMPLETED);
             LendingTransaction finalSavedLendingTransaction = lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
 
+            transferState = TransferState.TRANSFER_SUCCESS;
+
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                    .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-//                    .epResult(epTransferResponse)
                     .transactionId(finalSavedLendingTransaction.getId().toString())
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         } else {
 
@@ -330,11 +333,12 @@ public class LendingServiceImpl implements LendingService {
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
 
+            transferState = TransferState.TRANSFER_FAILED;
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-//                    .epResult(epTransferResponse)
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
     }

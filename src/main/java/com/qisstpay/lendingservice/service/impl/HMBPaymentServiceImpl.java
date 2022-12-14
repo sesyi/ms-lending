@@ -12,17 +12,13 @@ import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.*;
-import com.qisstpay.lendingservice.enums.CallStatusType;
-import com.qisstpay.lendingservice.enums.QPResponseCode;
-import com.qisstpay.lendingservice.enums.ServiceType;
-import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -30,10 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -83,6 +76,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
+
+        TransferState transferState = TransferState.EXCEPTION_OCCURRED;
+
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
@@ -131,13 +127,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         try {
             submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
-            lendingTransaction.setTransactionState(TransactionState.FAILURE);
+            lendingTransaction.setTransactionState(TransactionState.SUCCESS);
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
+
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
+                  //.code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -148,8 +146,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         if(!submitTransactionResponseDto.getResponseCode().equals("00")){
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
+//                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -157,9 +156,11 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         return TransferResponseDto
                 .builder()
-                .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
                 .transactionId(lendingTransaction.getId().toString())
+//                .code(transferState.getCode())
+                .state(transferState.getState())
+                .description(transferState.getDescription())
+
                 .build();
     }
 
