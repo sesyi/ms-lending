@@ -1,6 +1,5 @@
 package com.qisstpay.lendingservice.dto.internal.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 @Builder
@@ -11,5 +10,5 @@ import lombok.*;
 public class BankResponseDto {
 
     private String name;
-    private String code;
+    private String bankCode;
 }

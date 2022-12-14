@@ -133,7 +133,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
             return TransferResponseDto
                     .builder()
-                  //.code(transferState.getCode())
+                  .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
@@ -146,7 +146,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         if(!submitTransactionResponseDto.getResponseCode().equals("00")){
             return TransferResponseDto
                     .builder()
-//                    .code(transferState.getCode())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
@@ -157,7 +157,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         return TransferResponseDto
                 .builder()
                 .transactionId(lendingTransaction.getId().toString())
-//                .code(transferState.getCode())
+                .code(transferState.getCode())
                 .state(transferState.getState())
                 .description(transferState.getDescription())
 
@@ -193,6 +193,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         return TransactionStateResponse
                 .builder()
+                .code(transactionStatusDto.getState().toString())
                 .state(transactionStatusDto.getState().toString())
                 .description(transactionStatusDto.getDescription())
                 .amount(lendingTransaction.getAmount())
