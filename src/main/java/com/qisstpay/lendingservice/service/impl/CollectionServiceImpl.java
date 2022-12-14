@@ -68,7 +68,7 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(collectionRequestDto.getBillId());
-        if(collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)){
+        if (collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)) {
             return QpayCollectionResponseDto.builder()
                     .authorizedPayment(Boolean.FALSE)
                     .gateway(collectionRequestDto.getGateway())
@@ -248,12 +248,10 @@ public class CollectionServiceImpl implements CollectionService {
         if (collectionTransaction.get().getServiceTransactionId() != null) {
             String statusUrl = String.format("/%s?gateway=%s", collectionTransaction.get().getServiceTransactionId(), gatewayType.getName());
             status = qpayPaymentService.status(statusUrl, callLog);
-            if (status.getGatewayResponse().getGateway().equals(PaymentGatewayType.EASYPAISA.getName())) {
-                if (status.getGatewayResponse().getGatewayMessage().equals("PAID") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
-                    collectionTransaction.get().setBillStatus(BillStatusType.PAID);
-                    collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
-                    collectionTransactionService.save(collectionTransaction.get());
-                }
+            if (status.getGatewayResponse().getGatewayMessage().equals("PAID") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+                collectionTransaction.get().setBillStatus(BillStatusType.PAID);
+                collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
+                collectionTransactionService.save(collectionTransaction.get());
             }
             return QpayCollectionResponseDto.builder()
                     .authorizedPayment(status.getGatewayResponse().getAuthorizedPayment())
