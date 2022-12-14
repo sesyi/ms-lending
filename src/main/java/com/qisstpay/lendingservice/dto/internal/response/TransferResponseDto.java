@@ -15,8 +15,11 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransferResponseDto {
 
-    String result;
-    String qpResponseCode;
-    Object epResult;
     String transactionId;
+
+    String code;
+    String state;
+    String description;
+
+
 }

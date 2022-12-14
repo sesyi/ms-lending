@@ -1,21 +1,16 @@
 package com.qisstpay.lendingservice.enums;
 
 public enum PaymentGatewayType {
-    EASYPAISA("TMFB", "easypaisa"),
-    NIFT("nift", "nift"),
-    STRIP("stripe", "stripe");
+    EASYPAISA("easypaisa"),
+    NIFT("nift"),
+    STRIPE("stripe");
 
-    private final String code;
     private final String name;
 
-    PaymentGatewayType(String code, String name) {
-        this.code = code;
+    PaymentGatewayType(String name) {
         this.name = name;
     }
 
-    public String getCode() {
-        return code;
-    }
 
     public String getName() {
         return name;

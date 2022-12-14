@@ -33,10 +33,51 @@ public class QpayPaymentRequestDto {
     @JsonProperty("order_id")
     private String transactionId;
 
+    @JsonProperty("reference_order_id")
+    private String refTransactionId;
+
     @JsonProperty("gateway")
     private String gateway;
 
-    @JsonProperty("gateway_credentials")
-    private HashMap<String,String> gatewayCredentials;
-}
+    @JsonProperty("source")
+    private String source;
 
+    @JsonProperty("tokenized_card")
+    private String tokenizedCard;
+
+    @JsonProperty("card_number")
+    private String cardNumber;
+
+    @JsonProperty("cvv")
+    private String cvv;
+
+    @JsonProperty("expiry_month")
+    private String expiryMonth;
+
+    @JsonProperty("expiry_year")
+    private String expiryYear;
+
+    @JsonProperty("card_holder_name")
+    private String cardHolderName;
+
+    @JsonProperty("customer_name")
+    private String customerName;
+
+    @JsonProperty("locale")
+    private String locale;
+
+    @JsonProperty("three_ds")
+    private String threeDs;
+
+    @JsonProperty("installments")
+    private Integer installments;
+
+    @JsonProperty("gateway_credentials")
+    private HashMap<String, String> gatewayCredentials;
+
+    @JsonProperty("shipping_address")
+    private HashMap<String, String> shippingAddress;
+
+    @JsonProperty("nift_otp")
+    private NiftOtpRequestDto niftOtp;
+}
