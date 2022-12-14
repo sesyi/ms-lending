@@ -16,5 +16,8 @@ public class MetadataRequestDto {
     private String gateway;
 
     @JsonProperty("gateway_credentials")
-    private HashMap<String,String> gatewayCredentials;
+    private HashMap<String, String> gatewayCredentials;
+
+    @JsonProperty("nift_transaction")
+    private NiftTransactionRequestDto niftTransaction;
 }

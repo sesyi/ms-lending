@@ -1,11 +1,12 @@
 package com.qisstpay.lendingservice.service.impl;
 
+import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
-import com.qisstpay.lendingservice.dto.qpay.request.GatewayCredentialRequestDto;
 import com.qisstpay.lendingservice.dto.qpay.request.MetadataRequestDto;
+import com.qisstpay.lendingservice.dto.qpay.request.NiftOtpRequestDto;
 import com.qisstpay.lendingservice.dto.qpay.request.QpayCaptureRequestDto;
 import com.qisstpay.lendingservice.dto.qpay.request.QpayPaymentRequestDto;
 import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
@@ -17,6 +18,7 @@ import com.qisstpay.lendingservice.enums.BillStatusType;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,33 +68,36 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(collectionRequestDto.getBillId());
-        if (!collectionRequestDto.getGateway().equals(PaymentGatewayType.STRIP)) {
+        if(collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)){
+            return QpayCollectionResponseDto.builder()
+                    .authorizedPayment(Boolean.FALSE)
+                    .gateway(collectionRequestDto.getGateway())
+                    .status("0000")
+                    .source("")
+                    .furtherAction(Boolean.FALSE)
+                    .redirectURL("")
+                    .billId(collectionTransaction.get().getId())
+                    .billStatus(collectionTransaction.get().getBillStatus())
+                    .transactionId(collectionTransaction.get().getServiceTransactionId())
+                    .message("Bill Already Paid")
+                    .build();
+        }
+        if (!collectionRequestDto.getGateway().equals(PaymentGatewayType.STRIPE)) {
             Optional<ConsumerAccount> account = consumerAccountService.geByAccountNumOrIBAN(collectionRequestDto.getAccountNumber());
             if (account.isEmpty()) {
                 account = Optional.ofNullable(
                         consumerAccountService.createAccount(
                                 collectionRequestDto.getAccountNumber(),
-                                bankService.getByCode(collectionRequestDto.getGateway().getCode()),
+                                bankService.getByCode(collectionRequestDto.getBankID()),
                                 collectionTransaction.get().getConsumer()));
             }
             if (collectionTransaction.get().getConsumer().getEmail() == null) {
                 collectionTransaction.get().getConsumer().setEmail(collectionRequestDto.getCustomerEmail());
             }
         }
-        String transactionId = String.format("qpay-%s-%s-%s", collectionTransaction.get().getLenderCall().getUser().getId(), collectionTransaction.get().getId(), callLog.getId());
         callLog.setUser(collectionTransaction.get().getLenderCall().getUser());
         QpayPaymentResponseDto qpayPaymentResponseDto = qpayPaymentService.payment(
-                QpayPaymentRequestDto.builder()
-                        .accountNumber(collectionRequestDto.getAccountNumber())
-                        .amount(collectionTransaction.get().getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.get().getAmount() : collectionTransaction.get().getAmountAfterDueDate())
-                        .country("PK")
-                        .currency("PKR")
-                        .customerEmail(collectionRequestDto.getCustomerEmail())
-                        .gateway(collectionRequestDto.getGateway().getName())
-                        .gatewayCredentials(new HashMap<>())
-                        .transactionId(transactionId)
-                        .taxAmount(0.0)
-                        .build(),
+                getPaymentPayload(collectionRequestDto, collectionTransaction.get(), callLog),
                 callLog);
         collectionTransaction.get().setServiceTransactionId(qpayPaymentResponseDto.getGatewayResponse().getGatewayResponseId());
         collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
@@ -109,6 +114,72 @@ public class CollectionServiceImpl implements CollectionService {
                 .transactionId(qpayPaymentResponseDto.getGatewayResponse().getGatewayResponseId())
                 .message(qpayPaymentResponseDto.getGatewayResponse().getGatewayMessage())
                 .build();
+    }
+
+    private QpayPaymentRequestDto getPaymentPayload(QpayCollectionRequestDto collectionRequestDto, CollectionTransaction collectionTransaction, LenderCallLog callLog) {
+        String transactionId = String.format("qpay-%s-%s-%s", collectionTransaction.getLenderCall().getUser().getId(), collectionTransaction.getId(), callLog.getId());
+        String refTransactionId = String.format("ref-qpay-%s-%s-%s", collectionTransaction.getLenderCall().getUser().getId(), collectionTransaction.getId(), callLog.getId());
+        QpayPaymentRequestDto paymentRequestDto = null;
+        if (collectionRequestDto.getGateway().equals(PaymentGatewayType.EASYPAISA)) {
+            paymentRequestDto = QpayPaymentRequestDto.builder()
+                    .accountNumber(collectionRequestDto.getAccountNumber())
+                    .customerName(collectionTransaction.getConsumer().getName())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .country("PK")
+                    .currency("PKR")
+                    .customerEmail(collectionRequestDto.getCustomerEmail())
+                    .gateway(collectionRequestDto.getGateway().getName())
+                    .transactionId(transactionId)
+                    .taxAmount(0.0)
+                    .gatewayCredentials(new HashMap<>())
+                    .build();
+        } else if (collectionRequestDto.getGateway().equals(PaymentGatewayType.STRIPE)) {
+            paymentRequestDto = QpayPaymentRequestDto.builder()
+                    .accountNumber(collectionRequestDto.getAccountNumber())
+                    .customerName(collectionTransaction.getConsumer().getName())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .country("PK")
+                    .currency("PKR")
+                    .locale("en-us")
+                    .customerEmail(collectionRequestDto.getCustomerEmail())
+                    .gateway(collectionRequestDto.getGateway().getName())
+                    .threeDs(Boolean.TRUE.toString())
+                    .cardHolderName(collectionRequestDto.getCardHolderName())
+                    .cardNumber(collectionRequestDto.getCardNumber())
+                    .cvv(collectionRequestDto.getCvv())
+                    .expiryYear(collectionRequestDto.getExpiryYear())
+                    .expiryMonth(collectionRequestDto.getExpiryMonth())
+                    .transactionId(transactionId)
+                    .taxAmount(0.0)
+                    .source("card")
+                    .installments(1)
+                    .tokenizedCard(Boolean.FALSE.toString())
+                    .gatewayCredentials(new HashMap<>())
+                    .shippingAddress(new HashMap<>())
+                    .build();
+        } else if (collectionRequestDto.getGateway().equals(PaymentGatewayType.NIFT)) {
+            paymentRequestDto = QpayPaymentRequestDto.builder()
+                    .accountNumber(collectionRequestDto.getAccountNumber())
+                    .customerName(collectionTransaction.getConsumer().getName())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .country("PK")
+                    .currency("PKR")
+                    .locale("en-us")
+                    .customerEmail(collectionRequestDto.getCustomerEmail())
+                    .gateway(collectionRequestDto.getGateway().getName())
+                    .refTransactionId(refTransactionId)
+                    .taxAmount(0.0)
+                    .source("card")
+                    .installments(1)
+                    .gatewayCredentials(new HashMap<>())
+                    .niftOtp(NiftOtpRequestDto.builder()
+                            .cnic(collectionRequestDto.getCnic())
+                            .accountNo(collectionRequestDto.getAccountNumber())
+                            .bankID(collectionRequestDto.getBankID()).build())
+                    .build();
+        }
+        return paymentRequestDto;
+
     }
 
     @Override
@@ -149,7 +220,11 @@ public class CollectionServiceImpl implements CollectionService {
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(billId);
         QpayPaymentResponseDto capture;
         QpayPaymentResponseDto status;
-        if (gatewayType.equals(PaymentGatewayType.STRIP) && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+        if (collectionTransaction.get().getTransactionState().equals(TransactionState.RECEIVED)) {
+            log.info(PaymentErrorType.ENABLE_TO_GET_STATUS.getErrorMessage());
+            throw new ServiceException(PaymentErrorType.ENABLE_TO_GET_STATUS);
+        }
+        if (!gatewayType.equals(PaymentGatewayType.EASYPAISA) && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
             capture = qpayPaymentService.capture(
                     QpayCaptureRequestDto.builder()
                             .metadata(MetadataRequestDto.builder().gatewayCredentials(new HashMap<>()).gateway(gatewayType.getName()).build())
@@ -171,12 +246,14 @@ public class CollectionServiceImpl implements CollectionService {
             }
         }
         if (collectionTransaction.get().getServiceTransactionId() != null) {
-            String statusUrl = String.format("/{}?gateway={}", collectionTransaction.get().getServiceTransactionId(), gatewayType.getName());
+            String statusUrl = String.format("/%s?gateway=%s", collectionTransaction.get().getServiceTransactionId(), gatewayType.getName());
             status = qpayPaymentService.status(statusUrl, callLog);
-            if (status.getGatewayResponse().getGatewayStatus().equals("succeeded") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
-                collectionTransaction.get().setBillStatus(BillStatusType.PAID);
-                collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
-                collectionTransactionService.save(collectionTransaction.get());
+            if (status.getGatewayResponse().getGateway().equals(PaymentGatewayType.EASYPAISA.getName())) {
+                if (status.getGatewayResponse().getGatewayMessage().equals("PAID") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+                    collectionTransaction.get().setBillStatus(BillStatusType.PAID);
+                    collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
+                    collectionTransactionService.save(collectionTransaction.get());
+                }
             }
             return QpayCollectionResponseDto.builder()
                     .authorizedPayment(status.getGatewayResponse().getAuthorizedPayment())
