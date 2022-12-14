@@ -19,7 +19,6 @@ public interface CollectionService {
     QpayLinkResponseDto getQpayLink(CollectionBillRequestDto billRequestDto, LenderCallLog lenderCallLog);
 
     QpayCollectionResponseDto qpayCollectionStatus(Long billId, PaymentGatewayType gatewayType, LenderCallLog callLog);
-}
 
     EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest);
 

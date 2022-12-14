@@ -1,6 +1,17 @@
 package com.qisstpay.lendingservice.service.impl;
 
+import com.qisstpay.commons.enums.SlackTagType;
+import com.qisstpay.commons.error.errortype.CommunicationErrorType;
+import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.commons.exception.ServiceException;
+import com.qisstpay.lendingservice.dto.Abroad.AbroadBillUpdateRequest;
+import com.qisstpay.lendingservice.dto.Abroad.AbroadBillUpdateResponse;
+import com.qisstpay.lendingservice.dto.Abroad.AbroadInquiryRequest;
+import com.qisstpay.lendingservice.dto.Abroad.AbroadInquiryResponse;
+import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
+import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequest;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
 import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
@@ -14,20 +25,32 @@ import com.qisstpay.lendingservice.entity.CollectionTransaction;
 import com.qisstpay.lendingservice.entity.ConsumerAccount;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
+import com.qisstpay.lendingservice.enums.AbroadResponseCode;
 import com.qisstpay.lendingservice.enums.BillStatusType;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.service.*;
+import com.qisstpay.lendingservice.utils.CommonUtility;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -56,12 +79,37 @@ public class CollectionServiceImpl implements CollectionService {
     @Autowired
     private CollectionTransactionService collectionTransactionService;
 
-    @Value("${qpay.payment-link-base-url}")
-    private String paymentURL;
-
     private final String CALLING_SERVICE = "Calling Collection Service";
 
     private final String qpayUrl = "%s/?bid=%s";
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private static final String SUCCESS_STATUS_CODE = "00";
+
+    @Value("${qpay.payment-link-base-url}")
+    private String paymentURL;
+
+    @Value("${abroad.endpoints.base-url}")
+    private String abroadBaseUrl;
+
+    @Value("${abroad.endpoints.inquiry}")
+    private String billInquiryUrl;
+
+    @Value("${abroad.endpoints.bill-update}")
+    private String billUpdateUrl;
+
+    @Value("${abroad.auth.access-key}")
+    private String accessKey;
+
+    @Value("${abroad.auth.access-key-value}")
+    private String accessKeyValue;
+
+    @Value("${environment}")
+    private String environment;
+
+    @Value("${message.slack.channel.third-party-errors}")
+    private String thirdPartyErrorsSlackChannel;
 
     @Override
     public QpayCollectionResponseDto collectTroughQpay(QpayCollectionRequestDto collectionRequestDto, LenderCallLog callLog) {
@@ -272,66 +320,6 @@ public class CollectionServiceImpl implements CollectionService {
                 .billStatus(collectionTransaction.get().getBillStatus())
                 .build();
     }
-import com.qisstpay.commons.enums.SlackTagType;
-import com.qisstpay.commons.error.errortype.CommunicationErrorType;
-import com.qisstpay.commons.exception.CustomException;
-import com.qisstpay.commons.exception.ServiceException;
-import com.qisstpay.lendingservice.dto.Abroad.AbroadBillUpdateRequest;
-import com.qisstpay.lendingservice.dto.Abroad.AbroadBillUpdateResponse;
-import com.qisstpay.lendingservice.dto.Abroad.AbroadInquiryRequest;
-import com.qisstpay.lendingservice.dto.Abroad.AbroadInquiryResponse;
-import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
-import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequest;
-import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
-import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
-import com.qisstpay.lendingservice.enums.AbroadResponseCode;
-import com.qisstpay.lendingservice.service.CollectionService;
-import com.qisstpay.lendingservice.utils.CommonUtility;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
-
-@Service
-@Slf4j
-public class CollectionServiceImpl implements CollectionService {
-
-    @Value("${abroad.endpoints.base-url}")
-    private String abroadBaseUrl;
-
-    @Value("${abroad.endpoints.inquiry}")
-    private String billInquiryUrl;
-
-    @Value("${abroad.endpoints.bill-update}")
-    private String billUpdateUrl;
-
-    @Value("${abroad.auth.access-key}")
-    private String accessKey;
-
-    @Value("${abroad.auth.access-key-value}")
-    private String accessKeyValue;
-
-    @Value("${environment}")
-    private String environment;
-
-    @Value("${message.slack.channel.third-party-errors}")
-    private String thirdPartyErrorsSlackChannel;
-
-
-    private final RestTemplate restTemplate = new RestTemplate();
-
-
-    private static final String SUCCESS_STATUS_CODE = "00";
 
     @Override
     public EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest) {
