@@ -6,6 +6,10 @@ import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseD
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
+import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
+import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequest;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,5 +19,8 @@ public interface CollectionService {
     QpayLinkResponseDto getQpayLink(CollectionBillRequestDto billRequestDto, LenderCallLog lenderCallLog);
 
     QpayCollectionResponseDto qpayCollectionStatus(Long billId, PaymentGatewayType gatewayType, LenderCallLog callLog);
-}
 
+    EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest);
+
+    EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest);
+}

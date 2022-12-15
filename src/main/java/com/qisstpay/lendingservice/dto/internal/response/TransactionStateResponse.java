@@ -20,6 +20,7 @@ public class TransactionStateResponse {
     private String accountNumber;
     private double amount;
     private String transactionId;
+    private String code;
     private String state;
     private String description;
 }

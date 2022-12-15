@@ -201,7 +201,7 @@ public class LendingServiceImpl implements LendingService {
 
             return TransferResponseDto
                     .builder()
-//                    .code(transferState.getCode())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
@@ -261,7 +261,7 @@ public class LendingServiceImpl implements LendingService {
             transferState = TransferState.EP_INQUIRY_FAILED;
             return TransferResponseDto
                     .builder()
-//                    .code(transferState.getCode())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
@@ -316,7 +316,7 @@ public class LendingServiceImpl implements LendingService {
             return TransferResponseDto
                     .builder()
                     .transactionId(finalSavedLendingTransaction.getId().toString())
-//                    .code(transferState.getCode())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
@@ -336,7 +336,7 @@ public class LendingServiceImpl implements LendingService {
             transferState = TransferState.TRANSFER_FAILED;
             return TransferResponseDto
                     .builder()
-//                    .code(transferState.getCode())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
