@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 @RestController
 @RequestMapping("/user/v1")
 @RequiredArgsConstructor
+@CrossOrigin
 public class UserController {
 
     private static final String SAVE                 = "/save";
