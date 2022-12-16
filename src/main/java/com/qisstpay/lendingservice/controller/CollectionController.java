@@ -35,6 +35,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/collection/v1")
 @RequiredArgsConstructor
+@CrossOrigin
 public class CollectionController {
 
     @Autowired
