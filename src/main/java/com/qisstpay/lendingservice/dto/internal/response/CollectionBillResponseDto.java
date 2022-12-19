@@ -18,4 +18,5 @@ public class CollectionBillResponseDto {
     private String         identityNumber;
     private Timestamp      dueDate;
     private BillStatusType billStatus;
+    private String consumerId;
 }

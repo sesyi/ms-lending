@@ -43,6 +43,7 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
                     .identityNumber(collectionTransaction.get().getIdentityNumber())
                     .userName(collectionTransaction.get().getUserName())
                     .billStatus(collectionTransaction.get().getBillStatus())
+                    .consumerId(collectionTransaction.get().getConsumer().getId().toString())
                     .build();
         } else {
             log.error(BillErrorType.ENABLE_TO_GET_BILL.getErrorMessage());
