@@ -25,20 +25,17 @@ public class QpayPaymentTransaction {
     private Long id;
 
     @Column(name = "authorized_payment")
-    private String authorizedPayment;
+    private Boolean authorizedPayment;
 
     @Column(name = "gateway_customer_id")
     private String gatewayCustomerID;
-
-    @Column(name = "gateway_response_id")
-    private String gateway_response_id;
 
     @Column(name = "gateway")
     @Enumerated(EnumType.STRING)
     private PaymentGatewayType gateway;
 
     @Column(name = "transaction_id")
-    private String serviceTransactionId;
+    private String transactionId;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "collection_transaction_id")
