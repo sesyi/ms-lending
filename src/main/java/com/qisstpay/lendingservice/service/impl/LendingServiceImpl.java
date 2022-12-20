@@ -23,6 +23,7 @@ import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportRes
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
 import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
+import com.qisstpay.lendingservice.error.errortype.LendingTransactionErrorType;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +81,9 @@ public class LendingServiceImpl implements LendingService {
 
     @Autowired
     private LendingTransactionRepository lendingTransactionRepository;
+
+    @Autowired
+    private LenderPaymentGatewayRepository lenderPaymentGatewayRepository;
 
     @Autowired
     private EncryptionUtil encryptionUtil;
@@ -146,6 +150,40 @@ public class LendingServiceImpl implements LendingService {
         } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
             return hmbPaymentService.transfer(transferRequestDto, lenderCallLog, consumer);
 
+        }
+
+        return null;
+    }
+
+    @Override
+    public TransferResponseDto transferV2(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, User user) throws JsonProcessingException {
+        log.info("In LendingServiceImpl class...");
+
+        if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
+        }
+
+        LenderPaymentGateway lenderPaymentGateway = lenderPaymentGatewayRepository.findByIsDefaultTrue()
+                .orElseThrow(()-> new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "No Default Payment Service for Lender"));
+
+
+        // Consumer sign-up, if not already
+        Consumer savedConsumer = null;
+        Consumer consumer = null;
+        Optional<Consumer> existingConsumer = consumerRepository.findByPhoneNumber(transferRequestDto.getPhoneNumber());
+        if (!existingConsumer.isPresent()) {
+            Consumer newConsumer = new Consumer();
+            newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
+            savedConsumer = consumerRepository.saveAndFlush(newConsumer);
+            consumer = savedConsumer;
+        } else {
+            consumer = existingConsumer.get();
+        }
+
+        if (lenderPaymentGateway.getPaymentGateway().getCode() == PaymentGatewayCode.EP) {
+            return transferThroughEP(transferRequestDto, lenderCallLog, consumer);
+        } else if (lenderPaymentGateway.getPaymentGateway().getCode() == PaymentGatewayCode.HMB) {
+            return hmbPaymentService.transfer(transferRequestDto, lenderCallLog, consumer);
         }
 
         return null;

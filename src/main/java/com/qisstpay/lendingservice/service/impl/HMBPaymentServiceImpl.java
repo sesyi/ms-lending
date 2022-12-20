@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 @Service
@@ -215,10 +216,16 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Token URL : "+hmbserviceBaseUrl + getTokenAPIBasePath);
 
             url = new URL(hmbserviceBaseUrl + getTokenAPIBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setHostnameVerifier((hostname, session) -> true);
-            connection.setRequestProperty("insecure", "true");
+            HttpURLConnection connection = null;
 
+            if(environment.equals("prod")){
+                HttpsURLConnection httpsConnection = (HttpsURLConnection) url.openConnection();
+                httpsConnection.setHostnameVerifier((hostname, session) -> true);
+                connection = httpsConnection;
+            }else {
+                connection = (HttpsURLConnection) url.openConnection();
+            }
+            connection.setRequestProperty("insecure", "true");
             connection.setRequestMethod("GET");
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
