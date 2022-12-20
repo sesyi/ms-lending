@@ -4,7 +4,9 @@ import com.qisstpay.commons.error.ErrorEnumType;
 
 public enum PaymentErrorType implements ErrorEnumType<PaymentErrorType> {
     ENABLE_TO_CAPTURE(0, "This PaymentIntent could not be captured because it has a status of requires_action. Only a PaymentIntent with one of the following statuses may be captured: requires_capture."),
-    ENABLE_TO_GET_STATUS(1,"Need to start payment process first");
+    ENABLE_TO_GET_STATUS(1, "Need to start payment process first"),
+    BILL_PAID(2, "Bill Already Paid");
+
     private int    code;
     private String errorMessage;
 

@@ -114,7 +114,7 @@ public class CollectionServiceImpl implements CollectionService {
                     .billId(collectionTransaction.get().getId())
                     .billStatus(collectionTransaction.get().getBillStatus())
                     .transactionId(collectionTransaction.get().getServiceTransactionId())
-                    .message("Bill Already Paid")
+                    .message(PaymentErrorType.BILL_PAID.getErrorMessage())
                     .build();
         }
         if (!collectionRequestDto.getGateway().equals(PaymentGatewayType.STRIPE)) {
@@ -267,6 +267,19 @@ public class CollectionServiceImpl implements CollectionService {
         if (collectionTransaction.get().getTransactionState().equals(TransactionState.RECEIVED)) {
             log.info(PaymentErrorType.ENABLE_TO_GET_STATUS.getErrorMessage());
             throw new ServiceException(PaymentErrorType.ENABLE_TO_GET_STATUS);
+        } else if (collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)) {
+            return QpayCollectionResponseDto.builder()
+                    .authorizedPayment(qpayPaymentTransaction.getAuthorizedPayment())
+                    .gateway(gatewayType)
+                    .billId(collectionTransaction.get().getId())
+                    .billStatus(collectionTransaction.get().getBillStatus())
+                    .message(PaymentErrorType.BILL_PAID.getErrorMessage())
+                    .transactionId(collectionTransaction.get().getServiceTransactionId())
+                    .status("0000")
+                    .source("")
+                    .furtherAction(Boolean.FALSE)
+                    .redirectURL("")
+                    .build();
         }
         if (gatewayType.equals(PaymentGatewayType.NIFT) && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
             capture = qpayPaymentService.capture(
