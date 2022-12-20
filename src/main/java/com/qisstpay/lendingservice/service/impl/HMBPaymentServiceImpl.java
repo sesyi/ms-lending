@@ -78,7 +78,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
 
-        TransferState transferState = TransferState.EXCEPTION_OCCURRED;
+        TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
 
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
@@ -129,6 +129,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         try {
             submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
             lendingTransaction.setTransactionState(TransactionState.SUCCESS);
+            transferState = TransferState.TRANSFER_SUCCESS;
+
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
 
@@ -143,14 +145,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
         lendingTransaction.setLenderCall(lenderCallLog);
 
-        lendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
         if(!submitTransactionResponseDto.getResponseCode().equals("00")){
-            return TransferResponseDto
-                    .builder()
-                    .code(transferState.getCode())
-                    .state(transferState.getState())
-                    .description(transferState.getDescription())
-                    .build();
+            transferState = TransferState.SOMETHING_WENT_WRONG;
         }
 
         lendingTransaction = lendingTransactionRepository.save(lendingTransaction);
