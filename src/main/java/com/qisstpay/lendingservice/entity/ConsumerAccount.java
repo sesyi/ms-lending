@@ -6,6 +6,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Getter
@@ -41,11 +42,14 @@ public class ConsumerAccount {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "bank_id", referencedColumnName = "id")
     private Bank bank;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "consumer_id", referencedColumnName = "id")
     private Consumer consumer;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumerAccount")
+    private List<QpayPaymentTransaction> qpayPaymentTransaction;
 }

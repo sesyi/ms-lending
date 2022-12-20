@@ -16,20 +16,10 @@ import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
-import com.qisstpay.lendingservice.dto.qpay.request.MetadataRequestDto;
-import com.qisstpay.lendingservice.dto.qpay.request.NiftOtpRequestDto;
-import com.qisstpay.lendingservice.dto.qpay.request.QpayCaptureRequestDto;
-import com.qisstpay.lendingservice.dto.qpay.request.QpayPaymentRequestDto;
+import com.qisstpay.lendingservice.dto.qpay.request.*;
 import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
-import com.qisstpay.lendingservice.entity.CollectionTransaction;
-import com.qisstpay.lendingservice.entity.ConsumerAccount;
-import com.qisstpay.lendingservice.entity.LenderCallLog;
-import com.qisstpay.lendingservice.entity.LendingTransaction;
-import com.qisstpay.lendingservice.enums.AbroadResponseCode;
-import com.qisstpay.lendingservice.enums.BillStatusType;
-import com.qisstpay.lendingservice.enums.CallStatusType;
-import com.qisstpay.lendingservice.enums.PaymentGatewayType;
-import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.entity.*;
+import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.service.*;
 import com.qisstpay.lendingservice.utils.CommonUtility;
@@ -39,16 +29,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -116,6 +102,7 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(collectionRequestDto.getBillId());
+        QpayPaymentTransaction qpayPaymentTransaction = new QpayPaymentTransaction();
         if (collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)) {
             return QpayCollectionResponseDto.builder()
                     .authorizedPayment(Boolean.FALSE)
@@ -142,11 +129,15 @@ public class CollectionServiceImpl implements CollectionService {
             if (collectionTransaction.get().getConsumer().getEmail() == null) {
                 collectionTransaction.get().getConsumer().setEmail(collectionRequestDto.getCustomerEmail());
             }
+            qpayPaymentTransaction.setConsumerAccount(account.get());
         }
         callLog.setUser(collectionTransaction.get().getLenderCall().getUser());
         QpayPaymentResponseDto qpayPaymentResponseDto = qpayPaymentService.payment(
-                getPaymentPayload(collectionRequestDto, collectionTransaction.get(), callLog),
+                getPaymentPayload(collectionRequestDto, collectionTransaction.get(), callLog, qpayPaymentTransaction),
                 callLog);
+        qpayPaymentTransaction.setGatewayCustomerID(qpayPaymentResponseDto.getGatewayResponse().getGatewayCustomerId());
+        qpayPaymentTransaction.setAuthorizedPayment(qpayPaymentResponseDto.getGatewayResponse().getAuthorizedPayment());
+        collectionTransaction.get().getQpayPaymentTransaction().add(qpayPaymentTransaction);
         collectionTransaction.get().setServiceTransactionId(qpayPaymentResponseDto.getGatewayResponse().getGatewayResponseId());
         collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
         collectionTransactionService.save(collectionTransaction.get());
@@ -164,7 +155,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .build();
     }
 
-    private QpayPaymentRequestDto getPaymentPayload(QpayCollectionRequestDto collectionRequestDto, CollectionTransaction collectionTransaction, LenderCallLog callLog) {
+    private QpayPaymentRequestDto getPaymentPayload(QpayCollectionRequestDto collectionRequestDto, CollectionTransaction collectionTransaction, LenderCallLog callLog, QpayPaymentTransaction qpayPaymentTransaction) {
         String transactionId = String.format("qpay-%s-%s-%s", collectionTransaction.getLenderCall().getUser().getId(), collectionTransaction.getId(), callLog.getId());
         String refTransactionId = String.format("ref-qpay-%s-%s-%s", collectionTransaction.getLenderCall().getUser().getId(), collectionTransaction.getId(), callLog.getId());
         QpayPaymentRequestDto paymentRequestDto = null;
@@ -226,6 +217,8 @@ public class CollectionServiceImpl implements CollectionService {
                             .bankID(collectionRequestDto.getBankID()).build())
                     .build();
         }
+        qpayPaymentTransaction.setGateway(collectionRequestDto.getGateway());
+        qpayPaymentTransaction.setTransactionId(transactionId);
         return paymentRequestDto;
 
     }
@@ -247,6 +240,7 @@ public class CollectionServiceImpl implements CollectionService {
                     .identityNumber(billRequestDto.getIdentityNumber())
                     .userName(billRequestDto.getUserName())
                     .lenderCall(lenderCallLog)
+                    .qpayPaymentTransaction(new ArrayList<>())
                     .build());
             return QpayLinkResponseDto.builder()
                     .message("Successfully generate link")
@@ -262,45 +256,47 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public QpayCollectionResponseDto qpayCollectionStatus(Long billId, PaymentGatewayType gatewayType, LenderCallLog callLog) {
+    public QpayCollectionResponseDto qpayCollectionStatus(Long billId, PaymentGatewayType gatewayType, LenderCallLog callLog, String otp) {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(billId);
+        QpayPaymentTransaction qpayPaymentTransaction = collectionTransaction.get().getQpayPaymentTransaction().get(collectionTransaction.get().getQpayPaymentTransaction().size() - 1);
         QpayPaymentResponseDto capture;
         QpayPaymentResponseDto status;
         if (collectionTransaction.get().getTransactionState().equals(TransactionState.RECEIVED)) {
             log.info(PaymentErrorType.ENABLE_TO_GET_STATUS.getErrorMessage());
             throw new ServiceException(PaymentErrorType.ENABLE_TO_GET_STATUS);
         }
-        if (!gatewayType.equals(PaymentGatewayType.EASYPAISA) && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+        if (gatewayType.equals(PaymentGatewayType.NIFT) && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
             capture = qpayPaymentService.capture(
                     QpayCaptureRequestDto.builder()
-                            .metadata(MetadataRequestDto.builder().gatewayCredentials(new HashMap<>()).gateway(gatewayType.getName()).build())
+                            .metadata(MetadataRequestDto.builder()
+                                    .gatewayCredentials(new HashMap<>())
+                                    .gateway(gatewayType.getName())
+                                    .niftTransaction(
+                                            NiftTransactionRequestDto.builder()
+                                                    .otp(otp)
+                                                    .refTransactionId(qpayPaymentTransaction.getGatewayCustomerID())
+                                                    .bankId(qpayPaymentTransaction.getConsumerAccount().getBank().getCode())
+                                                    .transactionId(collectionTransaction.get().getServiceTransactionId())
+                                                    .build()).build())
                             .transactionId(collectionTransaction.get().getServiceTransactionId())
                             .build(), callLog);
             if (capture.getSuccess().equals(Boolean.FALSE)) {
-                return QpayCollectionResponseDto.builder()
-                        .authorizedPayment(capture.getGatewayResponse().getAuthorizedPayment())
-                        .gateway(gatewayType)
-                        .status(capture.getGatewayResponse().getGatewayStatus())
-                        .source(capture.getGatewayResponse().getGatewaySource())
-                        .furtherAction(capture.getFurtherAction())
-                        .redirectURL(capture.getRedirectURL())
-                        .billId(collectionTransaction.get().getId())
-                        .billStatus(collectionTransaction.get().getBillStatus())
-                        .transactionId(capture.getGatewayResponse().getGatewayResponseId())
-                        .message(capture.getGatewayResponse().getGatewayMessage())
-                        .build();
+                qpayPaymentTransaction.setAuthorizedPayment(capture.getGatewayResponse().getAuthorizedPayment());
             }
         }
         if (collectionTransaction.get().getServiceTransactionId() != null) {
             String statusUrl = String.format("/%s?gateway=%s", collectionTransaction.get().getServiceTransactionId(), gatewayType.getName());
             status = qpayPaymentService.status(statusUrl, callLog);
-            if (status.getGatewayResponse().getGatewayMessage().equals("PAID") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+            if (status.getGatewayResponse().getPaymentStatus().equals("Complete") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
                 collectionTransaction.get().setBillStatus(BillStatusType.PAID);
                 collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
-                collectionTransactionService.save(collectionTransaction.get());
+            } else {
+                collectionTransaction.get().setBillStatus(BillStatusType.UNPAID);
+                collectionTransaction.get().setTransactionState(TransactionState.FAILURE);
             }
+            collectionTransactionService.save(collectionTransaction.get());
             return QpayCollectionResponseDto.builder()
                     .authorizedPayment(status.getGatewayResponse().getAuthorizedPayment())
                     .gateway(gatewayType)
@@ -337,7 +333,7 @@ public class CollectionServiceImpl implements CollectionService {
             log.error("Exception Occurred in Abroad Inquiry for consumer: {}", epCollectionInquiryRequest.getConsumerNumber());
 //            updateEpCallLog(savedEpLoginCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
 //            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
-            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl+billInquiryUrl, new HttpEntity<>(abroadInquiryRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
+            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl + billInquiryUrl, new HttpEntity<>(abroadInquiryRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
         if (!abroadInquiryResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
@@ -397,7 +393,7 @@ public class CollectionServiceImpl implements CollectionService {
             log.error("Exception Occurred in Abroad Bill Update for consumer: {}", epCollectionBillUpdateRequest.getConsumerNumber());
 //            updateEpCallLog(savedEpLoginCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
 //            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
-            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl+billUpdateUrl, new HttpEntity<>(abroadBillUpdateRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
+            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl + billUpdateUrl, new HttpEntity<>(abroadBillUpdateRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
         if (!abroadBillUpdateResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
