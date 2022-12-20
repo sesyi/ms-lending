@@ -206,6 +206,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .build();
     }
 
+    private HttpURLConnection getConnection(URL url) throws IOException {
+        if(environment.equals("prod")) {
+            HttpsURLConnection httpsConnection = (HttpsURLConnection) url.openConnection();
+            httpsConnection.setHostnameVerifier((hostname, session) -> true);
+            return httpsConnection;
+        }
+        return  (HttpURLConnection) url.openConnection();
+    }
+
     @Override
     public GetTokenResponseDto callGetTokenApi() {
 
@@ -216,15 +225,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Token URL : "+hmbserviceBaseUrl + getTokenAPIBasePath);
 
             url = new URL(hmbserviceBaseUrl + getTokenAPIBasePath);
-            HttpURLConnection connection = null;
 
-            if(environment.equals("prod")){
-                HttpsURLConnection httpsConnection = (HttpsURLConnection) url.openConnection();
-                httpsConnection.setHostnameVerifier((hostname, session) -> true);
-                connection = httpsConnection;
-            }else {
-                connection = (HttpURLConnection) url.openConnection();
-            }
+            HttpURLConnection connection = getConnection(url);
+
             connection.setRequestProperty("insecure", "true");
             connection.setRequestMethod("GET");
             connection.setRequestProperty("UserId", userId);
@@ -279,11 +282,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Submit IFT Transaction Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
 
             url = new URL(hmbserviceBaseUrl + submitIFTTransactionBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
-//            log.info("Https Client: HttpsURLConnection");
-
-            connection.setHostnameVerifier((hostname, session) -> true);
+            HttpURLConnection connection = getConnection(url);
 
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -350,11 +349,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
 
             url = new URL(hmbserviceBaseUrl + submitIBFTTransactionBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            HttpURLConnection connection = getConnection(url);
 
 //            log.info("Https Client: HttpsURLConnection");
-
-            connection.setHostnameVerifier((hostname, session) -> true);
 
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -423,8 +420,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(getTransactionStatusRequestDto));
 
             url = new URL(hmbserviceBaseUrl + getTransactionBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setHostnameVerifier((hostname, session) -> true);
+            HttpURLConnection connection = getConnection(url);
+
             connection.setRequestProperty("insecure", "true");
 
             connection.setRequestMethod("POST");
