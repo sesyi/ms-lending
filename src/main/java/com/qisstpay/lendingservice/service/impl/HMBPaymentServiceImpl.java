@@ -552,6 +552,13 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         String stan = lenderCallLogId.toString();
 
+        if(environment.equals("stag")){
+            stan = "2"+stan;
+        }
+        else if(environment.equals("dev")){
+            stan = "3"+stan;
+        }
+
         if(lenderCallLogId<100000){
             StringBuilder stringBuilder = new StringBuilder();
             for (int i =0; i<6 - stan.length();i++){
