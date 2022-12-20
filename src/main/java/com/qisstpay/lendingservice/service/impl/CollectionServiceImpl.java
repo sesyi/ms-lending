@@ -283,19 +283,41 @@ public class CollectionServiceImpl implements CollectionService {
                                                     .build()).build())
                             .transactionId(collectionTransaction.get().getServiceTransactionId())
                             .build(), callLog);
-            if (capture.getSuccess().equals(Boolean.FALSE)) {
+            if (capture.getSuccess().equals(Boolean.TRUE)) {
                 qpayPaymentTransaction.setAuthorizedPayment(capture.getGatewayResponse().getAuthorizedPayment());
+                if (capture.getGatewayResponse().getGatewayMessage().equals("Success") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+                    collectionTransaction.get().setBillStatus(BillStatusType.PAID);
+                    collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
+                }
             }
+            collectionTransactionService.save(collectionTransaction.get());
+            return QpayCollectionResponseDto.builder()
+                    .authorizedPayment(capture.getGatewayResponse().getAuthorizedPayment())
+                    .gateway(gatewayType)
+                    .status(capture.getGatewayResponse().getGatewayStatus())
+                    .source(capture.getGatewayResponse().getGatewaySource())
+                    .furtherAction(capture.getFurtherAction())
+                    .redirectURL(capture.getRedirectURL())
+                    .billId(collectionTransaction.get().getId())
+                    .billStatus(collectionTransaction.get().getBillStatus())
+                    .transactionId(capture.getGatewayResponse().getGatewayResponseId())
+                    .message(capture.getGatewayResponse().getGatewayMessage())
+                    .build();
         }
         if (collectionTransaction.get().getServiceTransactionId() != null) {
             String statusUrl = String.format("/%s?gateway=%s", collectionTransaction.get().getServiceTransactionId(), gatewayType.getName());
             status = qpayPaymentService.status(statusUrl, callLog);
-            if (status.getGatewayResponse().getPaymentStatus().equals("Complete") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+//            if (status.getGatewayResponse().getPaymentStatus().equals("Complete") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+//                collectionTransaction.get().setBillStatus(BillStatusType.PAID);
+//                collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
+//            } else {
+//                collectionTransaction.get().setBillStatus(BillStatusType.UNPAID);
+//                collectionTransaction.get().setTransactionState(TransactionState.FAILURE);
+//            }
+            if (status.getGatewayResponse().getGatewayMessage().equals("PAID") && collectionTransaction.get().getBillStatus().equals(BillStatusType.UNPAID)) {
+                qpayPaymentTransaction.setAuthorizedPayment(status.getGatewayResponse().getAuthorizedPayment());
                 collectionTransaction.get().setBillStatus(BillStatusType.PAID);
                 collectionTransaction.get().setTransactionState(TransactionState.COMPLETED);
-            } else {
-                collectionTransaction.get().setBillStatus(BillStatusType.UNPAID);
-                collectionTransaction.get().setTransactionState(TransactionState.FAILURE);
             }
             collectionTransactionService.save(collectionTransaction.get());
             return QpayCollectionResponseDto.builder()
