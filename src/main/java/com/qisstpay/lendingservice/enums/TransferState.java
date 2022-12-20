@@ -2,7 +2,7 @@ package com.qisstpay.lendingservice.enums;
 
 public enum TransferState {
     TRANSFER_SUCCESS("1","SUCCESS", "Transfer completed"),
-    EXCEPTION_OCCURRED("-1","FAILURE", "Something went wrong"),
+    SOMETHING_WENT_WRONG("-1","FAILURE", "Something went wrong"),
     UNSC_CONTROL("101","FAILURE", "UNSC control"),
     AML_CONTROL("102","FAILURE", "AML control"),
     EP_LOGIN_FAILED("103","FAILURE","Payment channel Authorization failed"),

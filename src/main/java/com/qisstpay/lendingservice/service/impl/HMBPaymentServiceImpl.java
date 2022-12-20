@@ -78,7 +78,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
 
-        TransferState transferState = TransferState.EXCEPTION_OCCURRED;
+        TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
 
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
@@ -129,6 +129,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         try {
             submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
             lendingTransaction.setTransactionState(TransactionState.SUCCESS);
+            transferState = getStatusFromStatusDescription(submitTransactionResponseDto.getResponseCode(), submitTransactionResponseDto.getResponseDescription());
+
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
 
@@ -142,16 +144,6 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
         lendingTransaction.setLenderCall(lenderCallLog);
-
-        lendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
-        if(!submitTransactionResponseDto.getResponseCode().equals("00")){
-            return TransferResponseDto
-                    .builder()
-                    .code(transferState.getCode())
-                    .state(transferState.getState())
-                    .description(transferState.getDescription())
-                    .build();
-        }
 
         lendingTransaction = lendingTransactionRepository.save(lendingTransaction);
 
@@ -190,13 +182,13 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
 
-        TransactionStatusDto transactionStatusDto = getStatusFromStatusDescription(getTransactionStatusResponseDto.getResponseCode(), getTransactionStatusResponseDto.getResponseDescription());
+        TransferState transferState = getStatusFromStatusDescription(getTransactionStatusResponseDto.getResponseCode(), getTransactionStatusResponseDto.getResponseDescription());
 
         return TransactionStateResponse
                 .builder()
-                .code(transactionStatusDto.getState().toString())
-                .state(transactionStatusDto.getState().toString())
-                .description(transactionStatusDto.getDescription())
+                .code(transferState.getCode())
+                .state(transferState.getState())
+                .description(transferState.getDescription())
                 .amount(lendingTransaction.getAmount())
                 .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
@@ -477,42 +469,38 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 //        return getTransactionStatusResponseDto;
     }
 
-    public TransactionStatusDto getStatusFromStatusDescription(String responseCode, String responseDescription){
+    public TransferState getStatusFromStatusDescription(String responseCode, String responseDescription){
 
         TransactionStatusDto transactionStatusDto = new TransactionStatusDto();
 
         responseDescription = responseDescription.toLowerCase();
 
-        if(responseDescription.equals("transaction successfully proceeded...")){
-            transactionStatusDto.setState(TransactionState.SUCCESS);
-            transactionStatusDto.setDescription("Transfer completed");
+        if(responseDescription.equals("transaction successfully proceeded...".toLowerCase())){
+            return TransferState.TRANSFER_SUCCESS;
         }
-        else if(responseDescription.contains("Insufficient funds")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Insufficient funds");
+        if(responseDescription.contains("Insufficient funds".toLowerCase())){
+            return TransferState.INSUFFICIENT_FUNDS;
         }
-        else if(responseDescription.contains("Transfer limit exceeded")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Transfer limit exceeded");
+        if(responseDescription.contains("Transfer limit exceeded".toLowerCase())){
+            return TransferState.TRANSFER_LIMIT_EXCEEDED;
         }
-        else if(responseDescription.contains("To be release")){
-            transactionStatusDto.setState(TransactionState.IN_PROGRESS);
-            transactionStatusDto.setDescription("Transfer to be authorized by releaser");
+        if(responseDescription.contains("To be release".toLowerCase())){
+            if(!environment.equals("prod")){
+                return TransferState.TRANSFER_SUCCESS;
+            }
+            return TransferState.RELEASER_AUTHORIZATION_NEEDED;
         }
-        else if(responseDescription.contains("Currency mismatch for beneficiary")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Currency mismatch for beneficiary");
+        if(responseDescription.contains("Currency mismatch for beneficiary".toLowerCase())){
+            return TransferState.CURRENCY_MISMATCH;
         }
-        else if(responseDescription.contains("Customer account is not found")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Beneficiary account is not found");
+        if(responseDescription.contains("Customer account is not found".toLowerCase())){
+            return TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
         }
-        else if(responseDescription.contains("Customer account is inactive")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Beneficiary account is inactive");
+        if(responseDescription.contains("Customer account is inactive".toLowerCase())){
+            return TransferState.RECIPIENT_ACCOUNT_INACTIVE;
         }
 
-        return transactionStatusDto;
+        return TransferState.SOMETHING_WENT_WRONG;
     }
 
     private void updateLenderCallLog(CallStatusType status, String description, LenderCallLog lenderCallLog) {

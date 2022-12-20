@@ -23,7 +23,6 @@ import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportRes
 import com.qisstpay.lendingservice.encryption.EncryptionUtil;
 import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
-import com.qisstpay.lendingservice.error.errortype.LendingTransactionErrorType;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -191,7 +190,7 @@ public class LendingServiceImpl implements LendingService {
 
     private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) throws JsonProcessingException {
 
-        TransferState transferState = TransferState.EXCEPTION_OCCURRED;
+        TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
