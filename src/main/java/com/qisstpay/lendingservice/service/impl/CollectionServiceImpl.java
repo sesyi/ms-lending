@@ -137,6 +137,7 @@ public class CollectionServiceImpl implements CollectionService {
                 callLog);
         qpayPaymentTransaction.setGatewayCustomerID(qpayPaymentResponseDto.getGatewayResponse().getGatewayCustomerId());
         qpayPaymentTransaction.setAuthorizedPayment(qpayPaymentResponseDto.getGatewayResponse().getAuthorizedPayment());
+        qpayPaymentTransaction.setCollectionTransaction(collectionTransaction.get());
         collectionTransaction.get().getQpayPaymentTransaction().add(qpayPaymentTransaction);
         collectionTransaction.get().setServiceTransactionId(qpayPaymentResponseDto.getGatewayResponse().getGatewayResponseId());
         collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
