@@ -223,7 +223,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 httpsConnection.setHostnameVerifier((hostname, session) -> true);
                 connection = httpsConnection;
             }else {
-                connection = (HttpsURLConnection) url.openConnection();
+                connection = (HttpURLConnection) url.openConnection();
             }
             connection.setRequestProperty("insecure", "true");
             connection.setRequestMethod("GET");
