@@ -130,7 +130,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
     }
 
     @Override
-    public QpayPaymentResponseDto capture(QpayCaptureRequestDto captureRequestDto, LenderCallLog callLog) {
+    public QpayPaymentResponseDto capture(QpayCaptureRequestDto captureRequestDto, LenderCallLog callLog, String otp) {
         log.info(CALLING_SERVICE);
         log.info("In method status");
         HttpHeaders headers = new HttpHeaders();

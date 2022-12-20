@@ -12,6 +12,6 @@ public interface QpayPaymentService {
 
     QpayPaymentResponseDto status(String transactionIdAndGateway, LenderCallLog callLog);
 
-    QpayPaymentResponseDto capture(QpayCaptureRequestDto captureRequestDto, LenderCallLog callLog);
+    QpayPaymentResponseDto capture(QpayCaptureRequestDto captureRequestDto, LenderCallLog callLog, String otp);
 }
 

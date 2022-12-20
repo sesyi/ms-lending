@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "collection_transaction")
@@ -63,4 +64,7 @@ public class CollectionTransaction {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "lender_call_id")
     private LenderCallLog lenderCall;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "collectionTransaction")
+    private List<QpayPaymentTransaction> qpayPaymentTransaction;
 }

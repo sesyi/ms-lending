@@ -60,12 +60,12 @@ public class CollectionController {
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
     private static final String GET_QPAY_LINK              = "/qpay/link";
     private static final String GET_BILL                   = "/get/bill";
-    private static final String INQUIRY = "bill/inquiry";
-    private static final String UPDATE = "bill/update";
+    private static final String INQUIRY                    = "bill/inquiry";
+    private static final String UPDATE                     = "bill/update";
 
-    private static final String CALLING_CONTROLLER = "Calling CollectionController";
+    private static final String CALLING_CONTROLLER            = "Calling CollectionController";
     private static final String CALLING_COLLECTION_CONTROLLER = "Calling Collection Controller";
-    private static final String RESPONSE           = "Success Response: {}";
+    private static final String RESPONSE                      = "Success Response: {}";
 
 
     @PostMapping(GET_QPAY_LINK)
@@ -132,7 +132,8 @@ public class CollectionController {
     public CustomResponse<QpayCollectionResponseDto> getQpayCollectionStatus(
             @RequestHeader(value = "x-api-key") String apiKey,
             @RequestParam Long billId,
-            @RequestParam PaymentGatewayType gatewayType
+            @RequestParam PaymentGatewayType gatewayType,
+            @RequestParam(required = false) String otp
     ) {
         log.info(CALLING_CONTROLLER);
         log.info("In method" + GET_QPAY_COLLECTION_STATUS + " with billId: {}, gatewayType: {}", billId, gatewayType);
@@ -144,7 +145,7 @@ public class CollectionController {
 
         LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: {}, gatewayType: {}", billId, gatewayType), ServiceType.QPAY, CallType.RECEIVED);
 
-        QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, gatewayType, callLog);
+        QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, gatewayType, callLog, otp);
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
                 .body(response).build();
@@ -163,6 +164,7 @@ public class CollectionController {
 //        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
         return CustomResponse.CustomResponseBuilder.<EPCollectionInquiryResponse>builder().body(collectionService.billInquiry(epCollectionInquiryRequest)).build();
     }
+
     @PostMapping(UPDATE)
     public CustomResponse<EPCollectionBillUpdateResponse> billUpdate(
             @RequestHeader(value = "x-api-key") String apiKey,
