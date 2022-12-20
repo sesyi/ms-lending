@@ -260,7 +260,7 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(billId);
-        QpayPaymentTransaction qpayPaymentTransaction = collectionTransaction.get().getQpayPaymentTransaction().get(collectionTransaction.get().getQpayPaymentTransaction().size() - 1);
+        QpayPaymentTransaction qpayPaymentTransaction = collectionTransaction.get().getQpayPaymentTransaction().get(collectionTransaction.get().getQpayPaymentTransaction().size() > 1 ? collectionTransaction.get().getQpayPaymentTransaction().size() - 1 : 0);
         QpayPaymentResponseDto capture;
         QpayPaymentResponseDto status;
         if (collectionTransaction.get().getTransactionState().equals(TransactionState.RECEIVED)) {
