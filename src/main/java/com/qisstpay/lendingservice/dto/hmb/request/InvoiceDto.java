@@ -8,6 +8,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class InvoiceDto {
     
     @JsonProperty("DOCNO") 

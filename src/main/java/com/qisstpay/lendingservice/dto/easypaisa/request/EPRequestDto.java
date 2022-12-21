@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class EPRequestDto extends HttpEntity {
 
     @JsonProperty("Amount")

@@ -2,12 +2,14 @@
 package com.qisstpay.lendingservice.dto.easypaisa.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.ToString;
 import org.springframework.http.HttpEntity;
 
 import javax.annotation.Generated;
 
 @Generated("net.hexar.json2pojo")
 @SuppressWarnings("unused")
+@ToString
 public class EPLoginRequestDto extends HttpEntity {
 
     @JsonProperty("LoginPayload")

@@ -6,6 +6,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class TasdeeqSummaryOverdue24MResponseDto {

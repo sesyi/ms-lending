@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class GetTransactionStatusRequestDto {
     @JsonProperty("MakerID")
     private String makerID;

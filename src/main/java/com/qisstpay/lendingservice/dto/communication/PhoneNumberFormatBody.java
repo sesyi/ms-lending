@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@ToString
 public class PhoneNumberFormatBody {
     public String fullPhoneNumber;
     public String countryCode;
