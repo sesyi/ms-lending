@@ -143,7 +143,7 @@ public class CollectionController {
             throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
         }
 
-        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: {}, gatewayType: {}", billId, gatewayType), ServiceType.QPAY, CallType.RECEIVED);
+        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: %s, gatewayType: %s", billId, gatewayType), ServiceType.QPAY, CallType.RECEIVED);
 
         QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, gatewayType, callLog, otp);
         log.info(RESPONSE, response);

@@ -261,13 +261,14 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geById(billId);
-        QpayPaymentTransaction qpayPaymentTransaction = collectionTransaction.get().getQpayPaymentTransaction().get(collectionTransaction.get().getQpayPaymentTransaction().size() > 1 ? collectionTransaction.get().getQpayPaymentTransaction().size() - 1 : 0);
-        QpayPaymentResponseDto capture;
-        QpayPaymentResponseDto status;
         if (collectionTransaction.get().getTransactionState().equals(TransactionState.RECEIVED)) {
             log.info(PaymentErrorType.ENABLE_TO_GET_STATUS.getErrorMessage());
             throw new ServiceException(PaymentErrorType.ENABLE_TO_GET_STATUS);
-        } else if (collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)) {
+        }
+        QpayPaymentTransaction qpayPaymentTransaction = collectionTransaction.get().getQpayPaymentTransaction().get(collectionTransaction.get().getQpayPaymentTransaction().size() > 1 ? collectionTransaction.get().getQpayPaymentTransaction().size() - 1 : 0);
+        QpayPaymentResponseDto capture;
+        QpayPaymentResponseDto status;
+        if (collectionTransaction.get().getBillStatus().equals(BillStatusType.PAID)) {
             return QpayCollectionResponseDto.builder()
                     .authorizedPayment(qpayPaymentTransaction.getAuthorizedPayment())
                     .gateway(gatewayType)

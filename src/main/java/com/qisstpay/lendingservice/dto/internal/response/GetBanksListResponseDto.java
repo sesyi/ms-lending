@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class GetBanksListResponseDto {
     List<BankResponseDto> banks;
 }

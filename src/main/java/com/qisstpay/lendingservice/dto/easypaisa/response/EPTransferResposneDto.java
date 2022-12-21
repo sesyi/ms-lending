@@ -4,9 +4,11 @@ package com.qisstpay.lendingservice.dto.easypaisa.response;
 import javax.annotation.Generated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.ToString;
 
 @Generated("net.hexar.json2pojo")
 @SuppressWarnings("unused")
+@ToString
 public class EPTransferResposneDto {
 
     @JsonProperty("Balance")
