@@ -25,7 +25,6 @@ import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
-import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +80,9 @@ public class LendingServiceImpl implements LendingService {
 
     @Autowired
     private LendingTransactionRepository lendingTransactionRepository;
+
+    @Autowired
+    private LenderPaymentGatewayRepository lenderPaymentGatewayRepository;
 
     @Autowired
     private EncryptionUtil encryptionUtil;
@@ -152,8 +154,43 @@ public class LendingServiceImpl implements LendingService {
         return null;
     }
 
+    @Override
+    public TransferResponseDto transferV2(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, User user) throws JsonProcessingException {
+        log.info("In LendingServiceImpl class...");
+
+        if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
+        }
+
+        LenderPaymentGateway lenderPaymentGateway = lenderPaymentGatewayRepository.findByIsDefaultTrue()
+                .orElseThrow(()-> new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "No Default Payment Service for Lender"));
+
+
+        // Consumer sign-up, if not already
+        Consumer savedConsumer = null;
+        Consumer consumer = null;
+        Optional<Consumer> existingConsumer = consumerRepository.findByPhoneNumber(transferRequestDto.getPhoneNumber());
+        if (!existingConsumer.isPresent()) {
+            Consumer newConsumer = new Consumer();
+            newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
+            savedConsumer = consumerRepository.saveAndFlush(newConsumer);
+            consumer = savedConsumer;
+        } else {
+            consumer = existingConsumer.get();
+        }
+
+        if (lenderPaymentGateway.getPaymentGateway().getCode() == PaymentGatewayCode.EP) {
+            return transferThroughEP(transferRequestDto, lenderCallLog, consumer);
+        } else if (lenderPaymentGateway.getPaymentGateway().getCode() == PaymentGatewayCode.HMB) {
+            return hmbPaymentService.transfer(transferRequestDto, lenderCallLog, consumer);
+        }
+
+        return null;
+    }
+
     private TransferResponseDto transferThroughEP(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) throws JsonProcessingException {
 
+        TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
@@ -201,9 +238,9 @@ public class LendingServiceImpl implements LendingService {
 
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_LOGIN_FAILED.getCode())
-                    .result(QPResponseCode.EP_LOGIN_FAILED.getDescription())
-//                    .epResult(epLoginResponse)
+                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -258,11 +295,12 @@ public class LendingServiceImpl implements LendingService {
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_INQUIRY_FAILED.getDescription(), lenderCallLog);
 
+            transferState = TransferState.EP_INQUIRY_FAILED;
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.EP_INQUIRY_FAILED.getCode())
-                    .result(QPResponseCode.EP_INQUIRY_FAILED.getDescription())
-//                    .epResult(epInquiryResponse)
+                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
@@ -310,12 +348,14 @@ public class LendingServiceImpl implements LendingService {
             savedLendingTransaction.setTransactionState(TransactionState.COMPLETED);
             LendingTransaction finalSavedLendingTransaction = lendingTransactionRepository.saveAndFlush(savedLendingTransaction);
 
+            transferState = TransferState.TRANSFER_SUCCESS;
+
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                    .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
-//                    .epResult(epTransferResponse)
                     .transactionId(finalSavedLendingTransaction.getId().toString())
+                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         } else {
 
@@ -330,11 +370,12 @@ public class LendingServiceImpl implements LendingService {
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
 
+            transferState = TransferState.TRANSFER_FAILED;
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-//                    .epResult(epTransferResponse)
+                    .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
     }

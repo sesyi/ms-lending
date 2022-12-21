@@ -41,4 +41,7 @@ public class GatewayResponseDto {
 
     @JsonProperty("gateway_source")
     private String gatewaySource;
+
+    @JsonProperty("payment_status")
+    private String paymentStatus;
 }

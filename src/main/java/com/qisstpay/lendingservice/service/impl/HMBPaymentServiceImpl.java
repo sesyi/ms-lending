@@ -12,17 +12,13 @@ import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.*;
-import com.qisstpay.lendingservice.enums.CallStatusType;
-import com.qisstpay.lendingservice.enums.QPResponseCode;
-import com.qisstpay.lendingservice.enums.ServiceType;
-import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -31,9 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -83,6 +77,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
+
+        TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
+
         if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
@@ -131,35 +128,32 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         try {
             submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
-            lendingTransaction.setTransactionState(TransactionState.FAILURE);
+            lendingTransaction.setTransactionState(TransactionState.SUCCESS);
+            transferState = getStatusFromStatusDescription(submitTransactionResponseDto.getResponseCode(), submitTransactionResponseDto.getResponseDescription());
+
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
+
             return TransferResponseDto
                     .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
+                  .code(transferState.getCode())
+                    .state(transferState.getState())
+                    .description(transferState.getDescription())
                     .build();
         }
 
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
         lendingTransaction.setLenderCall(lenderCallLog);
 
-        lendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
-        if(!submitTransactionResponseDto.getResponseCode().equals("00")){
-            return TransferResponseDto
-                    .builder()
-                    .qpResponseCode(QPResponseCode.TRANSFER_FAILED.getCode())
-                    .result(QPResponseCode.TRANSFER_FAILED.getDescription())
-                    .build();
-        }
-
         lendingTransaction = lendingTransactionRepository.save(lendingTransaction);
 
         return TransferResponseDto
                 .builder()
-                .qpResponseCode(QPResponseCode.SUCCESSFUL_EXECUTION.getCode())
-                .result(QPResponseCode.SUCCESSFUL_EXECUTION.getDescription())
                 .transactionId(lendingTransaction.getId().toString())
+                .code(transferState.getCode())
+                .state(transferState.getState())
+                .description(transferState.getDescription())
+
                 .build();
     }
 
@@ -188,12 +182,13 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
 
-        TransactionStatusDto transactionStatusDto = getStatusFromStatusDescription(getTransactionStatusResponseDto.getResponseCode(), getTransactionStatusResponseDto.getResponseDescription());
+        TransferState transferState = getStatusFromStatusDescription(getTransactionStatusResponseDto.getResponseCode(), getTransactionStatusResponseDto.getResponseDescription());
 
         return TransactionStateResponse
                 .builder()
-                .state(transactionStatusDto.getState().toString())
-                .description(transactionStatusDto.getDescription())
+                .code(transferState.getCode())
+                .state(transferState.getState())
+                .description(transferState.getDescription())
                 .amount(lendingTransaction.getAmount())
                 .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
@@ -201,6 +196,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .transactionId(lendingTransaction.getId().toString())
                 .userName(lendingTransaction.getUserName())
                 .build();
+    }
+
+    private HttpURLConnection getConnection(URL url) throws IOException {
+        if(environment.equals("prod")) {
+            HttpsURLConnection httpsConnection = (HttpsURLConnection) url.openConnection();
+            httpsConnection.setHostnameVerifier((hostname, session) -> true);
+            return httpsConnection;
+        }
+        return  (HttpURLConnection) url.openConnection();
     }
 
     @Override
@@ -213,10 +217,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Token URL : "+hmbserviceBaseUrl + getTokenAPIBasePath);
 
             url = new URL(hmbserviceBaseUrl + getTokenAPIBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setHostnameVerifier((hostname, session) -> true);
-            connection.setRequestProperty("insecure", "true");
 
+            HttpURLConnection connection = getConnection(url);
+
+            connection.setRequestProperty("insecure", "true");
             connection.setRequestMethod("GET");
             connection.setRequestProperty("UserId", userId);
             connection.setRequestProperty("Password", password);
@@ -270,11 +274,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Submit IFT Transaction Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
 
             url = new URL(hmbserviceBaseUrl + submitIFTTransactionBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-
-//            log.info("Https Client: HttpsURLConnection");
-
-            connection.setHostnameVerifier((hostname, session) -> true);
+            HttpURLConnection connection = getConnection(url);
 
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -341,11 +341,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
 
             url = new URL(hmbserviceBaseUrl + submitIBFTTransactionBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            HttpURLConnection connection = getConnection(url);
 
 //            log.info("Https Client: HttpsURLConnection");
-
-            connection.setHostnameVerifier((hostname, session) -> true);
 
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -414,8 +412,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(getTransactionStatusRequestDto));
 
             url = new URL(hmbserviceBaseUrl + getTransactionBasePath);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setHostnameVerifier((hostname, session) -> true);
+            HttpURLConnection connection = getConnection(url);
+
             connection.setRequestProperty("insecure", "true");
 
             connection.setRequestMethod("POST");
@@ -471,42 +469,38 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 //        return getTransactionStatusResponseDto;
     }
 
-    public TransactionStatusDto getStatusFromStatusDescription(String responseCode, String responseDescription){
+    public TransferState getStatusFromStatusDescription(String responseCode, String responseDescription){
 
         TransactionStatusDto transactionStatusDto = new TransactionStatusDto();
 
         responseDescription = responseDescription.toLowerCase();
 
-        if(responseDescription.equals("transaction successfully proceeded...")){
-            transactionStatusDto.setState(TransactionState.SUCCESS);
-            transactionStatusDto.setDescription("Transfer completed");
+        if(responseDescription.equals("transaction successfully proceeded...".toLowerCase())){
+            return TransferState.TRANSFER_SUCCESS;
         }
-        else if(responseDescription.contains("Insufficient funds")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Insufficient funds");
+        if(responseDescription.contains("Insufficient funds".toLowerCase())){
+            return TransferState.INSUFFICIENT_FUNDS;
         }
-        else if(responseDescription.contains("Transfer limit exceeded")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Transfer limit exceeded");
+        if(responseDescription.contains("Transfer limit exceeded".toLowerCase())){
+            return TransferState.TRANSFER_LIMIT_EXCEEDED;
         }
-        else if(responseDescription.contains("To be release")){
-            transactionStatusDto.setState(TransactionState.IN_PROGRESS);
-            transactionStatusDto.setDescription("Transfer to be authorized by releaser");
+        if(responseDescription.contains("To be release".toLowerCase())){
+            if(!environment.equals("prod")){
+                return TransferState.TRANSFER_SUCCESS;
+            }
+            return TransferState.RELEASER_AUTHORIZATION_NEEDED;
         }
-        else if(responseDescription.contains("Currency mismatch for beneficiary")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Currency mismatch for beneficiary");
+        if(responseDescription.contains("Currency mismatch for beneficiary".toLowerCase())){
+            return TransferState.CURRENCY_MISMATCH;
         }
-        else if(responseDescription.contains("Customer account is not found")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Beneficiary account is not found");
+        if(responseDescription.contains("Customer account is not found".toLowerCase())){
+            return TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
         }
-        else if(responseDescription.contains("Customer account is inactive")){
-            transactionStatusDto.setState(TransactionState.FAILURE);
-            transactionStatusDto.setDescription("Beneficiary account is inactive");
+        if(responseDescription.contains("Customer account is inactive".toLowerCase())){
+            return TransferState.RECIPIENT_ACCOUNT_INACTIVE;
         }
 
-        return transactionStatusDto;
+        return TransferState.SOMETHING_WENT_WRONG;
     }
 
     private void updateLenderCallLog(CallStatusType status, String description, LenderCallLog lenderCallLog) {
@@ -542,6 +536,13 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     private String generateStan(Long lenderCallLogId){
 
         String stan = lenderCallLogId.toString();
+
+        if(environment.equals("stag")){
+            stan = "2"+stan;
+        }
+        else if(environment.equals("dev")){
+            stan = "3"+stan;
+        }
 
         if(lenderCallLogId<100000){
             StringBuilder stringBuilder = new StringBuilder();

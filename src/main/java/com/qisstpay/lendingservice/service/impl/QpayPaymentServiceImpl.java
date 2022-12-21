@@ -10,6 +10,7 @@ import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.QPayPaymentCallLog;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.EndPointType;
+import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.repository.QpayPaymentCallRepository;
 import com.qisstpay.lendingservice.service.QpayPaymentService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
@@ -158,6 +159,10 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG);
         } catch (Exception ex) {
             log.error("{} Request : {}", ex.getMessage(), qPayPaymentCallLog.getRequest());
+            if(ex.getMessage().contains("400 Bad Request")){
+                qPayPaymentCallLog.setStatus(CallStatusType.FAILURE);
+                throw new ServiceException(PaymentErrorType.ENABLE_TO_CAPTURE, ex, HttpMethod.POST.toString(), captureURL, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
+            }
             qPayPaymentCallLog.setMessage(ex.getMessage());
             qPayPaymentCallLog.setStatus(CallStatusType.FAILURE);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), captureURL, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);

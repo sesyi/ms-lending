@@ -36,11 +36,15 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findById(id);
         if (collectionTransaction.isPresent()) {
             return CollectionBillResponseDto.builder()
+                    .billId(collectionTransaction.get().getId())
                     .amount(collectionTransaction.get().getAmount())
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
                     .dueDate(collectionTransaction.get().getDueDate())
                     .identityNumber(collectionTransaction.get().getIdentityNumber())
                     .userName(collectionTransaction.get().getUserName())
+                    .billStatus(collectionTransaction.get().getBillStatus())
+                    .consumerId(collectionTransaction.get().getConsumer().getId().toString())
+                    .consumerEmail(collectionTransaction.get().getConsumer().getEmail())
                     .build();
         } else {
             log.error(BillErrorType.ENABLE_TO_GET_BILL.getErrorMessage());
