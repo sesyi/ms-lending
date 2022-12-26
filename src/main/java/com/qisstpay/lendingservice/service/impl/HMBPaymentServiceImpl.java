@@ -193,7 +193,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
                 .accountNumber(lendingTransaction.getAccountNo())
-                .transactionId(lendingTransaction.getId().toString())
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .userName(lendingTransaction.getUserName())
                 .build();
     }

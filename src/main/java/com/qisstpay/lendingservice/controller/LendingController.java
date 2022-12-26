@@ -70,7 +70,7 @@ public class LendingController {
     @GetMapping(STATUS)
     public CustomResponse<TransactionStateResponse> status(
             @RequestHeader(value = "x-api-key") String apiKey,
-            @PathVariable("transactionId") String transactionId,
+            @PathVariable("transactionId") String transactionStamp,
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
@@ -78,10 +78,10 @@ public class LendingController {
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionId, ServiceType.TRXN_STATE_CHECK, CallType.RECEIVED);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionStamp, ServiceType.TRXN_STATE_CHECK, CallType.RECEIVED);
 
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
-                .body(lendingService.checkStatus(transactionId, lenderCallLog)).build();
+                .body(lendingService.checkStatus(transactionStamp, lenderCallLog)).build();
     }
 
     @PostMapping(CREDIT_SCORE)

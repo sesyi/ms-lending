@@ -25,6 +25,7 @@ import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
+import com.qisstpay.lendingservice.utils.CommonUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -403,11 +404,12 @@ public class LendingServiceImpl implements LendingService {
     }
 
     @Override
-    public TransactionStateResponse checkStatus(String transactionId, LenderCallLog lenderCallLog) {
+    public TransactionStateResponse checkStatus(String transactionStamp, LenderCallLog lenderCallLog) {
 
-        LendingTransaction lendingTransaction = lendingTransactionRepository.findById(Long.valueOf(transactionId)).orElse(null);
+        LendingTransaction lendingTransaction = lendingTransactionRepository.findByTransactionStamp(transactionStamp).orElse(null);
 
         if (lendingTransaction != null) {
+            lendingTransaction.setTransactionStamp(CommonUtility.generateRandomTransactionStamp());
             ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
             if(serviceType.equals(ServiceType.EP)){
                 return checkEPStatus(lendingTransaction, lenderCallLog);
@@ -430,7 +432,7 @@ public class LendingServiceImpl implements LendingService {
                 .amount(lendingTransaction.getAmount())
                 .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
-                .transactionId(lendingTransaction.getId().toString())
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .userName(lendingTransaction.getUserName())
                 .build();
         //  update lender call log
