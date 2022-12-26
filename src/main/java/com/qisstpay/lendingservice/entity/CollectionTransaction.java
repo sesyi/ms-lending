@@ -49,6 +49,9 @@ public class CollectionTransaction {
     @Column(name = "transaction_id")
     private String serviceTransactionId;
 
+    @Column(name = "transaction_stamp")
+    private String transactionStamp;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private Timestamp createdAt;
