@@ -11,27 +11,28 @@ import lombok.ToString;
 @ToString
 public class EPCollectionInquiryResponse {
 
-    @JsonProperty("amount_after_due_date")
+    @JsonProperty("Amount_After_DueDate")
     private String amountAfterDueDate;
-    @JsonProperty("amount_paid")
+    @JsonProperty("Amount_Paid")
     private String amountPaid;
-    @JsonProperty("amount_within_due_date")
+    @JsonProperty("Amount_Within_DueDate")
     private String amountWithinDueDate;
-    @JsonProperty("bill_status")
+    @JsonProperty("Bill_Status")
     private String billStatus;
-    @JsonProperty("billing_month")
+    @JsonProperty("Billing_Month")
     private String billingMonth;
-    @JsonProperty("consumer_name")
+    @JsonProperty("Consumer_Detail")
     private String consumerName;
-    @JsonProperty("date_paid")
+    @JsonProperty("Date_Paid")
     private String datePaid;
-    @JsonProperty("due_date")
+    @JsonProperty("Due_Date")
     private String dueDate;
-    @JsonProperty("response_code")
+    @JsonProperty("Response_Code")
     private String responseCode;
     @JsonProperty("response_message")
     private String responseMessage;
-    @JsonProperty("tran_auth_Id")
+    @JsonProperty("Tran_Auth_Id")
     private String tranAuthId;
-
+    @JsonProperty("Reserved")
+    private String reserved;
 }

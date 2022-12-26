@@ -23,6 +23,9 @@ public class Consumer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "identity_number")
+    private String identityNumber;
+
     @Column(name = "phone_number")
     private String phoneNumber;
 

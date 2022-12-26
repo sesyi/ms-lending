@@ -8,5 +8,7 @@ public enum EndPointType {
     TRANSFER,
     QPAY_PAYMENT,
     QPAY_STATUS,
-    QPAY_CAPTURE
+    QPAY_CAPTURE,
+    BILL_INQUIRY,
+    BILL_UPDATE
 }

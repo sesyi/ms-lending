@@ -18,9 +18,23 @@ import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseD
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
 import com.qisstpay.lendingservice.dto.qpay.request.*;
 import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
-import com.qisstpay.lendingservice.entity.*;
-import com.qisstpay.lendingservice.enums.*;
+import com.qisstpay.lendingservice.entity.CollectionTransaction;
+import com.qisstpay.lendingservice.entity.Consumer;
+import com.qisstpay.lendingservice.entity.ConsumerAccount;
+import com.qisstpay.lendingservice.entity.EPCallLog;
+import com.qisstpay.lendingservice.entity.LenderCallLog;
+import com.qisstpay.lendingservice.entity.LendingTransaction;
+import com.qisstpay.lendingservice.entity.User;
+import com.qisstpay.lendingservice.enums.AbroadResponseCode;
+import com.qisstpay.lendingservice.enums.BillStatusType;
+import com.qisstpay.lendingservice.enums.CallStatusType;
+import com.qisstpay.lendingservice.enums.CallType;
+import com.qisstpay.lendingservice.enums.PaymentGatewayType;
+import com.qisstpay.lendingservice.enums.QPResponseCode;
+import com.qisstpay.lendingservice.enums.ServiceType;
+import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
+import com.qisstpay.lendingservice.repository.CollectionTransactionRepository;
 import com.qisstpay.lendingservice.service.*;
 import com.qisstpay.lendingservice.utils.CommonUtility;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +49,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +80,16 @@ public class CollectionServiceImpl implements CollectionService {
     private LendingCallService lendingCallService;
 
     @Autowired
+    private ConsumerService consumerService;
+
+    @Autowired
     private CollectionTransactionService collectionTransactionService;
+
+    @Autowired
+    private LendingService lendingService;
+
+    @Autowired
+    private CollectionTransactionRepository collectionTransactionRepository;
 
     private final String CALLING_SERVICE = "Calling Collection Service";
 
@@ -355,35 +381,77 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest) {
+    public EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest, EPCallLog savedEpCallLog) throws ParseException {
         log.info("Inquiry method has been invoked in CollectionServiceImpl class...");
 
         if (StringUtils.isBlank(epCollectionInquiryRequest.getConsumerNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer number is missing.");
         }
 
-        AbroadInquiryRequest abroadInquiryRequest = AbroadInquiryRequest.builder().consumerNumber(epCollectionInquiryRequest.getConsumerNumber()).build();
+        Optional<Consumer> consumer = consumerService.findByConsumerNumber(epCollectionInquiryRequest.getConsumerNumber());
+        if (!consumer.isPresent()) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer is not found.");
+        }
+
+        if (StringUtils.isBlank(epCollectionInquiryRequest.getBankMnemonic())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender ucid is missing.");
+        }
+
+        Optional<User> lender = userService.getUserByUcid(epCollectionInquiryRequest.getBankMnemonic());
+        if (!lender.isPresent()) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender is not found.");
+        }
+
+        // persist collection transaction
+        CollectionTransaction collectionTransaction = CollectionTransaction.builder()
+                .consumer(consumer.get())
+                .transactionState(TransactionState.RECEIVED)
+                .epCallLog(savedEpCallLog)
+                .build();
+        CollectionTransaction savedCollectionTransaction = collectionTransactionService.save(collectionTransaction);
+
+        AbroadInquiryRequest abroadInquiryRequest = AbroadInquiryRequest.builder()
+                .consumerNumber(epCollectionInquiryRequest.getConsumerNumber())
+                .build();
+
+        // add lender call log
+        LenderCallLog savedLenderCallLog = lendingCallService.saveLenderCall(
+                lender.get(),
+                abroadInquiryRequest.toString(),
+                ServiceType.EP,
+                CallType.SENT);
+
         AbroadInquiryResponse abroadInquiryResponse;
         try {
             abroadInquiryResponse = abroadBillInquiryCall(abroadInquiryRequest);
         } catch (Exception e) {
             log.error("Exception Occurred in Abroad Inquiry for consumer: {}", epCollectionInquiryRequest.getConsumerNumber());
-//            updateEpCallLog(savedEpLoginCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
-//            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
+            lendingService.updateEpCallLog(savedEpCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null, savedCollectionTransaction);
+            lendingService.updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.ABROAD_INQUIRY_FAILED.getDescription(), savedLenderCallLog);
+            savedCollectionTransaction.setTransactionState(TransactionState.EXCEPTION);
+            collectionTransactionService.save(savedCollectionTransaction);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl + billInquiryUrl, new HttpEntity<>(abroadInquiryRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
         if (!abroadInquiryResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
-//            //  update ep call log
-//            updateEpCallLog(
-//                    savedEpLoginCallLog,
-//                    CallStatusType.FAILURE,
-//                    epLoginResponse.getResponseCode(),
-//                    epLoginResponse.getResponseMessage(),
-//                    epLoginResponse.toString());
-//
-//            //  update lender call log
-//            updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
+            //  update ep call log
+            lendingService.updateEpCallLog(
+                    savedEpCallLog,
+                    CallStatusType.FAILURE,
+                    abroadInquiryResponse.getResponseCode(),
+                    null,
+                    abroadInquiryResponse.toString(),
+                    savedCollectionTransaction);
+
+            //  update lender call log
+            lendingService.updateLenderCallLog(
+                    CallStatusType.FAILURE,
+                    QPResponseCode.ABROAD_INQUIRY_FAILED.getDescription(),
+                    savedLenderCallLog);
+
+            // update collection transaction
+            savedCollectionTransaction.setTransactionState(TransactionState.FAILURE);
+            collectionTransactionService.save(savedCollectionTransaction);
 
             return EPCollectionInquiryResponse
                     .builder()
@@ -392,13 +460,33 @@ public class CollectionServiceImpl implements CollectionService {
                     .build();
         }
 
+        //  update ep call log
+        lendingService.updateEpCallLog(
+                savedEpCallLog,
+                CallStatusType.SUCCESS,
+                abroadInquiryResponse.getResponseCode(),
+                null,
+                abroadInquiryResponse.toString(),
+                savedCollectionTransaction);
+
 //        //  update ep call log
-//        updateEpCallLog(
-//                savedEpLoginCallLog,
-//                CallStatusType.SUCCESS,
-//                epLoginResponse.getResponseCode(),
-//                epLoginResponse.getResponseMessage(),
-//                epLoginResponse.toString());
+        lendingService.updateLenderCallLog(
+                CallStatusType.SUCCESS,
+                QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(),
+                savedLenderCallLog);
+
+        // update collection transaction
+        savedCollectionTransaction.setTransactionState(TransactionState.INQUIRY_SUCCESS);
+        savedCollectionTransaction.setAmountAfterDueDate(Double.valueOf(abroadInquiryResponse.getAmountAfterDueDate()));
+        savedCollectionTransaction.setAmount(Double.valueOf(abroadInquiryResponse.getAmountPaid()));
+        savedCollectionTransaction.setAmountWithinDueDate(Double.valueOf(abroadInquiryResponse.getAmountWithinDueDate()));
+        savedCollectionTransaction.setBillingMonth(abroadInquiryResponse.getBillingMonth());
+        savedCollectionTransaction.setBillStatus(abroadInquiryResponse.getBillStatus() == "U"? BillStatusType.UNPAID : BillStatusType.PAID);
+        savedCollectionTransaction.setServiceTransactionId(abroadInquiryResponse.getTranAuthId());
+        savedCollectionTransaction.setConsumerName(abroadInquiryResponse.getConsumerName());
+        savedCollectionTransaction.setDatePaid(getDateFromString(abroadInquiryResponse.getDatePaid()));
+        savedCollectionTransaction.setDueDate(getDateFromString(abroadInquiryResponse.getDueDate()));
+        collectionTransactionService.save(savedCollectionTransaction);
 
         return EPCollectionInquiryResponse
                 .builder()
@@ -411,60 +499,128 @@ public class CollectionServiceImpl implements CollectionService {
                 .consumerName(abroadInquiryResponse.getConsumerName())
                 .datePaid(abroadInquiryResponse.getDatePaid())
                 .dueDate(abroadInquiryResponse.getDueDate())
+                .tranAuthId(abroadInquiryResponse.getTranAuthId())
                 .build();
     }
 
     @Override
-    public EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) {
+    public EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest, EPCallLog savedEpCallLog) throws ParseException {
         log.info("Update method has been invoked in CollectionServiceImpl class...");
 
         if (StringUtils.isBlank(epCollectionBillUpdateRequest.getConsumerNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer number is missing.");
         }
 
-        AbroadBillUpdateRequest abroadBillUpdateRequest = AbroadBillUpdateRequest.builder().consumerNumber(epCollectionBillUpdateRequest.getConsumerNumber()).build();
+        Optional<Consumer> consumer = consumerService.findByConsumerNumber(epCollectionBillUpdateRequest.getConsumerNumber());
+        if (!consumer.isPresent()) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer is not found.");
+        }
+
+        if (StringUtils.isBlank(epCollectionBillUpdateRequest.getBankMnemonic())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender ucid is missing.");
+        }
+
+        Optional<User> lender = userService.getUserByUcid(epCollectionBillUpdateRequest.getBankMnemonic());
+        if (!lender.isPresent()) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender is not found.");
+        }
+
+        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByConsumerAndTransactionStateOrderByCreatedAtDesc(consumer.get(), TransactionState.INQUIRY_SUCCESS);
+        if (!collectionTransaction.isPresent()) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Inquiry is not done, pls perform inquiry first.");
+        }
+
+        // persist collection transaction
+        collectionTransaction.get().setConsumer(consumer.get());
+        collectionTransaction.get().setServiceTransactionId(epCollectionBillUpdateRequest.getTranAuthId());
+        collectionTransaction.get().setDatePaid(getDateFromString(epCollectionBillUpdateRequest.getTranDate()));
+        collectionTransaction.get().setAmount(Double.valueOf(epCollectionBillUpdateRequest.getTransactionAmount()));
+        collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
+        collectionTransaction.get().setEpCallLog(savedEpCallLog);
+        CollectionTransaction savedCollectionTransaction = collectionTransactionService.save(collectionTransaction.get());
+
+        AbroadBillUpdateRequest abroadBillUpdateRequest = AbroadBillUpdateRequest.builder()
+                .consumerNumber(epCollectionBillUpdateRequest.getConsumerNumber())
+                .tranAuthId(epCollectionBillUpdateRequest.getTranAuthId())
+                .tranDate(epCollectionBillUpdateRequest.getTranDate())
+                .transactionAmount(epCollectionBillUpdateRequest.getTransactionAmount())
+                .tranTime(epCollectionBillUpdateRequest.getTranTime())
+                .build();
+
+        // add lender call log
+        LenderCallLog savedLenderCallLog = lendingCallService.saveLenderCall(
+                lender.get(),
+                abroadBillUpdateRequest.toString(),
+                ServiceType.EP,
+                CallType.SENT);
+
         AbroadBillUpdateResponse abroadBillUpdateResponse;
         try {
             abroadBillUpdateResponse = abroadBillUpdateCall(abroadBillUpdateRequest);
         } catch (Exception e) {
             log.error("Exception Occurred in Abroad Bill Update for consumer: {}", epCollectionBillUpdateRequest.getConsumerNumber());
-//            updateEpCallLog(savedEpLoginCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
-//            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
+            lendingService.updateEpCallLog(savedEpCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null, savedCollectionTransaction);
+            lendingService.updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription(), savedLenderCallLog);
+            savedCollectionTransaction.setTransactionState(TransactionState.EXCEPTION);
+            collectionTransactionService.save(savedCollectionTransaction);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl + billUpdateUrl, new HttpEntity<>(abroadBillUpdateRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
+
         if (!abroadBillUpdateResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
-//            //  update ep call log
-//            updateEpCallLog(
-//                    savedEpLoginCallLog,
-//                    CallStatusType.FAILURE,
-//                    epLoginResponse.getResponseCode(),
-//                    epLoginResponse.getResponseMessage(),
-//                    epLoginResponse.toString());
-//
-//            //  update lender call log
-//            updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
+            //  update ep call log
+            lendingService.updateEpCallLog(
+                    savedEpCallLog,
+                    CallStatusType.FAILURE,
+                    abroadBillUpdateResponse.getResponseCode(),
+                    null,
+                    abroadBillUpdateResponse.toString(),
+                    savedCollectionTransaction);
+
+            //  update lender call log
+            lendingService.updateLenderCallLog(
+                    CallStatusType.FAILURE,
+                    QPResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription(),
+                    savedLenderCallLog);
+
+            // update collection transaction
+            savedCollectionTransaction.setTransactionState(TransactionState.FAILURE);
+            collectionTransactionService.save(savedCollectionTransaction);
 
             return EPCollectionBillUpdateResponse
                     .builder()
-                    .responseCode(AbroadResponseCode.ABROAD_INQUIRY_FAILED.getCode())
-                    .responseMessage(AbroadResponseCode.ABROAD_INQUIRY_FAILED.getDescription())
+                    .responseCode(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getCode())
+                    .responseMessage(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription())
                     .build();
         }
 
-//        //  update ep call log
-//        updateEpCallLog(
-//                savedEpLoginCallLog,
-//                CallStatusType.SUCCESS,
-//                epLoginResponse.getResponseCode(),
-//                epLoginResponse.getResponseMessage(),
-//                epLoginResponse.toString());
+        //  update ep call log
+        lendingService.updateEpCallLog(
+                savedEpCallLog,
+                CallStatusType.SUCCESS,
+                abroadBillUpdateResponse.getResponseCode(),
+                null,
+                abroadBillUpdateResponse.toString(),
+                savedCollectionTransaction);
+
+//        //  update lender call log
+        lendingService.updateLenderCallLog(
+                CallStatusType.SUCCESS,
+                QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(),
+                savedLenderCallLog);
+
+        // update collection transaction
+        savedCollectionTransaction.setTransactionState(TransactionState.COMPLETED);
+        savedCollectionTransaction.setIdentificationParameter(abroadBillUpdateResponse.getIdentificationParameter());
+        savedCollectionTransaction.setReserved(abroadBillUpdateResponse.getReserved());
+        savedCollectionTransaction.setBillStatus(BillStatusType.PAID);
+        collectionTransactionService.save(savedCollectionTransaction);
 
         return EPCollectionBillUpdateResponse
                 .builder()
                 .responseCode(abroadBillUpdateResponse.getResponseCode())
                 .identificationParameter(abroadBillUpdateResponse.getIdentificationParameter())
-                .tranAuthId("TO BE ADDED")
+                .reserved(abroadBillUpdateResponse.getReserved())
                 .build();
     }
 
@@ -496,4 +652,9 @@ public class CollectionServiceImpl implements CollectionService {
         return abroadBillUpdateResponse.getBody();
     }
 
+    private Date getDateFromString(String date) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        Date convertedCurrentDate = sdf.parse("20130918");
+        return convertedCurrentDate;
+    }
 }

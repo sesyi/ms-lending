@@ -3,10 +3,7 @@ package com.qisstpay.lendingservice.controller;
 
 import com.qisstpay.commons.response.CustomResponse;
 import com.qisstpay.lendingservice.dto.internal.response.GetBanksListResponseDto;
-import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
-import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.User;
-import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.service.BankService;
 import com.qisstpay.lendingservice.service.UserService;
@@ -42,7 +39,7 @@ public class BankController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         return CustomResponse.CustomResponseBuilder.<GetBanksListResponseDto>builder().body(

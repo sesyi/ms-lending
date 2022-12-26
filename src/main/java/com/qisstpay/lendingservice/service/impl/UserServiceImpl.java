@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> getUser(Long userId) {
+    public Optional<User> getUserByUsername(Long userId) {
         return userRepository.getByUserId(userId);
     }
 
@@ -97,7 +97,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> getUser(String userName) {
+    public Optional<User> getUserByUsername(String userName) {
         return userRepository.getByUserName(userName);
+    }
+
+    @Override
+    public Optional<User> getUserByUcid(String ucid) {
+        return userRepository.getByUcid(ucid);
     }
 }
