@@ -6,22 +6,29 @@ import com.google.gson.annotations.Expose;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 @Data
-@Builder
 public class EPCollectionBillUpdateRequest {
 
-    @JsonProperty("consumer_number")
+    @NotNull
+    @JsonProperty("Consumer_Number")
     private String consumerNumber;
-    @Expose
-    private String password;
-    @JsonProperty("tran_auth_id")
+//    @Expose
+//    private String password;
+    @JsonProperty("Tran_Auth_Id")
     private String tranAuthId;
-    @JsonProperty("tran_date")
+    @JsonProperty("Tran_Date")
     private String tranDate;
-    @JsonProperty("tran_time")
+    @JsonProperty("Tran_Time")
     private String tranTime;
-    @JsonProperty("transaction_amount")
+    @JsonProperty("Transaction_Amount")
     private String transactionAmount;
-    @Expose
-    private String username;
+//    @Expose
+//    private String username;
+    @NotNull
+    @JsonProperty("Bank_Mnemonic")
+    private String bankMnemonic;
+    @JsonProperty("Reserved")
+    private String reserved;
 }

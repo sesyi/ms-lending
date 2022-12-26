@@ -3,7 +3,8 @@ package com.qisstpay.lendingservice.enums;
 public enum AbroadResponseCode {
     SUCCESSFUL_EXECUTION("00", "Successful execution"),
     EXCEPTION_OCCURRED("-1", "Exception occurred"),
-    ABROAD_INQUIRY_FAILED("202","Abroad inquiry failed");
+    ABROAD_INQUIRY_FAILED("202","Abroad inquiry failed"),
+    ABROAD_BILL_UPDATE_FAILED("203","Abroad Bill Update failed");
 
     private final String code;
     private final String description;

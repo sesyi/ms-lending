@@ -11,10 +11,10 @@ public class EPCollectionBillUpdateResponse {
 
     @JsonProperty("Identification_parameter")
     private String identificationParameter;
-    @JsonProperty("response_code")
+    @JsonProperty("Response_Code")
     private String responseCode;
-    @JsonProperty("response_message")
+    @JsonProperty("Response_message")
     private String responseMessage;
-    @JsonProperty("tran_auth_Id")
-    private String tranAuthId;
+    @JsonProperty("Reserved")
+    private String reserved;
 }

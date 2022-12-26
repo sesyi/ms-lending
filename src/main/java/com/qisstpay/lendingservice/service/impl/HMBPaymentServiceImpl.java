@@ -89,7 +89,6 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
         lendingTransaction.setAccountNo(transferRequestDto.getAccountNo());
-        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
         lendingTransaction.setServiceType(ServiceType.HMB);
         lendingTransaction.setConsumer(consumer);
         lendingTransaction.setTransactionState(TransactionState.FAILURE);
@@ -197,11 +196,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .state(transactionStatusDto.getState().toString())
                 .description(transactionStatusDto.getDescription())
                 .amount(lendingTransaction.getAmount())
-                .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
                 .accountNumber(lendingTransaction.getAccountNo())
                 .transactionId(lendingTransaction.getId().toString())
-                .userName(lendingTransaction.getUserName())
                 .build();
     }
 

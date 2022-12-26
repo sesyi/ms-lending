@@ -5,5 +5,7 @@ public enum TransactionState {
     IN_PROGRESS,
     COMPLETED,
     SUCCESS,
-    FAILURE
+    FAILURE,
+    EXCEPTION,
+    INQUIRY_SUCCESS
 }

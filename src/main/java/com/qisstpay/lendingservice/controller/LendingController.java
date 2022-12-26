@@ -57,7 +57,7 @@ public class LendingController {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("In method" + TRANSFER + " with request {}", transferRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
@@ -74,7 +74,7 @@ public class LendingController {
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
@@ -93,7 +93,7 @@ public class LendingController {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("getScore creditScoreRequestDto: {}", creditScoreRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
         LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ, CallType.RECEIVED);
         CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallLog);
