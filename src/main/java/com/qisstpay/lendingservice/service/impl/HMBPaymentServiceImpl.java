@@ -475,7 +475,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         responseDescription = responseDescription.toLowerCase();
 
-        if(responseDescription.equals("transaction successfully proceeded...".toLowerCase())){
+        if(responseDescription.equals("Paid/Transferred".toLowerCase())){
             return TransferState.TRANSFER_SUCCESS;
         }
         if(responseDescription.contains("Insufficient funds".toLowerCase())){
@@ -498,6 +498,18 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
         if(responseDescription.contains("Customer account is inactive".toLowerCase())){
             return TransferState.RECIPIENT_ACCOUNT_INACTIVE;
+        }
+        if(responseDescription.contains("Rejected by releaser".toLowerCase())){
+            return TransferState.RELEASER_REJECTED;
+        }
+        if(responseDescription.contains("Core UnSuccess Failed".toLowerCase())){
+            return TransferState.SOMETHING_WENT_WRONG;
+        }
+        if(responseDescription.contains("waiting for core response".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
+        }
+        if(responseDescription.contains("Waiting for backoffice process".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
         }
 
         return TransferState.SOMETHING_WENT_WRONG;
