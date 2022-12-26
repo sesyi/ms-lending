@@ -24,6 +24,7 @@ import com.qisstpay.lendingservice.entity.ConsumerAccount;
 import com.qisstpay.lendingservice.entity.EPCallLog;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.LendingTransaction;
+import com.qisstpay.lendingservice.entity.QpayPaymentTransaction;
 import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.enums.AbroadResponseCode;
 import com.qisstpay.lendingservice.enums.BillStatusType;
