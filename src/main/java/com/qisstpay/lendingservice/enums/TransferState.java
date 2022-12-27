@@ -14,7 +14,9 @@ public enum TransferState {
     CURRENCY_MISMATCH("109","FAILURE", "Currency mismatch for recipient"),
     RECIPIENT_ACCOUNT_NOT_FOUND("110","FAILURE", "Recipient account is not found"),
     RECIPIENT_ACCOUNT_INACTIVE("111","FAILURE", "Recipient account is inactive"),
-    RELEASER_AUTHORIZATION_NEEDED("112","PENDING","Transfer to be authorized by releaser");
+    RELEASER_AUTHORIZATION_NEEDED("112","PENDING","Transfer to be authorized by releaser"),
+    RELEASER_REJECTED("113","FAILURE","Transfer rejected by releaser"),
+    GATEWAY_TRANSFER_PENDING("114","PENDING","Transfer in progress");
 
 
     private final String code;

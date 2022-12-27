@@ -58,6 +58,16 @@ public class ConsumerServiceImpl implements ConsumerService {
         return consumerRepository.save(consumer);
     }
 
+    @Override
+    public Optional<Consumer> findByConsumerNumber(String consumerNumber) {
+        return consumerRepository.findByPhoneNumber(consumerNumber);
+    }
+
+    @Override
+    public Optional<Consumer> findByIdentityNumber(String identityNumber) {
+        return consumerRepository.findByIdentityNumber(identityNumber);
+    }
+
     public Optional<Consumer> findByCnicOrPhonenumber(String cnic, String phoneNumber) {
         List<Consumer> consumerList = consumerRepository.findByCnicOrPhoneNumber(cnic, phoneNumber);
         if (consumerList.size() > 1) {

@@ -7,23 +7,32 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
+import javax.validation.constraints.NotNull;
+
 @Data
-@Builder
-@ToString
 public class EPCollectionBillUpdateRequest {
 
-    @JsonProperty("consumer_number")
+    @NotNull
+    @JsonProperty("Consumer_Number")
     private String consumerNumber;
     @Expose
+    @JsonProperty("Password")
     private String password;
-    @JsonProperty("tran_auth_id")
+    @JsonProperty("Tran_Auth_Id")
     private String tranAuthId;
-    @JsonProperty("tran_date")
+    @JsonProperty("Tran_Date")
     private String tranDate;
-    @JsonProperty("tran_time")
+    @JsonProperty("Tran_Time")
     private String tranTime;
-    @JsonProperty("transaction_amount")
+    @JsonProperty("Transaction_Amount")
     private String transactionAmount;
     @Expose
+    @NotNull
+    @JsonProperty("Username")
     private String username;
+    @NotNull
+    @JsonProperty("Bank_Mnemonic")
+    private String bankMnemonic;
+    @JsonProperty("Reserved")
+    private String reserved;
 }

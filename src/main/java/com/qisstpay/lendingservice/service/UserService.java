@@ -13,10 +13,12 @@ public interface UserService {
 
     MessageResponseDto verifyUser(Long userId, String apiKey);
 
-    Optional<User> getUser(Long userId);
+    Optional<User> getUserByUsername(Long userId);
 
     Optional<User> getUserById(Long id);
 
-    Optional<User> getUser(String userName);
+    Optional<User> getUserByUsername(String userName);
+
+    Optional<User> getUserByUcid(String ucid);
 }
 

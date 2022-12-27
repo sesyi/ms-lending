@@ -8,7 +8,9 @@ public enum QPResponseCode {
     EP_LOGIN_FAILED("103","EP login failed"),
     EP_INQUIRY_FAILED("104","EP inquiry failed"),
     TRANSFER_FAILED("105","Transfer failed"),
-    TRXN_FETCH_FAILED("106","Trxn fetch failed");
+    TRXN_FETCH_FAILED("106","Trxn fetch failed"),
+    ABROAD_INQUIRY_FAILED("005","Abroad Inquiry Failed"),
+    ABROAD_BILL_UPDATE_FAILED("006","Abroad Bill Update Failed");
 
     private final String code;
     private final String description;

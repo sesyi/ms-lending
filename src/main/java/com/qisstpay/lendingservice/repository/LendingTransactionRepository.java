@@ -12,4 +12,6 @@ public interface LendingTransactionRepository extends JpaRepository<LendingTrans
     LendingTransaction findFirstByOrderByIdDesc();
 
     Optional<LendingTransaction> findByIdentityNumber(String identityNumber);
+
+    Optional<LendingTransaction> findByTransactionStamp(String transactionStamp);
 }
