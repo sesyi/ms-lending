@@ -168,7 +168,7 @@ public class CollectionController {
 
         // mfb(3rd-party) authentication
         Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        ApiKeyAuth.verifyApiKey(user, apiKey);
+        mfbUserAuth.verifyUser(apiKey, user, epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword());
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionInquiryRequest.getBankMnemonic());
@@ -189,7 +189,7 @@ public class CollectionController {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        ApiKeyAuth.verifyApiKey(user, apiKey);
+        mfbUserAuth.verifyUser(apiKey, user, epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionBillUpdateRequest.getBankMnemonic());
