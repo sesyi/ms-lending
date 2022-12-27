@@ -10,6 +10,7 @@ import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryRes
 import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CollectionBillResponseDto;
+import com.qisstpay.lendingservice.dto.internal.response.MessageResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
 import com.qisstpay.lendingservice.entity.EPCallLog;
@@ -20,11 +21,8 @@ import com.qisstpay.lendingservice.enums.EndPointType;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
-import com.qisstpay.lendingservice.service.CollectionService;
-import com.qisstpay.lendingservice.service.CollectionTransactionService;
-import com.qisstpay.lendingservice.service.LendingCallService;
-import com.qisstpay.lendingservice.service.LendingService;
-import com.qisstpay.lendingservice.service.UserService;
+import com.qisstpay.lendingservice.security.MFBUserAuth;
+import com.qisstpay.lendingservice.service.*;
 import com.qisstpay.lendingservice.utils.TokenParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +58,9 @@ public class CollectionController {
     @Autowired
     private LendingService lendingService;
 
+    @Autowired
+    private MFBUserAuth mfbUserAuth;
+
     @Value("${auth.api-key.qpay}")
     private String qpayApiKey;
 
@@ -69,6 +70,7 @@ public class CollectionController {
     private static final String GET_BILL                   = "/get/bill";
     private static final String INQUIRY                    = "bill/inquiry";
     private static final String UPDATE                     = "bill/update";
+    private static final String TEST                       = "/test";
 
     private static final String CALLING_CONTROLLER            = "Calling CollectionController";
     private static final String CALLING_COLLECTION_CONTROLLER = "Calling Collection Controller";
@@ -166,7 +168,7 @@ public class CollectionController {
 
         // mfb(3rd-party) authentication
         Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        ApiKeyAuth.verifyApiKey(user, apiKey);
+        mfbUserAuth.verifyUser(apiKey, user, epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword());
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionInquiryRequest.getBankMnemonic());
@@ -187,7 +189,7 @@ public class CollectionController {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        ApiKeyAuth.verifyApiKey(user, apiKey);
+        mfbUserAuth.verifyUser(apiKey, user, epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionBillUpdateRequest.getBankMnemonic());
@@ -199,5 +201,19 @@ public class CollectionController {
                 user.get());
 
         return CustomResponse.CustomResponseBuilder.<EPCollectionBillUpdateResponse>builder().body(collectionService.billUpdate(epCollectionBillUpdateRequest, savedEpLoginCallLog)).build();
+    }
+
+
+    @PostMapping(TEST)
+    public CustomResponse<MessageResponseDto> test(
+            @RequestHeader(value = "x-api-key") String apiKey,
+            @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) {
+        log.info(CALLING_COLLECTION_CONTROLLER);
+        // mfb authentication
+        Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
+        mfbUserAuth.verifyUser(apiKey, user, epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
+        log.info("adding call log for lender {}", user.get().getId());
+//        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
+        return CustomResponse.CustomResponseBuilder.<MessageResponseDto>builder().body(MessageResponseDto.builder().message("Test successful").build()).build();
     }
 }
