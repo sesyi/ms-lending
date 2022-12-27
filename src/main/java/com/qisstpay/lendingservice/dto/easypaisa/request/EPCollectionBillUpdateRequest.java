@@ -15,8 +15,9 @@ public class EPCollectionBillUpdateRequest {
     @NotNull
     @JsonProperty("Consumer_Number")
     private String consumerNumber;
-//    @Expose
-//    private String password;
+    @Expose
+    @JsonProperty("Password")
+    private String password;
     @JsonProperty("Tran_Auth_Id")
     private String tranAuthId;
     @JsonProperty("Tran_Date")
@@ -25,8 +26,10 @@ public class EPCollectionBillUpdateRequest {
     private String tranTime;
     @JsonProperty("Transaction_Amount")
     private String transactionAmount;
-//    @Expose
-//    private String username;
+    @Expose
+    @NotNull
+    @JsonProperty("Username")
+    private String username;
     @NotNull
     @JsonProperty("Bank_Mnemonic")
     private String bankMnemonic;

@@ -2,6 +2,7 @@
 package com.qisstpay.lendingservice.dto.easypaisa.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.Expose;
 import lombok.Data;
 import lombok.ToString;
 
@@ -14,8 +15,11 @@ public class EPCollectionInquiryRequest {
     @NotNull
     @JsonProperty("Consumer_Number")
     private String consumerNumber;
+    @Expose
     @JsonProperty("Password")
     private String password;
+    @Expose
+    @NotNull
     @JsonProperty("Username")
     private String username;
     @NotNull
