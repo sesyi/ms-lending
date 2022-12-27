@@ -162,13 +162,12 @@ public class CollectionController {
 
     @PostMapping(INQUIRY)
     public CustomResponse<EPCollectionInquiryResponse> inquiry(
-            @RequestHeader(value = "x-api-key") String apiKey,
             @RequestBody EPCollectionInquiryRequest epCollectionInquiryRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
 
         // mfb(3rd-party) authentication
         Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        mfbUserAuth.verifyUser(apiKey, user, epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword());
+        mfbUserAuth.verifyUser(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword());
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionInquiryRequest.getBankMnemonic());
@@ -184,12 +183,11 @@ public class CollectionController {
 
     @PostMapping(UPDATE)
     public CustomResponse<EPCollectionBillUpdateResponse> billUpdate(
-            @RequestHeader(value = "x-api-key") String apiKey,
             @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        mfbUserAuth.verifyUser(apiKey, user, epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
+        mfbUserAuth.verifyUser(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionBillUpdateRequest.getBankMnemonic());
@@ -206,12 +204,11 @@ public class CollectionController {
 
     @PostMapping(TEST)
     public CustomResponse<MessageResponseDto> test(
-            @RequestHeader(value = "x-api-key") String apiKey,
             @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        mfbUserAuth.verifyUser(apiKey, user, epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
+        mfbUserAuth.verifyUser(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
         log.info("adding call log for lender {}", user.get().getId());
 //        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transferRequestDto.toString(), transferRequestDto.getType() == TransferType.HMB? ServiceType.HMB: ServiceType.EP);
         return CustomResponse.CustomResponseBuilder.<MessageResponseDto>builder().body(MessageResponseDto.builder().message("Test successful").build()).build();
