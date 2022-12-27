@@ -163,12 +163,11 @@ public class CollectionController {
     @PostMapping(INQUIRY)
     public CustomResponse<EPCollectionInquiryResponse> inquiry(
             @RequestHeader(value = "x-api-key") String apiKey,
-            @RequestHeader(value = "Username") String userName,
             @RequestBody EPCollectionInquiryRequest epCollectionInquiryRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
 
         // mfb(3rd-party) authentication
-        Optional<User> user = userService.getUserByUsername(userName);
+        Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         // add call logs
@@ -186,11 +185,10 @@ public class CollectionController {
     @PostMapping(UPDATE)
     public CustomResponse<EPCollectionBillUpdateResponse> billUpdate(
             @RequestHeader(value = "x-api-key") String apiKey,
-            @RequestHeader(value = "Username") String userName,
             @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
-        Optional<User> user = userService.getUserByUsername(userName);
+        Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         // add call logs

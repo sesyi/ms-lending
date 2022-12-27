@@ -526,9 +526,9 @@ public class CollectionServiceImpl implements CollectionService {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender is not found.");
         }
 
-        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByConsumerAndTransactionStateOrderByCreatedAtDesc(consumer.get(), TransactionState.INQUIRY_SUCCESS);
+        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findTopByConsumerAndTransactionStateOrderByCreatedAtDesc(consumer.get(), TransactionState.INQUIRY_SUCCESS);
         if (!collectionTransaction.isPresent()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Inquiry is not done, pls perform inquiry first.");
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Either inquiry is not done, Or it has already been done.");
         }
 
         // persist collection transaction
