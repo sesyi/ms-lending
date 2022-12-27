@@ -24,20 +24,18 @@ public class MFBUserAuth {
     @Autowired
     RestTemplate restTemplate;
 
-    public void verifyUser(final String apiKey, Optional<User> user, String userName, String password) {
+    public void verifyUser(String userName, String password) {
 
-        if (!checkUserCredentials(VerifyMFBRequestDto.builder().username(userName).password(password).build(), apiKey)) {
+        if (!checkUserCredentials(VerifyMFBRequestDto.builder().username(userName).password(password).build())) {
             log.info("Token verification: {}", HttpStatus.UNAUTHORIZED);
             throw new CustomException(HttpStatus.UNAUTHORIZED.toString(), String.format("Token verification: %s", HttpStatus.UNAUTHORIZED));
         }
-        ApiKeyAuth.verifyApiKey(user, apiKey);
     }
 
-    private Boolean checkUserCredentials(final VerifyMFBRequestDto verifyMFBRequestDto, String apiKey) {
+    private Boolean checkUserCredentials(final VerifyMFBRequestDto verifyMFBRequestDto) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.add("x-api-key", apiKey);
             HttpEntity<VerifyMFBRequestDto> requestEntity = new HttpEntity<>(verifyMFBRequestDto, headers);
             ResponseEntity<Object> responseEntity = restTemplate.exchange(
                     verifyMFBt, HttpMethod.POST, requestEntity, Object.class);
