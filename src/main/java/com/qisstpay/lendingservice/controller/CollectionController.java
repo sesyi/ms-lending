@@ -205,7 +205,7 @@ public class CollectionController {
 
 
     @PostMapping(TEST)
-    public CustomResponse<MessageResponseDto> billUpdate(
+    public CustomResponse<MessageResponseDto> test(
             @RequestHeader(value = "x-api-key") String apiKey,
             @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) {
         log.info(CALLING_COLLECTION_CONTROLLER);
