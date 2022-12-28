@@ -15,10 +15,8 @@ public class EPCollectionBillUpdateResponse {
 
     @JsonProperty("Identification_parameter")
     private String identificationParameter;
-    @JsonProperty("Response_Code")
+    @JsonProperty("response_Code")
     private String responseCode;
-    @JsonProperty("Response_message")
-    private String responseMessage;
-    @JsonProperty("Reserved")
+    @JsonProperty("reserved")
     private String reserved;
 }

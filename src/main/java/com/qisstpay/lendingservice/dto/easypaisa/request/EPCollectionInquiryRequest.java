@@ -13,14 +13,14 @@ import javax.validation.constraints.NotNull;
 public class EPCollectionInquiryRequest {
 
     @NotNull
-    @JsonProperty("Consumer_Number")
+    @JsonProperty("Consumer_number")
     private String consumerNumber;
     @Expose
-    @JsonProperty("Password")
+    @JsonProperty("password")
     private String password;
     @Expose
     @NotNull
-    @JsonProperty("Username")
+    @JsonProperty("username")
     private String username;
     @NotNull
     @JsonProperty("Bank_Mnemonic")

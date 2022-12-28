@@ -4,33 +4,37 @@ import com.qisstpay.commons.error.errortype.AuthenticationErrorType;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.commons.response.CustomResponse;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
-import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequest;
-import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
-import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
 import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CollectionBillResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.MessageResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
-import com.qisstpay.lendingservice.entity.EPCallLog;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.enums.CallType;
-import com.qisstpay.lendingservice.enums.EndPointType;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.security.MFBUserAuth;
-import com.qisstpay.lendingservice.service.*;
+import com.qisstpay.lendingservice.service.CollectionService;
+import com.qisstpay.lendingservice.service.CollectionTransactionService;
+import com.qisstpay.lendingservice.service.LendingCallService;
+import com.qisstpay.lendingservice.service.UserService;
 import com.qisstpay.lendingservice.utils.TokenParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.text.ParseException;
 import java.util.Optional;
 
 @Slf4j
@@ -56,9 +60,6 @@ public class CollectionController {
     private LendingCallService lendingCallService;
 
     @Autowired
-    private LendingService lendingService;
-
-    @Autowired
     private MFBUserAuth mfbUserAuth;
 
     @Value("${auth.api-key.qpay}")
@@ -68,8 +69,6 @@ public class CollectionController {
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
     private static final String GET_QPAY_LINK              = "/qpay/link";
     private static final String GET_BILL                   = "/get/bill";
-    private static final String INQUIRY                    = "bill/inquiry";
-    private static final String UPDATE                     = "bill/update";
     private static final String TEST                       = "/test";
 
     private static final String CALLING_CONTROLLER            = "Calling CollectionController";
@@ -159,48 +158,6 @@ public class CollectionController {
         return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
                 .body(response).build();
     }
-
-    @PostMapping(INQUIRY)
-    public CustomResponse<EPCollectionInquiryResponse> inquiry(
-            @RequestBody EPCollectionInquiryRequest epCollectionInquiryRequest) throws ParseException {
-        log.info(CALLING_COLLECTION_CONTROLLER);
-
-        // mfb(3rd-party) authentication
-        Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        mfbUserAuth.verifyUser(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword());
-
-        // add call logs
-        log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionInquiryRequest.getBankMnemonic());
-        EPCallLog savedEpLoginCallLog = lendingService.addEPCalLog(
-                EndPointType.BILL_INQUIRY,
-                epCollectionInquiryRequest.toString(),
-                null,
-                CallType.RECEIVED,
-                user.get());
-
-        return CustomResponse.CustomResponseBuilder.<EPCollectionInquiryResponse>builder().body(collectionService.billInquiry(epCollectionInquiryRequest, savedEpLoginCallLog)).build();
-    }
-
-    @PostMapping(UPDATE)
-    public CustomResponse<EPCollectionBillUpdateResponse> billUpdate(
-            @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) throws ParseException {
-        log.info(CALLING_COLLECTION_CONTROLLER);
-        // mfb authentication
-        Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        mfbUserAuth.verifyUser(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
-
-        // add call logs
-        log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionBillUpdateRequest.getBankMnemonic());
-        EPCallLog savedEpLoginCallLog = lendingService.addEPCalLog(
-                EndPointType.BILL_UPDATE,
-                epCollectionBillUpdateRequest.toString(),
-                null,
-                CallType.RECEIVED,
-                user.get());
-
-        return CustomResponse.CustomResponseBuilder.<EPCollectionBillUpdateResponse>builder().body(collectionService.billUpdate(epCollectionBillUpdateRequest, savedEpLoginCallLog)).build();
-    }
-
 
     @PostMapping(TEST)
     public CustomResponse<MessageResponseDto> test(
