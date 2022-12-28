@@ -80,6 +80,11 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
 
+
+        if (!StringUtils.isBlank(transferRequestDto.getAccountNo()) && StringUtils.isBlank(transferRequestDto.getAccountNumber())) {
+            transferRequestDto.setAccountNumber(transferRequestDto.getAccountNo());
+        }
+
         if (StringUtils.isBlank(transferRequestDto.getAccountNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
