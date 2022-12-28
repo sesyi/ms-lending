@@ -29,7 +29,7 @@ public class LendingTransaction {
     @Column(name = "identity_number")
     private String identityNumber;
 
-    @Column(name = "account_Number")
+    @Column(name = "account_number")
     private String accountNumber;
 
     @Column(name = "amount")
