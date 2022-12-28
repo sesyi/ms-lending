@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class CollectionBillRequestDto {
     private Double    amount;
     private Double    amountAfterDueDate;

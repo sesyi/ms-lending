@@ -57,7 +57,7 @@ public class LendingController {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("In method" + TRANSFER + " with request {}", transferRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
@@ -70,18 +70,18 @@ public class LendingController {
     @GetMapping(STATUS)
     public CustomResponse<TransactionStateResponse> status(
             @RequestHeader(value = "x-api-key") String apiKey,
-            @PathVariable("transactionId") String transactionId,
+            @PathVariable("transactionId") String transactionStamp,
             @RequestHeader(value = "Authorization") String authorizationHeader
     ) {
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionId, ServiceType.TRXN_STATE_CHECK, CallType.RECEIVED);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), transactionStamp, ServiceType.TRXN_STATE_CHECK, CallType.RECEIVED);
 
         return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
-                .body(lendingService.checkStatus(transactionId, lenderCallLog)).build();
+                .body(lendingService.checkStatus(transactionStamp, lenderCallLog)).build();
     }
 
     @PostMapping(CREDIT_SCORE)
@@ -93,7 +93,7 @@ public class LendingController {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("getScore creditScoreRequestDto: {}", creditScoreRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserByUsername(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
         LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), creditScoreRequestDto.toString(), ServiceType.TASDEEQ, CallType.RECEIVED);
         CreditScoreResponseDto response = lendingService.checkCreditScore(creditScoreRequestDto, lenderCallLog);

@@ -4,6 +4,7 @@ import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
+import com.qisstpay.lendingservice.entity.EPCallLog;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
@@ -11,6 +12,8 @@ import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequ
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
 import org.springframework.stereotype.Service;
+
+import java.text.ParseException;
 
 @Service
 public interface CollectionService {
@@ -20,7 +23,7 @@ public interface CollectionService {
 
     QpayCollectionResponseDto qpayCollectionStatus(Long billId, PaymentGatewayType gatewayType, LenderCallLog callLog, String otp);
 
-    EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest);
+    EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest, EPCallLog savedEpCallLog) throws ParseException;
 
-    EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest);
+    EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest, EPCallLog savedEpCallLog) throws ParseException;
 }

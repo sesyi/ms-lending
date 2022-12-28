@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class CollectionBillResponseDto {
     private Long           billId;
     private Double         amount;

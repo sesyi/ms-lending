@@ -5,14 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.Expose;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
+
+import javax.validation.constraints.NotNull;
 
 @Data
-@Builder
 public class EPCollectionBillUpdateRequest {
 
+    @NotNull
     @JsonProperty("consumer_number")
     private String consumerNumber;
     @Expose
+    @JsonProperty("password")
     private String password;
     @JsonProperty("tran_auth_id")
     private String tranAuthId;
@@ -23,5 +27,12 @@ public class EPCollectionBillUpdateRequest {
     @JsonProperty("transaction_amount")
     private String transactionAmount;
     @Expose
+    @NotNull
+    @JsonProperty("username")
     private String username;
+    @NotNull
+    @JsonProperty("bank_mnemonic")
+    private String bankMnemonic;
+    @JsonProperty("reserved")
+    private String reserved;
 }

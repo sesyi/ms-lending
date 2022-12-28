@@ -3,7 +3,8 @@ package com.qisstpay.lendingservice.enums;
 public enum PaymentGatewayType {
     EASYPAISA("easypaisa"),
     NIFT("nift"),
-    STRIPE("stripe");
+    STRIPE("stripe"),
+    UBL("ubl");
 
     private final String name;
 

@@ -2,11 +2,13 @@
 package com.qisstpay.lendingservice.dto.easypaisa.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.ToString;
 
 import javax.annotation.Generated;
 
 @Generated("net.hexar.json2pojo")
 @SuppressWarnings("unused")
+@ToString
 public class EPLoginResponseDto {
 
     @JsonProperty("ResponseCode")

@@ -80,7 +80,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
 
-        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
+        if (StringUtils.isBlank(transferRequestDto.getAccountNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
         if (transferRequestDto.getBankCode() == null) {
@@ -89,8 +89,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
-        lendingTransaction.setAccountNo(transferRequestDto.getAccountNo());
-        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
+        lendingTransaction.setAccountNo(transferRequestDto.getAccountNumber());
         lendingTransaction.setServiceType(ServiceType.HMB);
         lendingTransaction.setConsumer(consumer);
         lendingTransaction.setTransactionState(TransactionState.FAILURE);
@@ -127,7 +126,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         try {
-            submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
+            submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
             lendingTransaction.setTransactionState(TransactionState.SUCCESS);
             transferState = getStatusFromStatusDescription(submitTransactionResponseDto.getResponseCode(), submitTransactionResponseDto.getResponseDescription());
 
@@ -190,11 +189,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .state(transferState.getState())
                 .description(transferState.getDescription())
                 .amount(lendingTransaction.getAmount())
-                .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
                 .accountNumber(lendingTransaction.getAccountNo())
-                .transactionId(lendingTransaction.getId().toString())
-                .userName(lendingTransaction.getUserName())
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .build();
     }
 
@@ -475,7 +472,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         responseDescription = responseDescription.toLowerCase();
 
-        if(responseDescription.equals("transaction successfully proceeded...".toLowerCase())){
+        if(responseDescription.equals("Paid/Transferred".toLowerCase())){
             return TransferState.TRANSFER_SUCCESS;
         }
         if(responseDescription.contains("Insufficient funds".toLowerCase())){
@@ -498,6 +495,18 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
         if(responseDescription.contains("Customer account is inactive".toLowerCase())){
             return TransferState.RECIPIENT_ACCOUNT_INACTIVE;
+        }
+        if(responseDescription.contains("Rejected by releaser".toLowerCase())){
+            return TransferState.RELEASER_REJECTED;
+        }
+        if(responseDescription.contains("Core UnSuccess Failed".toLowerCase())){
+            return TransferState.SOMETHING_WENT_WRONG;
+        }
+        if(responseDescription.contains("waiting for core response".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
+        }
+        if(responseDescription.contains("Waiting for backoffice process".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
         }
 
         return TransferState.SOMETHING_WENT_WRONG;

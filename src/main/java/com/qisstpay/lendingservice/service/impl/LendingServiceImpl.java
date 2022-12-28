@@ -25,6 +25,7 @@ import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.*;
+import com.qisstpay.lendingservice.utils.CommonUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,6 +139,7 @@ public class LendingServiceImpl implements LendingService {
         if (!existingConsumer.isPresent()) {
             Consumer newConsumer = new Consumer();
             newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
+            newConsumer.setIdentityNumber(transferRequestDto.getIdentityNumber());
             savedConsumer = consumerRepository.saveAndFlush(newConsumer);
             consumer = savedConsumer;
         } else {
@@ -194,9 +196,7 @@ public class LendingServiceImpl implements LendingService {
         //  persist lending transaction
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
-        lendingTransaction.setIdentityNumber(transferRequestDto.getIdentityNumber());
         lendingTransaction.setConsumer(consumer);
-        lendingTransaction.setUserName(transferRequestDto.getUserName());
         lendingTransaction.setTransactionState(TransactionState.RECEIVED);
         lendingTransaction.setLenderCall(lenderCallLog);
         lendingTransaction.setServiceType(ServiceType.EP);
@@ -212,14 +212,16 @@ public class LendingServiceImpl implements LendingService {
         EPCallLog savedEpLoginCallLog = addEPCalLog(
                 EndPointType.LOGIN,
                 epLoginRequestDto.toString(),
-                savedLendingTransaction);
+                savedLendingTransaction,
+                CallType.SENT,
+                null);
 
         EPLoginResponseDto epLoginResponse;
         try {
             epLoginResponse = epLogin(epLoginRequestDto);
         } catch (Exception e) {
             log.error("Exception Occurred in EP Login for consumer: {}", transferRequestDto.getPhoneNumber());
-            updateEpCallLog(savedEpLoginCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
+            updateEpCallLog(savedEpLoginCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null, null);
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), epLoginUrl, epLoginRequestDto, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
@@ -231,7 +233,8 @@ public class LendingServiceImpl implements LendingService {
                     CallStatusType.FAILURE,
                     epLoginResponse.getResponseCode(),
                     epLoginResponse.getResponseMessage(),
-                    epLoginResponse.toString());
+                    epLoginResponse.toString(),
+                    null);
 
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_LOGIN_FAILED.getDescription(), lenderCallLog);
@@ -250,7 +253,8 @@ public class LendingServiceImpl implements LendingService {
                 CallStatusType.SUCCESS,
                 epLoginResponse.getResponseCode(),
                 epLoginResponse.getResponseMessage(),
-                epLoginResponse.toString());
+                epLoginResponse.toString(),
+                null);
 
 
         /**
@@ -266,7 +270,9 @@ public class LendingServiceImpl implements LendingService {
         EPCallLog savedEpInquiryCallLog = addEPCalLog(
                 EndPointType.INQUIRY,
                 epRequestDto.toString(),
-                savedLendingTransaction);
+                savedLendingTransaction,
+                CallType.SENT,
+                null);
 
         // update lending transaction status
         savedLendingTransaction.setTransactionState(TransactionState.IN_PROGRESS);
@@ -278,7 +284,7 @@ public class LendingServiceImpl implements LendingService {
             epInquiryResponse = epInquiry(epRequestDto, xHashValueVal);
         } catch (Exception e) {
             log.error("Exception Occurred in EP Inquiry for consumer: {}", transferRequestDto.getPhoneNumber());
-            updateEpCallLog(savedEpInquiryCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
+            updateEpCallLog(savedEpInquiryCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null, null);
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.EP_INQUIRY_FAILED.getDescription(), lenderCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), epInquiryUrl, epRequestDto, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
@@ -290,7 +296,8 @@ public class LendingServiceImpl implements LendingService {
                     CallStatusType.FAILURE,
                     epInquiryResponse.getResponseCode(),
                     epInquiryResponse.getResponseMessage(),
-                    epInquiryResponse.toString());
+                    epInquiryResponse.toString(),
+                    null);
 
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.EP_INQUIRY_FAILED.getDescription(), lenderCallLog);
@@ -310,7 +317,8 @@ public class LendingServiceImpl implements LendingService {
                 CallStatusType.SUCCESS,
                 epInquiryResponse.getResponseCode(),
                 epInquiryResponse.getResponseMessage(),
-                epInquiryResponse.toString());
+                epInquiryResponse.toString(),
+                null);
 
         /**
          * ep transfer call
@@ -319,14 +327,16 @@ public class LendingServiceImpl implements LendingService {
         EPCallLog savedEpTransferCallLog = addEPCalLog(
                 EndPointType.TRANSFER,
                 epRequestDto.toString(),
-                savedLendingTransaction);
+                savedLendingTransaction,
+                CallType.SENT,
+                null);
 
         EPTransferResposneDto epTransferResponse;
         try {
             epTransferResponse = epTransfer(epRequestDto, xHashValueVal);
         } catch (Exception e) {
             log.error("Exception Occurred in EP Transfer for consumer: {}", transferRequestDto.getPhoneNumber());
-            updateEpCallLog(savedEpTransferCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null);
+            updateEpCallLog(savedEpTransferCallLog, CallStatusType.EXCEPTION, null, e.getMessage(), null, null);
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), epTransferUrl, epRequestDto, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         }
@@ -338,7 +348,8 @@ public class LendingServiceImpl implements LendingService {
                     CallStatusType.SUCCESS,
                     epTransferResponse.getResponseCode(),
                     epTransferResponse.getResponseMessage(),
-                    epTransferResponse.toString());
+                    epTransferResponse.toString(),
+                    null);
 
             //  update lender call log
             updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
@@ -365,7 +376,8 @@ public class LendingServiceImpl implements LendingService {
                     CallStatusType.FAILURE,
                     epTransferResponse.getResponseCode(),
                     epTransferResponse.getResponseMessage(),
-                    epTransferResponse.toString());
+                    epTransferResponse.toString(),
+                    null);
 
             //  update lender call log
             updateLenderCallLog(CallStatusType.FAILURE, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
@@ -380,34 +392,38 @@ public class LendingServiceImpl implements LendingService {
         }
     }
 
-    private void updateLenderCallLog(CallStatusType status, String description, LenderCallLog lenderCallLog) {
+    public void updateLenderCallLog(CallStatusType status, String description, LenderCallLog lenderCallLog) {
         lenderCallLog.setStatus(status);
         lenderCallLog.setError(description);
         lenderCallRepository.saveAndFlush(lenderCallLog);
     }
 
-    private EPCallLog addEPCalLog(EndPointType type, String request, LendingTransaction lendingTransaction) {
+    public EPCallLog addEPCalLog(EndPointType type, String request, LendingTransaction lendingTransaction, CallType callType, User user) {
         EPCallLog epCallLog = new EPCallLog();
         epCallLog.setEndPoint(type);
         epCallLog.setRequest(request);
         epCallLog.setLendingTransaction(lendingTransaction);
+        epCallLog.setCallType(callType);
+        epCallLog.setUser(user);
         return epCallLogRepository.save(epCallLog);
     }
 
-    private EPCallLog updateEpCallLog(EPCallLog savedEpCallLogs, CallStatusType status, String responseCode, String message, String response) {
+    public EPCallLog updateEpCallLog(EPCallLog savedEpCallLogs, CallStatusType status, String responseCode, String message, String response, CollectionTransaction collectionTransaction) {
         savedEpCallLogs.setStatus(status);
         savedEpCallLogs.setStatusCode(responseCode);
         savedEpCallLogs.setMessage(message);
         savedEpCallLogs.setResponse(response);
+        savedEpCallLogs.setCollectionTransaction(collectionTransaction);
         return epCallLogRepository.save(savedEpCallLogs);
     }
 
     @Override
-    public TransactionStateResponse checkStatus(String transactionId, LenderCallLog lenderCallLog) {
+    public TransactionStateResponse checkStatus(String transactionStamp, LenderCallLog lenderCallLog) {
 
-        LendingTransaction lendingTransaction = lendingTransactionRepository.findById(Long.valueOf(transactionId)).orElse(null);
+        LendingTransaction lendingTransaction = lendingTransactionRepository.findByTransactionStamp(transactionStamp).orElse(null);
 
         if (lendingTransaction != null) {
+            lendingTransaction.setTransactionStamp(CommonUtility.generateRandomTransactionStamp());
             ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
             if(serviceType.equals(ServiceType.EP)){
                 return checkEPStatus(lendingTransaction, lenderCallLog);
@@ -428,10 +444,8 @@ public class LendingServiceImpl implements LendingService {
                 .state(lendingTransaction.getLenderCall().getStatus().toString())
                 .description(lendingTransaction.getLenderCall().getError())
                 .amount(lendingTransaction.getAmount())
-                .identityNumber(lendingTransaction.getIdentityNumber())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
-                .transactionId(lendingTransaction.getId().toString())
-                .userName(lendingTransaction.getUserName())
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .build();
         //  update lender call log
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);

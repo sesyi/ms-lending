@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.CallType;
 import com.qisstpay.lendingservice.enums.EndPointType;
@@ -17,10 +18,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.sql.Timestamp;
@@ -76,4 +79,12 @@ public class EPCallLog {
     @JoinColumn(name="lending_trxn_id")
     private LendingTransaction lendingTransaction;
 
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="collection_trxn_id")
+    private CollectionTransaction collectionTransaction;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "mfb_id", referencedColumnName = "id")
+    @JsonIgnore
+    private User user;
 }

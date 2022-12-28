@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class QpayCollectionResponseDto {
     private Long               billId;
     private BillStatusType     billStatus;

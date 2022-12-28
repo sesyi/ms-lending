@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class SubmitTransactionRequestDto {
     @JsonProperty("ChannelID")
     private String channelID;

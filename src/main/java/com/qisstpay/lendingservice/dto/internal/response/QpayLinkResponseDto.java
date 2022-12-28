@@ -7,6 +7,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class QpayLinkResponseDto {
     private String  message;
     private String  qpayLink;

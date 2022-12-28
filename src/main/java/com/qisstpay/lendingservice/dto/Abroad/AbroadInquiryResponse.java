@@ -2,15 +2,13 @@
 package com.qisstpay.lendingservice.dto.Abroad;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class AbroadInquiryResponse {
 
     @JsonProperty("amount_after_due_date")

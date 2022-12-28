@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.util.Optional;
 
 @Component
@@ -39,7 +40,7 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
                     .billId(collectionTransaction.get().getId())
                     .amount(collectionTransaction.get().getAmount())
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
-                    .dueDate(collectionTransaction.get().getDueDate())
+                    .dueDate(new Timestamp(collectionTransaction.get().getDueDate().getTime()))
                     .identityNumber(collectionTransaction.get().getIdentityNumber())
                     .userName(collectionTransaction.get().getUserName())
                     .billStatus(collectionTransaction.get().getBillStatus())

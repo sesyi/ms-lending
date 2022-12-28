@@ -8,6 +8,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class QpayCollectionStatusRequestDto {
     private Long               billId;
     private String             accountNumber;

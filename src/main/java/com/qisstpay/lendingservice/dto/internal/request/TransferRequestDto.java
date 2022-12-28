@@ -1,15 +1,13 @@
 package com.qisstpay.lendingservice.dto.internal.request;
 
 import com.qisstpay.lendingservice.enums.TransferType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class TransferRequestDto {
 
     private String userName;
@@ -17,7 +15,7 @@ public class TransferRequestDto {
     private String identityNumber;
     private String phoneNumber;
     private String bankCode;
-    private String accountNo;
+    private String accountNumber;
     private double amount;
 
     @Override

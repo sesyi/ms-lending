@@ -13,7 +13,10 @@ import org.springframework.stereotype.Component;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -80,6 +83,13 @@ public class CommonUtility {
             }
         }
         return object;
+    }
+
+    public static String generateRandomTransactionStamp(){
+        String transactionId = new StringBuilder()
+                        .append(1000 + (int)(Math.random() * ((9999 - 1000) + 1)))
+                        .append((new Date()).getTime()).toString();
+        return transactionId;
     }
 
 

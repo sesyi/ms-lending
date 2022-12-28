@@ -54,7 +54,7 @@ public class LendingControllerV2 {
         log.info(CALLING_LENDING_CONTROLLER);
         log.info("In method" + TRANSFER + " with request {}", transferRequestDto);
         Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
-        Optional<User> user = userService.getUser(userId);
+        Optional<User> user = userService.getUserById(userId);
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());

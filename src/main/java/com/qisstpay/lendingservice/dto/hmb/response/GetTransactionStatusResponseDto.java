@@ -8,6 +8,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class GetTransactionStatusResponseDto {
     @JsonProperty("ResponseCode")
     private String ResponseCode;
