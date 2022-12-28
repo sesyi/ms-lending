@@ -11,7 +11,7 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "mfb_calls_logs")
+@Table(name = "call_logs_mfb")
 @Getter
 @Setter
 @NoArgsConstructor
