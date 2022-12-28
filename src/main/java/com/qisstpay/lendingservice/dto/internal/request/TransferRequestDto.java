@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.dto.internal.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.qisstpay.lendingservice.enums.TransferType;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TransferRequestDto {
 
     private String userName;
