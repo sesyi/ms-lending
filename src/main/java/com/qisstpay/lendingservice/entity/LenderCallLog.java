@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Entity
-@Table(name = "lender_calls_logs")
+@Table(name = "call_logs_lender")
 @Getter
 @Setter
 @NoArgsConstructor

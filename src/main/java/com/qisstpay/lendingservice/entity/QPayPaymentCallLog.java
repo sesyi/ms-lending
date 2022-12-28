@@ -11,7 +11,7 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "qpay_payment_calls_logs")
+@Table(name = "call_logs_qpay_payment")
 @Getter
 @Setter
 @NoArgsConstructor
