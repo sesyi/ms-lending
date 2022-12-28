@@ -139,7 +139,8 @@ public class LendingServiceImpl implements LendingService {
         if (!existingConsumer.isPresent()) {
             Consumer newConsumer = new Consumer();
             newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
-            newConsumer.setIdentityNumber(transferRequestDto.getIdentityNumber());
+            newConsumer.setCnic(transferRequestDto.getCnic());
+            newConsumer.setConsumerNumber(transferRequestDto.getConsumerNumber());
             savedConsumer = consumerRepository.saveAndFlush(newConsumer);
             consumer = savedConsumer;
         } else {

@@ -14,5 +14,5 @@ public interface ConsumerService {
 
     Optional<Consumer> findByConsumerNumber(String consumerNumber);
 
-    Optional<Consumer> findByIdentityNumber(String identityNumber);
+    Optional<Consumer> findByCnic(String cnic);
 }

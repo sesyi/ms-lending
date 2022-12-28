@@ -13,7 +13,7 @@ public interface CollectionTransactionService {
 
     CollectionBillResponseDto geBill(Long id);
 
-    Optional<CollectionTransaction> geByIdentityNumber(String identityNumber);
+    Optional<CollectionTransaction> getByConsumerNumber(String consumerNumber);
 
     CollectionTransaction save(CollectionTransaction collectionTransaction);
 }

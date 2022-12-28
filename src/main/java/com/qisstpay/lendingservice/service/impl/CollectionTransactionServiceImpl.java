@@ -41,7 +41,7 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
                     .amount(collectionTransaction.get().getAmount())
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
                     .dueDate(new Timestamp(collectionTransaction.get().getDueDate().getTime()))
-                    .identityNumber(collectionTransaction.get().getIdentityNumber())
+                    .identityNumber(collectionTransaction.get().getConsumerNumber())
                     .userName(collectionTransaction.get().getUserName())
                     .billStatus(collectionTransaction.get().getBillStatus())
                     .consumerId(collectionTransaction.get().getConsumer().getId().toString())
@@ -54,8 +54,8 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
     }
 
     @Override
-    public Optional<CollectionTransaction> geByIdentityNumber(String identityNumber) {
-        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByIdentityNumber(identityNumber);
+    public Optional<CollectionTransaction> getByConsumerNumber(String consumerNumber) {
+        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByconsumerNumber(consumerNumber);
         if (collectionTransaction.isPresent()) {
             return collectionTransaction;
         } else {
