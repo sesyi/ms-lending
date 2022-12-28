@@ -15,6 +15,7 @@ import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.*;
 import com.qisstpay.lendingservice.repository.*;
 import com.qisstpay.lendingservice.service.HMBPaymentService;
+import com.qisstpay.lendingservice.utils.CommonUtility;
 import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -97,6 +98,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         lendingTransaction.setAccountNumber(transferRequestDto.getAccountNumber());
         lendingTransaction.setServiceType(ServiceType.HMB);
         lendingTransaction.setConsumer(consumer);
+        lendingTransaction.setTransactionStamp(CommonUtility.generateRandomTransactionStamp());
         lendingTransaction.setTransactionState(TransactionState.FAILURE);
 
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
@@ -153,7 +155,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         return TransferResponseDto
                 .builder()
-                .transactionId(lendingTransaction.getId().toString())
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .code(transferState.getCode())
                 .state(transferState.getState())
                 .description(transferState.getDescription())
