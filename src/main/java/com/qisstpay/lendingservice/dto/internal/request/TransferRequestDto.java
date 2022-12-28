@@ -15,7 +15,7 @@ public class TransferRequestDto {
     private String identityNumber;
     private String phoneNumber;
     private String bankCode;
-    private String accountNo;
+    private String accountNumber;
     private double amount;
 
     @Override
