@@ -12,8 +12,9 @@ public class TransferRequestDto {
 
     private String userName;
     private TransferType type;
-    private String identityNumber;
+    private String cnic;
     private String phoneNumber;
+    private String consumerNumber;
     private String bankCode;
     private String accountNumber;
     private String accountNo; //to be removed later on when communicated to the lenders to use accountNumber
@@ -23,7 +24,7 @@ public class TransferRequestDto {
     public String toString() {
         return "TransferRequestDto{" +
                 "userName='" + userName + '\'' +
-                ", identityNumber='" + identityNumber + '\'' +
+                ", identityNumber='" + cnic + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", amount=" + amount +
                 '}';

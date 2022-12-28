@@ -265,7 +265,7 @@ public class CollectionServiceImpl implements CollectionService {
                     .dueDate(billRequestDto.getDueDate())
                     .billStatus(BillStatusType.UNPAID)
                     .transactionState(TransactionState.RECEIVED)
-                    .identityNumber(billRequestDto.getIdentityNumber())
+                    .consumerNumber(billRequestDto.getIdentityNumber())
                     .userName(billRequestDto.getUserName())
                     .lenderCall(lenderCallLog)
                     .qpayPaymentTransaction(new ArrayList<>())
@@ -456,8 +456,9 @@ public class CollectionServiceImpl implements CollectionService {
 
             return EPCollectionInquiryResponse
                     .builder()
-                    .responseCode(AbroadResponseCode.ABROAD_INQUIRY_FAILED.getCode())
-                    .responseMessage(AbroadResponseCode.ABROAD_INQUIRY_FAILED.getDescription())
+                    .responseCode(abroadInquiryResponse.getResponseCode())
+                    .responseMessage(abroadInquiryResponse.getResponseMessage())
+                    .status(abroadInquiryResponse.getStatus())
                     .build();
         }
 
@@ -590,8 +591,9 @@ public class CollectionServiceImpl implements CollectionService {
 
             return EPCollectionBillUpdateResponse
                     .builder()
-                    .responseCode(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getCode())
-                    .identificationParameter(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription())
+                    .responseCode(abroadBillUpdateResponse.getResponseCode())
+                    .identificationParameter(abroadBillUpdateResponse.getIdentificationParameter())
+                    .reserved(abroadBillUpdateResponse.getReserved())
                     .build();
         }
 

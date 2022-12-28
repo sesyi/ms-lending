@@ -64,8 +64,8 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     @Override
-    public Optional<Consumer> findByIdentityNumber(String identityNumber) {
-        return consumerRepository.findByIdentityNumber(identityNumber);
+    public Optional<Consumer> findByCnic(String identityNumber) {
+        return consumerRepository.findByCnic(identityNumber);
     }
 
     public Optional<Consumer> findByCnicOrPhonenumber(String cnic, String phoneNumber) {

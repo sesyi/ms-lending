@@ -23,11 +23,14 @@ public class Consumer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "identity_number")
-    private String identityNumber;
+    @Column(name = "cnic")
+    private String cnic;
 
     @Column(name = "phone_number")
     private String phoneNumber;
+
+    @Column(name = "consumer_number")
+    private String consumerNumber;
 
     @Column(name = "email")
     private String email;
@@ -41,9 +44,6 @@ public class Consumer {
     @Column(name = "gender")
     @Enumerated(EnumType.STRING)
     private GenderType gender;
-
-    @Column(name = "cnic")
-    private String cnic;
 
     @Column(name = "passport")
     private String passport;

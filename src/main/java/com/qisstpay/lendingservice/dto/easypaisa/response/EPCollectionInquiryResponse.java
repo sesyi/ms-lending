@@ -31,10 +31,12 @@ public class EPCollectionInquiryResponse {
     private String dueDate;
     @JsonProperty("response_Code")
     private String responseCode;
-    @JsonProperty("response_message")
+    @JsonProperty("Response_Message")
     private String responseMessage;
     @JsonProperty("tran_auth_Id")
     private String tranAuthId;
     @JsonProperty("reserved")
     private String reserved;
+    @JsonProperty("status")
+    private String status;
 }

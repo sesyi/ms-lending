@@ -139,7 +139,8 @@ public class LendingServiceImpl implements LendingService {
         if (!existingConsumer.isPresent()) {
             Consumer newConsumer = new Consumer();
             newConsumer.setPhoneNumber(transferRequestDto.getPhoneNumber());
-            newConsumer.setIdentityNumber(transferRequestDto.getIdentityNumber());
+            newConsumer.setCnic(transferRequestDto.getCnic());
+            newConsumer.setConsumerNumber(transferRequestDto.getConsumerNumber());
             savedConsumer = consumerRepository.saveAndFlush(newConsumer);
             consumer = savedConsumer;
         } else {
@@ -199,6 +200,7 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setConsumer(consumer);
         lendingTransaction.setTransactionState(TransactionState.RECEIVED);
         lendingTransaction.setLenderCall(lenderCallLog);
+        lendingTransaction.setTransactionStamp(CommonUtility.generateRandomTransactionStamp());
         lendingTransaction.setServiceType(ServiceType.EP);
         LendingTransaction savedLendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
 
@@ -363,7 +365,7 @@ public class LendingServiceImpl implements LendingService {
 
             return TransferResponseDto
                     .builder()
-                    .transactionId(finalSavedLendingTransaction.getId().toString())
+                    .transactionId(finalSavedLendingTransaction.getTransactionStamp())
                     .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
