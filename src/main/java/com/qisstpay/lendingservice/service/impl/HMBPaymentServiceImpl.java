@@ -80,7 +80,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
 
-        if (StringUtils.isBlank(transferRequestDto.getAccountNo())) {
+        if (StringUtils.isBlank(transferRequestDto.getAccountNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
         if (transferRequestDto.getBankCode() == null) {
@@ -89,7 +89,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         LendingTransaction lendingTransaction = new LendingTransaction();
         lendingTransaction.setAmount(transferRequestDto.getAmount());
-        lendingTransaction.setAccountNo(transferRequestDto.getAccountNo());
+        lendingTransaction.setAccountNo(transferRequestDto.getAccountNumber());
         lendingTransaction.setServiceType(ServiceType.HMB);
         lendingTransaction.setConsumer(consumer);
         lendingTransaction.setTransactionState(TransactionState.FAILURE);
@@ -126,7 +126,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         try {
-            submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNo(), transactionNo, stan, transferRequestDto.getAmount()));
+            submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
             lendingTransaction.setTransactionState(TransactionState.SUCCESS);
             transferState = getStatusFromStatusDescription(submitTransactionResponseDto.getResponseCode(), submitTransactionResponseDto.getResponseDescription());
 

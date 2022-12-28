@@ -591,7 +591,7 @@ public class CollectionServiceImpl implements CollectionService {
             return EPCollectionBillUpdateResponse
                     .builder()
                     .responseCode(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getCode())
-                    .responseMessage(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription())
+                    .identificationParameter(AbroadResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription())
                     .build();
         }
 

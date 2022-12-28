@@ -13,26 +13,26 @@ import javax.validation.constraints.NotNull;
 public class EPCollectionBillUpdateRequest {
 
     @NotNull
-    @JsonProperty("Consumer_Number")
+    @JsonProperty("consumer_number")
     private String consumerNumber;
     @Expose
-    @JsonProperty("Password")
+    @JsonProperty("password")
     private String password;
-    @JsonProperty("Tran_Auth_Id")
+    @JsonProperty("tran_auth_id")
     private String tranAuthId;
-    @JsonProperty("Tran_Date")
+    @JsonProperty("tran_date")
     private String tranDate;
-    @JsonProperty("Tran_Time")
+    @JsonProperty("tran_time")
     private String tranTime;
-    @JsonProperty("Transaction_Amount")
+    @JsonProperty("transaction_amount")
     private String transactionAmount;
     @Expose
     @NotNull
-    @JsonProperty("Username")
+    @JsonProperty("username")
     private String username;
     @NotNull
-    @JsonProperty("Bank_Mnemonic")
+    @JsonProperty("bank_mnemonic")
     private String bankMnemonic;
-    @JsonProperty("Reserved")
+    @JsonProperty("reserved")
     private String reserved;
 }
