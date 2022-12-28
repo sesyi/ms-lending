@@ -31,4 +31,10 @@ public class AbroadInquiryResponse {
     private String responseCode;
     @JsonProperty("tran_auth_id")
     private String tranAuthId;
+    @JsonProperty("Response_Message")
+    private String responseMessage;
+    @JsonProperty("reserved")
+    private String reserved;
+    @JsonProperty("status")
+    private String status;
 }

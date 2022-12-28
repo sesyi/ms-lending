@@ -30,7 +30,7 @@ public class CollectionTransaction {
     private String userName;
 
     @Column(name = "consumer_number")
-    private String identityNumber;
+    private String consumerNumber;
 
     @Column(name = "amount")
     private Double amount;
