@@ -29,7 +29,7 @@ import javax.persistence.Table;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "ep_calls_logs")
+@Table(name = "call_logs_ep")
 @Getter
 @Setter
 @NoArgsConstructor

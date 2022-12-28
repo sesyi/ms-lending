@@ -10,7 +10,7 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "lending_transaction")
+@Table(name = "lending_transactions")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,8 +29,8 @@ public class LendingTransaction {
     @Column(name = "identity_number")
     private String identityNumber;
 
-    @Column(name = "account_no")
-    private String accountNo;
+    @Column(name = "account_Number")
+    private String accountNumber;
 
     @Column(name = "amount")
     private double amount;
