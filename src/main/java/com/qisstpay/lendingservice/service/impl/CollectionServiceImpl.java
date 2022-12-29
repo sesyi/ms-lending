@@ -34,6 +34,7 @@ import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.QPResponseCode;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.enums.TransactionState;
+import com.qisstpay.lendingservice.enums.TransferState;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.repository.CollectionTransactionRepository;
 import com.qisstpay.lendingservice.service.*;
@@ -391,7 +392,13 @@ public class CollectionServiceImpl implements CollectionService {
 
         Optional<Consumer> consumer = consumerService.findByConsumerNumber(epCollectionInquiryRequest.getConsumerNumber());
         if (!consumer.isPresent()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer is not found.");
+            log.info("consumer is not found: {}", epCollectionInquiryRequest.getConsumerNumber());
+            return EPCollectionInquiryResponse
+                    .builder()
+                    .responseCode(TransferState.CUSTOMER_NOT_FOUND.getCode())
+                    .responseMessage(TransferState.CUSTOMER_NOT_FOUND.getState())
+                    .status(TransferState.CUSTOMER_NOT_FOUND.getDescription())
+                    .build();
         }
 
         if (StringUtils.isBlank(epCollectionInquiryRequest.getBankMnemonic())) {
@@ -515,7 +522,13 @@ public class CollectionServiceImpl implements CollectionService {
 
         Optional<Consumer> consumer = consumerService.findByConsumerNumber(epCollectionBillUpdateRequest.getConsumerNumber());
         if (!consumer.isPresent()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer is not found.");
+            log.info("Consumer is not found: {}", epCollectionBillUpdateRequest.getConsumerNumber());
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.CUSTOMER_NOT_FOUND.getCode())
+                    .identificationParameter(TransferState.CUSTOMER_NOT_FOUND.getState())
+                    .reserved(TransferState.CUSTOMER_NOT_FOUND.getDescription())
+                    .build();
         }
 
         if (StringUtils.isBlank(epCollectionBillUpdateRequest.getBankMnemonic())) {
