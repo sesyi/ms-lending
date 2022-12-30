@@ -405,7 +405,13 @@ public class CollectionServiceImpl implements CollectionService {
 
         Optional<User> lender = userService.getUserByUcid(epCollectionInquiryRequest.getBankMnemonic());
         if (!lender.isPresent()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender is not found.");
+            log.info("lender is not found with ucid: {}", epCollectionInquiryRequest.getBankMnemonic());
+            return EPCollectionInquiryResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .responseMessage(TransferState.INVALID_DATA_EP.getState())
+                    .status(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
         }
 
         // persist collection transaction
@@ -507,6 +513,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .datePaid(abroadInquiryResponse.getDatePaid())
                 .dueDate(abroadInquiryResponse.getDueDate())
                 .tranAuthId(abroadInquiryResponse.getTranAuthId())
+                .reserved(abroadInquiryResponse.getReserved())
                 .build();
     }
 
@@ -535,7 +542,13 @@ public class CollectionServiceImpl implements CollectionService {
 
         Optional<User> lender = userService.getUserByUcid(epCollectionBillUpdateRequest.getBankMnemonic());
         if (!lender.isPresent()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender is not found.");
+            log.info("lender is not found with ucid: {}", epCollectionBillUpdateRequest.getBankMnemonic());
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .identificationParameter(TransferState.INVALID_DATA_EP.getState())
+                    .reserved(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
         }
 
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findTopByConsumerAndTransactionStateOrderByCreatedAtDesc(consumer.get(), TransactionState.INQUIRY_SUCCESS);

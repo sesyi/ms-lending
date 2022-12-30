@@ -54,7 +54,7 @@ public class EPCollectionController {
 
 
     @PostMapping(INQUIRY)
-    public CustomResponse<EPCollectionInquiryResponse> inquiry(
+    public EPCollectionInquiryResponse inquiry(
             @RequestBody EPCollectionInquiryRequest epCollectionInquiryRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
 
@@ -71,11 +71,11 @@ public class EPCollectionController {
                 CallType.RECEIVED,
                 user.get());
 
-        return CustomResponse.CustomResponseBuilder.<EPCollectionInquiryResponse>builder().body(collectionService.billInquiry(epCollectionInquiryRequest, savedEpLoginCallLog)).build();
+        return collectionService.billInquiry(epCollectionInquiryRequest, savedEpLoginCallLog);
     }
 
     @PostMapping(UPDATE)
-    public CustomResponse<EPCollectionBillUpdateResponse> billUpdate(
+    public EPCollectionBillUpdateResponse billUpdate(
             @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
@@ -91,6 +91,6 @@ public class EPCollectionController {
                 CallType.RECEIVED,
                 user.get());
 
-        return CustomResponse.CustomResponseBuilder.<EPCollectionBillUpdateResponse>builder().body(collectionService.billUpdate(epCollectionBillUpdateRequest, savedEpLoginCallLog)).build();
+        return collectionService.billUpdate(epCollectionBillUpdateRequest, savedEpLoginCallLog);
     }
 }
