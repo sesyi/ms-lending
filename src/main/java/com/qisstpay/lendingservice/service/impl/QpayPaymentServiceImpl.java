@@ -59,7 +59,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
     private final String CALLING_SERVICE = "Calling QpayPayment Service";
 
     @Override
-    public QpayPaymentTransaction payment(QpayPaymentRequestDto paymentRequestDto, LenderCallLog callLog, CollectionTransaction collectionTransaction, Optional<ConsumerAccount> account) {
+    public QpayPaymentTransaction payment(QpayPaymentRequestDto paymentRequestDto, LenderCallLog callLog, CollectionTransaction collectionTransaction, Optional<ConsumerAccount> account, PaymentGatewayType gateway) {
         log.info(CALLING_SERVICE);
         log.info("In method payment");
         HttpHeaders headers = new HttpHeaders();
@@ -94,6 +94,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
                         .gatewayMessage(response.getBody().getGatewayResponse().getGatewayMessage())
                         .gatewaySource(response.getBody().getGatewayResponse().getGatewaySource())
                         .gatewayStatus(response.getBody().getGatewayResponse().getGatewayStatus())
+                        .gateway(gateway)
                         .build();
                 account.ifPresent(qpayPaymentTransaction::setConsumerAccount);
                 qpayPaymentTransaction.setCollectionTransaction(collectionTransaction);

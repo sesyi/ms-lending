@@ -7,13 +7,14 @@ import com.qisstpay.lendingservice.entity.CollectionTransaction;
 import com.qisstpay.lendingservice.entity.ConsumerAccount;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.QpayPaymentTransaction;
+import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
 public interface QpayPaymentService {
-    QpayPaymentTransaction payment(QpayPaymentRequestDto paymentRequestDto, LenderCallLog callLog, CollectionTransaction collectionTransaction, Optional<ConsumerAccount> account);
+    QpayPaymentTransaction payment(QpayPaymentRequestDto paymentRequestDto, LenderCallLog callLog, CollectionTransaction collectionTransaction, Optional<ConsumerAccount> account, PaymentGatewayType gateway);
 
     QpayPaymentResponseDto status(String transactionIdAndGateway, LenderCallLog callLog);
 

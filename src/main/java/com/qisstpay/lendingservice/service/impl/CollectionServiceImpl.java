@@ -142,8 +142,7 @@ public class CollectionServiceImpl implements CollectionService {
         callLog.setUser(collectionTransaction.get().getLenderCall().getUser());
         QpayPaymentTransaction qpayPaymentTransaction = qpayPaymentService.payment(
                 getPaymentPayload(collectionRequestDto, collectionTransaction.get(), callLog),
-                callLog, collectionTransaction.get(), account);
-        qpayPaymentTransaction.setGateway(collectionRequestDto.getGateway());
+                callLog, collectionTransaction.get(), account, collectionRequestDto.getGateway());
         return QpayCollectionResponseDto.builder()
                 .authorizedPayment(qpayPaymentTransaction.getAuthorizedPayment())
                 .gateway(collectionRequestDto.getGateway())
