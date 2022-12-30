@@ -12,7 +12,7 @@ public enum PaymentGatewayType {
     PaymentGatewayType(String name) {
         this.name = name;
     }
-    
+
     public String getName() {
         return name;
     }

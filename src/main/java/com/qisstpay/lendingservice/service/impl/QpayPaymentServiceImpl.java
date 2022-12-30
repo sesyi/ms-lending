@@ -83,6 +83,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
                 collectionTransaction.setServiceTransactionId(response.getBody().getGatewayResponse().getGatewayResponseId());
                 QpayPaymentTransaction qpayPaymentTransaction = QpayPaymentTransaction.builder()
                         .furtherAction(response.getBody().getFurtherAction())
+                        .authorizedPayment(response.getBody().getGatewayResponse().getAuthorizedPayment())
                         .htmlSnippet(response.getBody().getHtmlSnippet())
                         .redirectURL(response.getBody().getRedirectURL())
                         .transactionId(paymentRequestDto.getTransactionId())
