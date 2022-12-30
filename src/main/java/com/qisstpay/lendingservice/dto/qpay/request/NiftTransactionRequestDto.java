@@ -14,7 +14,7 @@ public class NiftTransactionRequestDto {
     private String otp;
 
     @JsonProperty("pp_RetreivalReferenceNo")
-    private String transactionId;
+    private String serviceTransactionId;
 
     @JsonProperty("pp_TxnRefNo")
     private String refTransactionId;

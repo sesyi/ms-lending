@@ -4,7 +4,8 @@ import com.qisstpay.commons.error.ErrorEnumType;
 
 public enum LendingTransactionErrorType implements ErrorEnumType<LendingTransactionErrorType> {
     ENABLE_TO_GET_TRANSACTION(0, "Unable to fetch Transaction Details. Invalid Transaction Id"),
-    INVALID_IDENTITY_NUMBER(1, "Unable to fetch Transaction Details. Invalid identity number");
+    INVALID_IDENTITY_NUMBER(1, "Unable to fetch Transaction Details. Invalid identity number"),
+    INVALID_TRANSACTION_NUMBER(1, "Unable to fetch Transaction Details. Invalid transaction number");
 
     private int    code;
     private String errorMessage;

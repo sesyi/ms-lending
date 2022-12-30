@@ -11,5 +11,7 @@ public interface LendingTransactionService {
     Optional<LendingTransaction> geById(Long id);
 
     Optional<LendingTransaction> geByIdentityNumber(String identityNumber);
+
+    Optional<LendingTransaction> geByTransactionStamp(String transactionStamp);
 }
 
