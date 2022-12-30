@@ -46,6 +46,7 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
                     .billStatus(collectionTransaction.get().getBillStatus())
                     .consumerId(collectionTransaction.get().getConsumer().getId().toString())
                     .consumerEmail(collectionTransaction.get().getConsumer().getEmail())
+                    .billingMonth(collectionTransaction.get().getBillingMonth())
                     .build();
         } else {
             log.error(BillErrorType.ENABLE_TO_GET_BILL.getErrorMessage());
