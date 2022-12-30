@@ -7,6 +7,8 @@ import com.qisstpay.lendingservice.dto.hmb.request.InvoiceDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.TransactionDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
+import com.qisstpay.lendingservice.dto.qpay.response.GatewayResponseDto;
+import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerPersonalInformationResponseDto;
@@ -14,6 +16,7 @@ import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportRes
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqCreditScoreDataResponseDto;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.ConsumerCreditScoreData;
+import com.qisstpay.lendingservice.entity.QpayPaymentTransaction;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,6 +67,11 @@ public class ModelConverter {
         consumer.setLoanDetails(new ArrayList<>());
         consumer.setCreditHistories(new ArrayList<>());
         return consumer;
+    }
+
+
+    public QpayPaymentTransaction convertToQpayPaymentTransaction(GatewayResponseDto gatewayResponseDto) {
+        return modelMapper.map(gatewayResponseDto, QpayPaymentTransaction.class);
     }
 
     public TasdeeqAuthResponseDto convertTOTasdeeqAuthResponseDto(Object object) {

@@ -5,16 +5,11 @@ import lombok.*;
 
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @ToString
-public class QpayCaptureRequestDto {
-    @JsonProperty("id")
-    private String id;
-
-    @JsonProperty("metadata")
-    private MetadataRequestDto metadata;
-
+public class SourceMetadataRequestDto {
+    @JsonProperty("redirect_url")
+    private String redirectURL;
 }
-

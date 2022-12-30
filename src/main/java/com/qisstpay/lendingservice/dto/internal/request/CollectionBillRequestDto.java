@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 public class CollectionBillRequestDto {
     private Double    amount;
     private Double    amountAfterDueDate;
-    private String    userName;
-    private String    identityNumber;
+    private String    transactionId;
+    private String    billingMonth;
     private Timestamp dueDate;
 }
