@@ -24,6 +24,9 @@ public class QpayPaymentResponseDto {
     @JsonProperty("redirect_url")
     private String redirectURL;
 
+    @JsonProperty("html_snippet")
+    private String htmlSnippet;
+
     @JsonProperty("gateway_response")
     private GatewayResponseDto gatewayResponse;
 }

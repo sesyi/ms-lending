@@ -17,10 +17,12 @@ public class QpayCollectionResponseDto {
     private BillStatusType     billStatus;
     private Boolean            furtherAction;
     private String             redirectURL;
+    private String             htmlSnippet;
     private Boolean            authorizedPayment;
     private String             transactionId;
     private String             status;
     private String             source;
     private String             message;
+    private String             paymentStatus;
     private PaymentGatewayType gateway;
 }

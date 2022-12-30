@@ -1,6 +1,5 @@
 package com.qisstpay.lendingservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qisstpay.lendingservice.enums.BillStatusType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import lombok.*;
@@ -25,12 +24,6 @@ public class CollectionTransaction {
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "user_name")
-    private String userName;
-
-    @Column(name = "consumer_number")
-    private String consumerNumber;
 
     @Column(name = "amount")
     private Double amount;
@@ -88,6 +81,7 @@ public class CollectionTransaction {
 
     @Column(name = "identification_parameter")
     private String identificationParameter;
+
     @Column(name = "reserved")
     private String reserved;
 

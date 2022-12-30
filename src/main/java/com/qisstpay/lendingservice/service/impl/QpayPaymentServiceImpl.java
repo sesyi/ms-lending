@@ -6,12 +6,13 @@ import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.dto.qpay.request.QpayCaptureRequestDto;
 import com.qisstpay.lendingservice.dto.qpay.request.QpayPaymentRequestDto;
 import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
-import com.qisstpay.lendingservice.entity.LenderCallLog;
-import com.qisstpay.lendingservice.entity.QPayPaymentCallLog;
+import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.EndPointType;
+import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.repository.QpayPaymentCallRepository;
+import com.qisstpay.lendingservice.service.CollectionTransactionService;
 import com.qisstpay.lendingservice.service.QpayPaymentService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -37,6 +39,9 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
 
     @Autowired
     private ModelConverter modelConverter;
+
+    @Autowired
+    private CollectionTransactionService collectionTransactionService;
 
     @Value("${gateway.qpay-payment}")
     private String paymentURL;
@@ -53,7 +58,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
     private final String CALLING_SERVICE = "Calling QpayPayment Service";
 
     @Override
-    public QpayPaymentResponseDto payment(QpayPaymentRequestDto paymentRequestDto, LenderCallLog callLog) {
+    public QpayPaymentTransaction payment(QpayPaymentRequestDto paymentRequestDto, LenderCallLog callLog, CollectionTransaction collectionTransaction, Optional<ConsumerAccount> account) {
         log.info(CALLING_SERVICE);
         log.info("In method payment");
         HttpHeaders headers = new HttpHeaders();
@@ -72,12 +77,24 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
             response = restTemplate.postForEntity(paymentURL, requestEntity, QpayPaymentResponseDto.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
                 qPayPaymentCallLog.setStatus(CallStatusType.SUCCESS);
-                qPayPaymentCallLog.setMessage(response.getBody().getServiceMessage());
+                qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
                 qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
-                return response.getBody();
+                collectionTransaction.setServiceTransactionId(response.getBody().getGatewayResponse().getGatewayResponseId());
+                QpayPaymentTransaction qpayPaymentTransaction = modelConverter.convertToQpayPaymentTransaction(response.getBody().getGatewayResponse());
+                qpayPaymentTransaction.setFurtherAction(response.getBody().getFurtherAction());
+                qpayPaymentTransaction.setHtmlSnippet(response.getBody().getHtmlSnippet());
+                qpayPaymentTransaction.setRedirectURL(response.getBody().getRedirectURL());
+                qpayPaymentTransaction.setTransactionId(paymentRequestDto.getTransactionId());
+                qpayPaymentTransaction.setRefTransactionId(paymentRequestDto.getRefTransactionId());
+                qpayPaymentTransaction.setAmount(paymentRequestDto.getAmount());
+                account.ifPresent(qpayPaymentTransaction::setConsumerAccount);
+                qpayPaymentTransaction.setCollectionTransaction(collectionTransaction);
+                collectionTransaction.getQpayPaymentTransaction().add(qpayPaymentTransaction);
+                collectionTransaction.setTransactionState(TransactionState.IN_PROGRESS);
+                return qpayPaymentTransaction;
             }
             qPayPaymentCallLog.setStatus(CallStatusType.EXCEPTION);
-            qPayPaymentCallLog.setMessage(response.getBody().getServiceMessage());
+            qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
             qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG);
         } catch (Exception ex) {
@@ -87,6 +104,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, ex, HttpMethod.POST.toString(), paymentURL, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
         } finally {
             qpayPaymentCallRepository.save(qPayPaymentCallLog);
+            collectionTransactionService.save(collectionTransaction);
         }
     }
 
@@ -149,17 +167,17 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
             response = restTemplate.postForEntity(captureURL, requestEntity, QpayPaymentResponseDto.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
                 qPayPaymentCallLog.setStatus(CallStatusType.SUCCESS);
-                qPayPaymentCallLog.setMessage(response.getBody().getServiceMessage());
+                qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
                 qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
                 return response.getBody();
             }
             qPayPaymentCallLog.setStatus(CallStatusType.EXCEPTION);
-            qPayPaymentCallLog.setMessage(response.getBody().getServiceMessage());
+            qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
             qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
             throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG);
         } catch (Exception ex) {
             log.error("{} Request : {}", ex.getMessage(), qPayPaymentCallLog.getRequest());
-            if(ex.getMessage().contains("400 Bad Request")){
+            if (ex.getMessage().contains("400 Bad Request")) {
                 qPayPaymentCallLog.setStatus(CallStatusType.FAILURE);
                 throw new ServiceException(PaymentErrorType.ENABLE_TO_CAPTURE, ex, HttpMethod.POST.toString(), captureURL, requestEntity, environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
             }

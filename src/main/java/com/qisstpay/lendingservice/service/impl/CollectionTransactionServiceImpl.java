@@ -41,8 +41,8 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
                     .amount(collectionTransaction.get().getAmount())
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
                     .dueDate(new Timestamp(collectionTransaction.get().getDueDate().getTime()))
-                    .identityNumber(collectionTransaction.get().getConsumerNumber())
-                    .userName(collectionTransaction.get().getUserName())
+                    .serviceTransactionId(collectionTransaction.get().getServiceTransactionId())
+                    .userName(collectionTransaction.get().getConsumer().getName())
                     .billStatus(collectionTransaction.get().getBillStatus())
                     .consumerId(collectionTransaction.get().getConsumer().getId().toString())
                     .consumerEmail(collectionTransaction.get().getConsumer().getEmail())
@@ -50,17 +50,6 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
         } else {
             log.error(BillErrorType.ENABLE_TO_GET_BILL.getErrorMessage());
             throw new ServiceException(BillErrorType.ENABLE_TO_GET_BILL);
-        }
-    }
-
-    @Override
-    public Optional<CollectionTransaction> getByConsumerNumber(String consumerNumber) {
-        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByconsumerNumber(consumerNumber);
-        if (collectionTransaction.isPresent()) {
-            return collectionTransaction;
-        } else {
-            log.error(LendingTransactionErrorType.INVALID_IDENTITY_NUMBER.getErrorMessage());
-            throw new ServiceException(BillErrorType.INVALID_IDENTITY_NUMBER);
         }
     }
 

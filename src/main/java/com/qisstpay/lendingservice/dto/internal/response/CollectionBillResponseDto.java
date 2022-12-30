@@ -16,7 +16,7 @@ public class CollectionBillResponseDto {
     private Double         amount;
     private Double         amountAfterDueDate;
     private String         userName;
-    private String         identityNumber;
+    private String         serviceTransactionId;
     private Timestamp      dueDate;
     private BillStatusType billStatus;
     private String         consumerId;
