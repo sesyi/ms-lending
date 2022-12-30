@@ -76,7 +76,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
         ResponseEntity<QpayPaymentResponseDto> response;
         try {
             response = restTemplate.postForEntity(paymentURL, requestEntity, QpayPaymentResponseDto.class);
-            if (response.getStatusCode().equals(HttpStatus.OK)) {
+            if (response.getStatusCode().equals(HttpStatus.OK) || response.getStatusCodeValue() == 201) {
                 qPayPaymentCallLog.setStatus(CallStatusType.SUCCESS);
                 qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
                 qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
