@@ -42,7 +42,7 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
                     .dueDate(new Timestamp(collectionTransaction.get().getDueDate().getTime()))
                     .serviceTransactionId(collectionTransaction.get().getServiceTransactionId())
-                    .userName(collectionTransaction.get().getConsumer().getConsumerNumber())
+                    .userName(collectionTransaction.get().getConsumer().getName())
                     .billStatus(collectionTransaction.get().getBillStatus())
                     .consumerId(collectionTransaction.get().getConsumer().getId().toString())
                     .consumerEmail(collectionTransaction.get().getConsumer().getEmail())
