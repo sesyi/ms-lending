@@ -54,17 +54,6 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
     }
 
     @Override
-    public Optional<CollectionTransaction> getByConsumerNumber(String consumerNumber) {
-        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByconsumerNumber(consumerNumber);
-        if (collectionTransaction.isPresent()) {
-            return collectionTransaction;
-        } else {
-            log.error(LendingTransactionErrorType.INVALID_IDENTITY_NUMBER.getErrorMessage());
-            throw new ServiceException(BillErrorType.INVALID_IDENTITY_NUMBER);
-        }
-    }
-
-    @Override
     public CollectionTransaction save(CollectionTransaction collectionTransaction) {
         return collectionTransactionRepository.save(collectionTransaction);
     }
