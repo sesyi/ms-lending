@@ -7,8 +7,6 @@ import com.qisstpay.lendingservice.dto.hmb.request.InvoiceDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.TransactionDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
-import com.qisstpay.lendingservice.dto.qpay.response.GatewayResponseDto;
-import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerPersonalInformationResponseDto;
@@ -16,7 +14,6 @@ import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqConsumerReportRes
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqCreditScoreDataResponseDto;
 import com.qisstpay.lendingservice.entity.Consumer;
 import com.qisstpay.lendingservice.entity.ConsumerCreditScoreData;
-import com.qisstpay.lendingservice.entity.QpayPaymentTransaction;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,11 +66,6 @@ public class ModelConverter {
         return consumer;
     }
 
-
-    public QpayPaymentTransaction convertToQpayPaymentTransaction(GatewayResponseDto gatewayResponseDto) {
-        return modelMapper.map(gatewayResponseDto, QpayPaymentTransaction.class);
-    }
-
     public TasdeeqAuthResponseDto convertTOTasdeeqAuthResponseDto(Object object) {
         return modelMapper.map(object, TasdeeqAuthResponseDto.class);
     }
@@ -91,7 +83,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount){
+    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount) {
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -133,7 +125,9 @@ public class ModelConverter {
                 .REF6("").REF7("").REF8("").REF9("").REF10("")
                 .REF11("").REF12("").REF13("").REF14("").REF15("")
                 .REF16("").REF17("").REF18("").REF19("").REF20("")
-                .invoices(new ArrayList<>(){{add(invoiceDto);}})
+                .invoices(new ArrayList<>() {{
+                    add(invoiceDto);
+                }})
                 .build();
 
 
@@ -151,11 +145,13 @@ public class ModelConverter {
                 .signatory1ID(hmbSignatoryId)
                 .signatory2ID("")
                 .signatory3ID("")
-                .transactions(new LinkedList<TransactionDto>(){{add(transactionDto);}})
+                .transactions(new LinkedList<TransactionDto>() {{
+                    add(transactionDto);
+                }})
                 .build();
     }
 
-    public GetTransactionStatusRequestDto convertToGetTransactionStatusRequestDto(String stan, String transactionNo){
+    public GetTransactionStatusRequestDto convertToGetTransactionStatusRequestDto(String stan, String transactionNo) {
 
         return GetTransactionStatusRequestDto.builder()
                 .stan(stan)

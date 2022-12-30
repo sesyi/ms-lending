@@ -9,6 +9,7 @@ import com.qisstpay.lendingservice.dto.qpay.response.QpayPaymentResponseDto;
 import com.qisstpay.lendingservice.entity.*;
 import com.qisstpay.lendingservice.enums.CallStatusType;
 import com.qisstpay.lendingservice.enums.EndPointType;
+import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
 import com.qisstpay.lendingservice.repository.QpayPaymentCallRepository;
@@ -80,13 +81,20 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
                 qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
                 qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
                 collectionTransaction.setServiceTransactionId(response.getBody().getGatewayResponse().getGatewayResponseId());
-                QpayPaymentTransaction qpayPaymentTransaction = modelConverter.convertToQpayPaymentTransaction(response.getBody().getGatewayResponse());
-                qpayPaymentTransaction.setFurtherAction(response.getBody().getFurtherAction());
-                qpayPaymentTransaction.setHtmlSnippet(response.getBody().getHtmlSnippet());
-                qpayPaymentTransaction.setRedirectURL(response.getBody().getRedirectURL());
-                qpayPaymentTransaction.setTransactionId(paymentRequestDto.getTransactionId());
-                qpayPaymentTransaction.setRefTransactionId(paymentRequestDto.getRefTransactionId());
-                qpayPaymentTransaction.setAmount(paymentRequestDto.getAmount());
+                QpayPaymentTransaction qpayPaymentTransaction = QpayPaymentTransaction.builder()
+                        .furtherAction(response.getBody().getFurtherAction())
+                        .htmlSnippet(response.getBody().getHtmlSnippet())
+                        .redirectURL(response.getBody().getRedirectURL())
+                        .transactionId(paymentRequestDto.getTransactionId())
+                        .refTransactionId(paymentRequestDto.getRefTransactionId())
+                        .amount(paymentRequestDto.getAmount())
+                        .gatewayCardSourceId(response.getBody().getGatewayResponse().getGatewayCardSourceId())
+                        .gatewayClientSecret(response.getBody().getGatewayResponse().getGatewayClientSecret())
+                        .gatewayCode(response.getBody().getGatewayResponse().getGatewayCode())
+                        .gatewayMessage(response.getBody().getGatewayResponse().getGatewayMessage())
+                        .gatewaySource(response.getBody().getGatewayResponse().getGatewaySource())
+                        .gatewayStatus(response.getBody().getGatewayResponse().getGatewayStatus())
+                        .build();
                 account.ifPresent(qpayPaymentTransaction::setConsumerAccount);
                 qpayPaymentTransaction.setCollectionTransaction(collectionTransaction);
                 collectionTransaction.getQpayPaymentTransaction().add(qpayPaymentTransaction);

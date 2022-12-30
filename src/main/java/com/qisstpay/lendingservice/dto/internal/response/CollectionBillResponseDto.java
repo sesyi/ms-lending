@@ -21,4 +21,5 @@ public class CollectionBillResponseDto {
     private BillStatusType billStatus;
     private String         consumerId;
     private String         consumerEmail;
+    private String         billingMonth;
 }
