@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class SubmitTransactionRequestDto {
+public class SubmitIBFTTransactionRequestDto {
     @JsonProperty("ChannelID")
     private String channelID;
     @JsonProperty("ProductCode")

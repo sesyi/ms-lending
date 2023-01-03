@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.InvoiceDto;
-import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.request.SubmitIBFTTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.TransactionDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
@@ -83,7 +83,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount) {
+    public SubmitIBFTTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount) {
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -131,7 +131,7 @@ public class ModelConverter {
                 .build();
 
 
-        return SubmitTransactionRequestDto.builder()
+        return SubmitIBFTTransactionRequestDto.builder()
                 .channelID("CMS")
                 .productCode("IBFT")
                 .drAccountNo(donorAccountNumber)

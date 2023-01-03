@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class SubmitTransactionResponseDto {
+public class SubmitIBFTTransactionResponseDto {
     @JsonProperty("ResponseCode")
     private String ResponseCode;
     @JsonProperty("ResponseDescription")
