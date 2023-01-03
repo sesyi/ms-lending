@@ -92,15 +92,23 @@ public class CollectionController {
     @GetMapping(GET_BILL)
     public CustomResponse<CollectionBillResponseDto> getCollectionBill(
             @RequestHeader(value = "x-api-key") String apiKey,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam Long billId
     ) {
         log.info(CALLING_CONTROLLER);
         log.info("In method" + GET_BILL + " with billId {}", billId);
-        Boolean check = ApiKeyAuth.verifyApiKey(apiKey, qpayApiKey);
-        if (check.equals(Boolean.FALSE)) {
-            log.info(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
-            throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+        if (authorizationHeader != null) {
+            Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
+            Optional<User> lender = userService.getUserByUsername(userId);
+            ApiKeyAuth.verifyApiKey(lender, apiKey);
+        } else {
+            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, qpayApiKey);
+            if (check.equals(Boolean.FALSE)) {
+                log.info(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
+                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+            }
         }
+
         CollectionBillResponseDto response = collectionTransactionService.geBill(billId);
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<CollectionBillResponseDto>builder()
