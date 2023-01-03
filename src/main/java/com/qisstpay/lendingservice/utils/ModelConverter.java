@@ -2,10 +2,7 @@ package com.qisstpay.lendingservice.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
-import com.qisstpay.lendingservice.dto.hmb.request.InvoiceDto;
-import com.qisstpay.lendingservice.dto.hmb.request.SubmitIBFTTransactionRequestDto;
-import com.qisstpay.lendingservice.dto.hmb.request.TransactionDto;
+import com.qisstpay.lendingservice.dto.hmb.request.*;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.response.TasdeeqAuthResponseDto;
@@ -139,6 +136,74 @@ public class ModelConverter {
                 .dateTime("20220523143445")
                 .stan(stan)
                 .fileTemplate("IBFTE")
+                .makerID(hmbMakerId)
+                .releaserID(hmbReleaserId)
+                .checkerID(hmbCheckerId)
+                .signatory1ID(hmbSignatoryId)
+                .signatory2ID("")
+                .signatory3ID("")
+                .transactions(new LinkedList<TransactionDto>() {{
+                    add(transactionDto);
+                }})
+                .build();
+    }
+
+    public SubmitIFTTransactionRequestDto convertToSubmitTransactionRequestDtoIFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount) {
+
+        InvoiceDto invoiceDto = InvoiceDto.builder().
+                DOCNO("")
+                .DOCDESCR("")
+                .DOCAMOUNT("")
+                .DEDUCTAMOUNT("")
+                .NETAMOUNT("")
+                .IREF1("").IREF2("").IREF3("").IREF4("").IREF5("")
+                .IREF6("").IREF7("").IREF8("").IREF9("").IREF10("")
+                .IREF11("").IREF12("").IREF13("").IREF14("").IREF15("")
+                .COLUMNORDER("")
+                .VALUE_DATE("").build();
+
+        TransactionDto transactionDto = TransactionDto.builder()
+                .TXNREFNO(transactionNo)
+                .XPIN("")
+                .BENEFNAME("Bene Acc Name")
+                .BENEMNAME("")
+                .BENELNAME("")
+                .BENEADDR("")
+                .BENECELL("")
+                .BENEEMAIL("")
+                .BENEIN("")
+                .BeneAccTitle("Ben Acc Title")
+                .BENEACNO(benAccountNo)
+                .SwiftBankCode("")
+                .BANK(benAccountBankCode)
+                .BRANCH("")
+                .INSTRUMENTNO("")
+                .INSTRUMENTPrintDT("")
+                .INSTRUMENTDT("")
+                .COVERAMOUNT("")
+                .CURRENCYCODE("")
+                .EXCHANGERATE("")
+                .TRANSACTIONAMOUNT(String.valueOf(amount))
+                .ADVISING("")
+                .PRINTLOC("")
+                .REF1("").REF2("").REF3("").REF4("").REF5("")
+                .REF6("").REF7("").REF8("").REF9("").REF10("")
+                .REF11("").REF12("").REF13("").REF14("").REF15("")
+                .REF16("").REF17("").REF18("").REF19("").REF20("")
+                .invoices(new ArrayList<>() {{
+                    add(invoiceDto);
+                }})
+                .build();
+
+
+        return SubmitIFTTransactionRequestDto.builder()
+                .channelID("CMS")
+                .productCode("IFT")
+                .drAccountNo(donorAccountNumber)
+                .drAccTitle(donorAccountTitle)
+                .dateTime("20220523143445")
+                .stan(stan)
+                .fileTemplate("IFT")
                 .makerID(hmbMakerId)
                 .releaserID(hmbReleaserId)
                 .checkerID(hmbCheckerId)

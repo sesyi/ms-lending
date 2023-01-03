@@ -2,9 +2,11 @@ package com.qisstpay.lendingservice.service;
 
 import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitIBFTTransactionRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.request.SubmitIFTTransactionRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.GetTransactionStatusResponseDto;
 import com.qisstpay.lendingservice.dto.hmb.response.SubmitIBFTTransactionResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.response.SubmitIFTTransactionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
@@ -19,7 +21,7 @@ public interface HMBPaymentService {
 
     // remove in future
     GetTokenResponseDto callGetTokenApi();
-    SubmitIBFTTransactionResponseDto callSubmitIFTTransactionApi(String token, SubmitIBFTTransactionRequestDto IBFTSubmitTransactionRequestDto);
+    SubmitIFTTransactionResponseDto callSubmitIFTTransactionApi(String token, SubmitIFTTransactionRequestDto submitIFTTransactionRequestDto);
     SubmitIBFTTransactionResponseDto callSubmitIBFTTransactionApi(String token, SubmitIBFTTransactionRequestDto IBFTSubmitTransactionRequestDto) throws Exception;
     GetTransactionStatusResponseDto callGetStatusApi(String authToken, GetTransactionStatusRequestDto getTransactionStatusRequestDto) throws Exception;
 }
