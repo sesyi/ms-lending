@@ -80,7 +80,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitIBFTTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount) {
+    public SubmitIBFTTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode,  String benAccountTitle, String benAccountNo, String transactionNo, String stan, double amount) {
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -104,7 +104,7 @@ public class ModelConverter {
                 .BENECELL("")
                 .BENEEMAIL("")
                 .BENEIN("")
-                .BeneAccTitle("Ben Acc Title")
+                .BeneAccTitle(benAccountTitle)
                 .BENEACNO(benAccountNo)
                 .SwiftBankCode("")
                 .BANK(benAccountBankCode)
@@ -148,7 +148,7 @@ public class ModelConverter {
                 .build();
     }
 
-    public SubmitIFTTransactionRequestDto convertToSubmitTransactionRequestDtoIFT(String benAccountBankCode, String benAccountNo, String transactionNo, String stan, double amount) {
+    public SubmitIFTTransactionRequestDto convertToSubmitTransactionRequestDtoIFT(String benAccountBankCode,  String benAccountTitle, String benAccountNo, String transactionNo, String stan, double amount) {
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -172,7 +172,7 @@ public class ModelConverter {
                 .BENECELL("")
                 .BENEEMAIL("")
                 .BENEIN("")
-                .BeneAccTitle("Ben Acc Title")
+                .BeneAccTitle(benAccountTitle)
                 .BENEACNO(benAccountNo)
                 .SwiftBankCode("")
                 .BANK(benAccountBankCode)

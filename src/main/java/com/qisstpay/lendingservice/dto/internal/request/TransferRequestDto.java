@@ -18,6 +18,7 @@ public class TransferRequestDto {
     private String phoneNumber;
     private String consumerNumber;
     private String bankCode;
+    private String accountTitle;
     private String accountNumber;
     private String accountNo; //to be removed later on when communicated to the lenders to use accountNumber
     private double amount;
