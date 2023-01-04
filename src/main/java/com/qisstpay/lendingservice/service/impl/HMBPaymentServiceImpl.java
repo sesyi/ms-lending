@@ -312,8 +312,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
 
         try {
-            log.info("HMB Transaction Status Request URL : "+hmbserviceBaseUrl + fetchAccountTitleBasePath);
-            log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(hmbFetchAccountTitleRequestDto));
+            log.info("HMB Fetch Title Request URL : "+hmbserviceBaseUrl + fetchAccountTitleBasePath);
+            log.info("HMB Fetch Title Request Payload : " + objectMapper.writeValueAsString(hmbFetchAccountTitleRequestDto));
 
             url = new URL(hmbserviceBaseUrl + fetchAccountTitleBasePath);
             HttpURLConnection connection = getConnection(url);
@@ -336,7 +336,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             int responseCode = connection.getResponseCode();
 
             String responseBody = readInputStream(connection.getInputStream());
-            log.info("HMB Transaction Status Response : "+ responseBody );
+            log.info("HMB Fetch Title Response : "+ responseBody );
 
             if (responseCode == 200) {
                 hmbFetchAccountTitleResponseDto = objectMapper.readValue(responseBody, HMBFetchAccountTitleResponseDto.class);
