@@ -104,8 +104,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             productCode = "IFT";
         }
 
+        HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
+
         try {
-            HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, fetchTitleRequestDto.getAccountNumber(), stan));
+            hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, fetchTitleRequestDto.getAccountNumber(), stan));
+
+            if (hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")) {
+                throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Invalid Account Details");
+            }
+
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             e.printStackTrace();
@@ -118,7 +125,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         return FetchTitleResponseDto.builder()
                 .bankCode(fetchTitleRequestDto.getBankCode())
                 .accountNumber(fetchTitleRequestDto.getAccountNumber())
-                .accountTitle("")
+                .accountTitle(hmbFetchAccountTitleResponseDto.getResponseDescription())
                 .build();
     }
 
