@@ -226,7 +226,7 @@ public class ModelConverter {
                 .build();
     }
 
-    public HMBFetchAccountTitleRequestDto convertToHMBFetchAccountTitleRequestDto(String benAccountBankCode, String benAccountNo, String stan){
+    public HMBFetchAccountTitleRequestDto convertToHMBFetchAccountTitleRequestDto(String productCode, String benAccountBankCode, String benAccountNo, String stan){
 
         TransactionDto transactionDto = TransactionDto.builder()
                 .BENEACNO(benAccountNo)
@@ -235,7 +235,7 @@ public class ModelConverter {
 
         return HMBFetchAccountTitleRequestDto.builder()
                 .channelID("CMS")
-                .productCode("IFT")
+                .productCode(productCode)
                 .drAccountNo(donorAccountNumber)
                 .drAccTitle(donorAccountTitle)
                 .dateTime("20220523143445")
