@@ -186,23 +186,33 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
 
-        boolean isFetchAccountTitleEnabled = false; //todo make configurable
 
-        if(isFetchAccountTitleEnabled){
-            HMBCallLog hmbCallLogForFetchTitle = HMBCallLog.builder().build();
-            hmbCallLogForFetchTitle = hmbCallLogRepository.save(hmbCallLog);
+        //---------fetch title-------------//
+        HMBCallLog hmbCallLogForFetchTitle = HMBCallLog.builder().build();
+        hmbCallLogForFetchTitle = hmbCallLogRepository.save(hmbCallLog);
 
-            String productCode = "IBFT";
-            if(bank.getCode().equals("MPBL")){
-                productCode = "IFT";
+        String productCode = "IBFT";
+        if(bank.getCode().equals("MPBL")){
+            productCode = "IFT";
+        }
+
+        try {
+            stan = generateStan(lenderCallLog.getId());
+            hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, transferRequestDto.getAccountNumber(), stan));
+
+            if(hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")){
+                transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
+                return TransferResponseDto
+                        .builder()
+                        .code(transferState.getCode())
+                        .state(transferState.getState())
+                        .description(transferState.getDescription())
+                        .build();
             }
 
-            try {
-                stan = generateStan(lenderCallLog.getId());
-                hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, transferRequestDto.getAccountNumber(), stan));
-
-                if(hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")){
-                    transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
+            if(StringUtils.isNotBlank(accountTitle)){
+                if(!accountTitle.trim().equals(hmbFetchAccountTitleResponseDto.getResponseDescription().trim())){
+                    transferState = TransferState.RECIPIENT_ACCOUNT_TITLE_MISMATCH;
                     return TransferResponseDto
                             .builder()
                             .code(transferState.getCode())
@@ -211,26 +221,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                             .build();
                 }
 
-                if(StringUtils.isNotBlank(accountTitle)){
-                    if(!accountTitle.trim().equals(hmbFetchAccountTitleResponseDto.getResponseDescription().trim())){
-                        transferState = TransferState.RECIPIENT_ACCOUNT_TITLE_MISMATCH;
-                        return TransferResponseDto
-                                .builder()
-                                .code(transferState.getCode())
-                                .state(transferState.getState())
-                                .description(transferState.getDescription())
-                                .build();
-                    }
-
-                }else {
-                    accountTitle = hmbFetchAccountTitleResponseDto.getResponseDescription();
-                }
-            } catch (Exception e) {
-                updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
-                e.printStackTrace();
-                throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+            }else {
+                accountTitle = hmbFetchAccountTitleResponseDto.getResponseDescription();
             }
+        } catch (Exception e) {
+            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
+            e.printStackTrace();
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
         }
+
 
         stan = generateStan(lenderCallLog.getId());
 
