@@ -31,6 +31,7 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Date;
 
 @Service
 @Slf4j
@@ -712,25 +713,24 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
     private String generateStan(Long lenderCallLogId){
 
-        String stan = lenderCallLogId.toString();
+        StringBuilder stringBuilder = new StringBuilder();
+
+//        String stan = lenderCallLogId.toString();
 
         if(environment.equals("stag")){
-            stan = "2"+stan;
+            stringBuilder.append(2);
         }
         else if(environment.equals("dev")){
-            stan = "3"+stan;
+            stringBuilder.append(3);
+        }
+        else {
+            stringBuilder.append(1);
         }
 
-        if(lenderCallLogId<100000){
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i =0; i<6 - stan.length();i++){
-                stringBuilder.append("0");
-            }
-            stan = stringBuilder.append(lenderCallLogId).toString();
-        }
-        return stan;
+        return stringBuilder
+                .append(10 + (int)(Math.random() * ((99 - 10) + 1)))
+                .append((new Date()).getTime()).toString()
+                .toString();
     }
-
-
-
+    
 }
