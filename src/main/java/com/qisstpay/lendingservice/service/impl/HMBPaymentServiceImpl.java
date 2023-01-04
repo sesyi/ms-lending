@@ -155,7 +155,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         lendingTransaction = lendingTransactionRepository.save(lendingTransaction);
 
-        String stan = generateStan(lenderCallLog.getId());
+        String stan = null;
 
         GetTokenResponseDto getTokenResponseDto = callGetTokenApi();
 
@@ -175,14 +175,64 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             bankCode = "MDL";
         }
 
+        String accountTitle = transferRequestDto.getAccountTitle();
+
+        HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
+
+        boolean isFetchAccountTitleEnabled = false; //todo make configurable
+
+        if(isFetchAccountTitleEnabled){
+            HMBCallLog hmbCallLogForFetchTitle = HMBCallLog.builder().build();
+            hmbCallLogForFetchTitle = hmbCallLogRepository.save(hmbCallLog);
+
+            String productCode = "IBFT";
+            if(bank.getCode().equals("MPBL")){
+                productCode = "IFT";
+            }
+
+            try {
+                stan = generateStan(lenderCallLog.getId());
+                hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, transferRequestDto.getAccountNumber(), stan));
+
+                if(hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")){
+                    transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
+                    return TransferResponseDto
+                            .builder()
+                            .code(transferState.getCode())
+                            .state(transferState.getState())
+                            .description(transferState.getDescription())
+                            .build();
+                }
+
+                if(StringUtils.isNotBlank(accountTitle)){
+                    if(!accountTitle.trim().equals(hmbFetchAccountTitleResponseDto.getResponseDescription().trim())){
+                        transferState = TransferState.RECIPIENT_ACCOUNT_TITLE_MISMATCH;
+                        return TransferResponseDto
+                                .builder()
+                                .code(transferState.getCode())
+                                .state(transferState.getState())
+                                .description(transferState.getDescription())
+                                .build();
+                    }
+
+                }else {
+                    accountTitle = hmbFetchAccountTitleResponseDto.getResponseDescription();
+                }
+            } catch (Exception e) {
+                updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
+                e.printStackTrace();
+                throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+            }
+        }
+
         try {
             if(bank.getCode().equals("MPBL")){ //ift for habib metro to habib metro
                 SubmitIFTTransactionResponseDto submitIFTTransactionResponseDto = null;
-                submitIFTTransactionResponseDto = callSubmitIFTTransactionApi(getTokenResponseDto.getToken(),modelConverter.convertToSubmitTransactionRequestDtoIFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
+                submitIFTTransactionResponseDto = callSubmitIFTTransactionApi(getTokenResponseDto.getToken(),modelConverter.convertToSubmitTransactionRequestDtoIFT(bankCode, accountTitle, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
                 transferState = getStatusFromStatusDescription(submitIFTTransactionResponseDto.getResponseCode(), submitIFTTransactionResponseDto.getResponseDescription());
             }else {
                 SubmitIBFTTransactionResponseDto submitIBFTTransactionResponseDto = null;
-                submitIBFTTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
+                submitIBFTTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, accountTitle, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
                 transferState = getStatusFromStatusDescription(submitIBFTTransactionResponseDto.getResponseCode(), submitIBFTTransactionResponseDto.getResponseDescription());
             }
             lendingTransaction.setTransactionState(TransactionState.SUCCESS);
