@@ -52,6 +52,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     private String submitIFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
     private String submitIBFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
     private String getTransactionBasePath = "/TransPaymentAPI/Transaction/GetStatus";
+    private String fetchAccountTitleBasePath = "/TransPaymentAPI/Transaction/TitleFetch";
 
     @Autowired
     private BankRepository bankRepository;
@@ -91,7 +92,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
         try {
-            callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(fetchTitleRequestDto.getBankCode(), fetchTitleRequestDto.getAccountNumber(), stan));
+            HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(fetchTitleRequestDto.getBankCode(), fetchTitleRequestDto.getAccountNumber(), stan));
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             e.printStackTrace();
@@ -311,10 +312,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
 
         try {
-            log.info("HMB Transaction Status Request URL : "+hmbserviceBaseUrl + getTransactionBasePath);
+            log.info("HMB Transaction Status Request URL : "+hmbserviceBaseUrl + fetchAccountTitleBasePath);
             log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(hmbFetchAccountTitleRequestDto));
 
-            url = new URL(hmbserviceBaseUrl + getTransactionBasePath);
+            url = new URL(hmbserviceBaseUrl + fetchAccountTitleBasePath);
             HttpURLConnection connection = getConnection(url);
 
             connection.setRequestProperty("insecure", "true");
