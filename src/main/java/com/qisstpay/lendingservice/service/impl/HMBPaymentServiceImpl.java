@@ -91,8 +91,21 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
+        Bank bank = bankRepository.findByCode(fetchTitleRequestDto.getBankCode()).orElseThrow(
+                () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
+        );
+
+        HMBBank hmbBank = hmbBankRepository.findByBankId(bank.getId());
+
+        String bankCode = hmbBank.getCode();
+
+        String productCode = "IBFT";
+        if(bank.getCode().equals("MPBL")){
+            productCode = "IFT";
+        }
+
         try {
-            HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(fetchTitleRequestDto.getBankCode(), fetchTitleRequestDto.getAccountNumber(), stan));
+            HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, fetchTitleRequestDto.getAccountNumber(), stan));
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             e.printStackTrace();
