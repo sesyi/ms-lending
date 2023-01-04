@@ -13,8 +13,10 @@ import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPLoginResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPTransferResposneDto;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
+import com.qisstpay.lendingservice.dto.internal.request.FetchTitleRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
+import com.qisstpay.lendingservice.dto.internal.response.FetchTitleResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
@@ -123,6 +125,21 @@ public class LendingServiceImpl implements LendingService {
     private HMBBankRepository hmbBankRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+
+    @Override
+    public FetchTitleResponseDto fetchTitle(FetchTitleRequestDto fetchTitleRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
+
+        if (StringUtils.isBlank(fetchTitleRequestDto.getAccountNumber())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account Number is missing");
+        }
+
+        if (StringUtils.isBlank(fetchTitleRequestDto.getBankCode())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is missing");
+        }
+
+        return hmbPaymentService.fetchTitle(fetchTitleRequestDto, lenderCallLog);
+    }
 
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {

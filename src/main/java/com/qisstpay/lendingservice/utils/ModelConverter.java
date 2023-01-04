@@ -225,4 +225,31 @@ public class ModelConverter {
                 .dateTime("20220523143445")
                 .build();
     }
+
+    public HMBFetchAccountTitleRequestDto convertToHMBFetchAccountTitleRequestDto(String benAccountBankCode, String benAccountNo, String stan){
+
+        TransactionDto transactionDto = TransactionDto.builder()
+                .BENEACNO(benAccountNo)
+                .BANK(benAccountBankCode)
+                .build();
+
+        return HMBFetchAccountTitleRequestDto.builder()
+                .channelID("CMS")
+                .productCode("IFT")
+                .drAccountNo(donorAccountNumber)
+                .drAccTitle(donorAccountTitle)
+                .dateTime("20220523143445")
+                .stan(stan)
+                .fileTemplate("IFT")
+                .makerID(hmbMakerId)
+                .releaserID(hmbReleaserId)
+                .checkerID(hmbCheckerId)
+                .signatory1ID(hmbSignatoryId)
+                .signatory2ID("")
+                .signatory3ID("")
+                .transactions(new LinkedList<TransactionDto>() {{
+                    add(transactionDto);
+                }})
+                .build();
+    }
 }
