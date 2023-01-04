@@ -63,7 +63,7 @@ public class LendingController {
         ApiKeyAuth.verifyApiKey(user, apiKey);
 
         log.info("adding call log for lender {}", user.get().getId());
-        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), fetchTitleRequestDto.toString(), fetchTitleRequestDto.getType() == TransferType.HMB ? ServiceType.HMB : ServiceType.EP, CallType.RECEIVED);
+        LenderCallLog lenderCallLog = lendingCallService.saveLenderCall(user.get(), fetchTitleRequestDto.toString(), ServiceType.HMB, CallType.RECEIVED);
 
         return CustomResponse.CustomResponseBuilder.<FetchTitleResponseDto>builder()
                 .body(lendingService.fetchTitle(fetchTitleRequestDto, lenderCallLog)).build();
