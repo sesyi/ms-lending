@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.dto.hmb.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionDto {
 
     @JsonProperty("TXNREFNO")

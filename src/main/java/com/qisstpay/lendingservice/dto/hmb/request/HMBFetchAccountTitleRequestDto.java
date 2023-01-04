@@ -11,7 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class SubmitTransactionRequestDto {
+public class HMBFetchAccountTitleRequestDto {
+
     @JsonProperty("ChannelID")
     private String channelID;
     @JsonProperty("ProductCode")
@@ -40,4 +41,5 @@ public class SubmitTransactionRequestDto {
     private String releaserID;
     @JsonProperty("Transactions")
     List<TransactionDto> transactions;
+
 }

@@ -3,8 +3,10 @@ package com.qisstpay.lendingservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qisstpay.lendingservice.controller.CollectionController;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
+import com.qisstpay.lendingservice.dto.internal.request.FetchTitleRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.CreditScoreResponseDto;
+import com.qisstpay.lendingservice.dto.internal.response.FetchTitleResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.CollectionTransaction;
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface LendingService {
+    FetchTitleResponseDto fetchTitle(FetchTitleRequestDto fetchTitleRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException;
+
     TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException;
 
     TransferResponseDto transferV2(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, User user) throws JsonProcessingException;
