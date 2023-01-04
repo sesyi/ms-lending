@@ -225,6 +225,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             }
         }
 
+        stan = generateStan(lenderCallLog.getId());
+
         try {
             if(bank.getCode().equals("MPBL")){ //ift for habib metro to habib metro
                 SubmitIFTTransactionResponseDto submitIFTTransactionResponseDto = null;
