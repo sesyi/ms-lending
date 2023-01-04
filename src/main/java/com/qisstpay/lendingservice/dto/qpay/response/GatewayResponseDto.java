@@ -16,7 +16,7 @@ public class GatewayResponseDto {
     private Boolean authorizedPayment;
 
     @JsonProperty("gateway")
-    private String gateway;
+    private String gatewayType;
 
     @JsonProperty("gateway_code")
     private String gatewayCode;

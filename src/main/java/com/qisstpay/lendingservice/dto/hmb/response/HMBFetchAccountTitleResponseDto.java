@@ -5,10 +5,11 @@ import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class SubmitTransactionResponseDto {
+public class HMBFetchAccountTitleResponseDto {
     @JsonProperty("ResponseCode")
     private String ResponseCode;
     @JsonProperty("ResponseDescription")

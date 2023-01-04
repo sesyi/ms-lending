@@ -16,7 +16,9 @@ public enum TransferState {
     RECIPIENT_ACCOUNT_INACTIVE("111","FAILURE", "Recipient account is inactive"),
     RELEASER_AUTHORIZATION_NEEDED("112","PENDING","Transfer to be authorized by releaser"),
     RELEASER_REJECTED("113","FAILURE","Transfer rejected by releaser"),
-    GATEWAY_TRANSFER_PENDING("114","PENDING","Transfer in progress");
+    GATEWAY_TRANSFER_PENDING("114","PENDING","Transfer in progress"),
+    CUSTOMER_NOT_FOUND("01", "CUSTOMER_NOT_FOUND", "RESPONSE_CUSTOMER_RELATIONSHIP_NOT_FOUND"),
+    INVALID_DATA_EP("04", "Invalid Data (e.g userid, password, Bank Mnemonic provided wrong)", "Invalid Username & password, Bank Mnemoic");
 
 
     private final String code;

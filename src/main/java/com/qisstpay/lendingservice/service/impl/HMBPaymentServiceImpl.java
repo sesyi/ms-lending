@@ -3,12 +3,14 @@ package com.qisstpay.lendingservice.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
-import com.qisstpay.lendingservice.dto.hmb.request.SubmitTransactionRequestDto;
-import com.qisstpay.lendingservice.dto.hmb.response.GetTokenResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.GetTransactionStatusResponseDto;
-import com.qisstpay.lendingservice.dto.hmb.response.SubmitTransactionResponseDto;
+import com.qisstpay.lendingservice.dto.hmb.request.HMBFetchAccountTitleRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.request.SubmitIBFTTransactionRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.request.SubmitIFTTransactionRequestDto;
+import com.qisstpay.lendingservice.dto.hmb.response.*;
 import com.qisstpay.lendingservice.dto.internal.TransactionStatusDto;
+import com.qisstpay.lendingservice.dto.internal.request.FetchTitleRequestDto;
 import com.qisstpay.lendingservice.dto.internal.request.TransferRequestDto;
+import com.qisstpay.lendingservice.dto.internal.response.FetchTitleResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.TransactionStateResponse;
 import com.qisstpay.lendingservice.dto.internal.response.TransferResponseDto;
 import com.qisstpay.lendingservice.entity.*;
@@ -50,6 +52,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     private String submitIFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
     private String submitIBFTTransactionBasePath = "/TransPaymentAPI/Transaction/TransSubmit";
     private String getTransactionBasePath = "/TransPaymentAPI/Transaction/GetStatus";
+    private String fetchAccountTitleBasePath = "/TransPaymentAPI/Transaction/TitleFetch";
 
     @Autowired
     private BankRepository bankRepository;
@@ -77,6 +80,36 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     private ObjectMapper objectMapper;
 
     @Override
+    public FetchTitleResponseDto fetchTitle(FetchTitleRequestDto fetchTitleRequestDto, LenderCallLog lenderCallLog) {
+
+        GetTokenResponseDto getTokenResponseDto = callGetTokenApi();
+        if(getTokenResponseDto == null || getTokenResponseDto.getToken() == null){
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+        }
+
+        String stan = generateStan(lenderCallLog.getId());
+        HMBCallLog hmbCallLog = HMBCallLog.builder().build();
+        hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
+
+        try {
+            HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(fetchTitleRequestDto.getBankCode(), fetchTitleRequestDto.getAccountNumber(), stan));
+        } catch (Exception e) {
+            updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
+            e.printStackTrace();
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+        }
+
+        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
+
+
+        return FetchTitleResponseDto.builder()
+                .bankCode(fetchTitleRequestDto.getBankCode())
+                .accountNumber(fetchTitleRequestDto.getAccountNumber())
+                .accountTitle("")
+                .build();
+    }
+
+    @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer) {
 
         TransferState transferState = TransferState.SOMETHING_WENT_WRONG;
@@ -102,7 +135,6 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         lendingTransaction.setTransactionState(TransactionState.FAILURE);
 
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
-
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
         String transactionNo = environment.toUpperCase().charAt(0) + "-"+ lenderCallLog.getUser().getId() + "-" + consumer.getId() + "-" + lenderCallLog.getId();
@@ -118,8 +150,6 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
         }
 
-        SubmitTransactionResponseDto submitTransactionResponseDto = null;
-
         Bank bank = bankRepository.findByCode(transferRequestDto.getBankCode()).orElseThrow(
                 () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
         );
@@ -133,9 +163,17 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         try {
-            submitTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
+            if(bank.getCode().equals("MPBL")){ //ift for habib metro to habib metro
+                SubmitIFTTransactionResponseDto submitIFTTransactionResponseDto = null;
+                submitIFTTransactionResponseDto = callSubmitIFTTransactionApi(getTokenResponseDto.getToken(),modelConverter.convertToSubmitTransactionRequestDtoIFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
+                transferState = getStatusFromStatusDescription(submitIFTTransactionResponseDto.getResponseCode(), submitIFTTransactionResponseDto.getResponseDescription());
+            }else {
+                SubmitIBFTTransactionResponseDto submitIBFTTransactionResponseDto = null;
+                submitIBFTTransactionResponseDto = callSubmitIBFTTransactionApi(getTokenResponseDto.getToken(), modelConverter.convertToSubmitTransactionRequestDtoIBFT(bankCode, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
+                transferState = getStatusFromStatusDescription(submitIBFTTransactionResponseDto.getResponseCode(), submitIBFTTransactionResponseDto.getResponseDescription());
+            }
             lendingTransaction.setTransactionState(TransactionState.SUCCESS);
-            transferState = getStatusFromStatusDescription(submitTransactionResponseDto.getResponseCode(), submitTransactionResponseDto.getResponseDescription());
+
 
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
@@ -169,12 +207,14 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
-
         String stan = generateStan(lenderCallLog.getId());
 
         String transactionNo = lendingTransaction.getServiceTransactionId();
 
         GetTokenResponseDto getTokenResponseDto = callGetTokenApi();
+        if(getTokenResponseDto == null || getTokenResponseDto.getToken() == null){
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+        }
 
         GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
         try {
@@ -267,15 +307,58 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     }
 
     @Override
-    public SubmitTransactionResponseDto callSubmitIFTTransactionApi(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) {
+    public HMBFetchAccountTitleResponseDto callFetchTitleApi(String authToken, HMBFetchAccountTitleRequestDto hmbFetchAccountTitleRequestDto) throws Exception {
+        URL url = null;
+        HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
+
+        try {
+            log.info("HMB Transaction Status Request URL : "+hmbserviceBaseUrl + fetchAccountTitleBasePath);
+            log.info("HMB Transaction Status Request Payload : " + objectMapper.writeValueAsString(hmbFetchAccountTitleRequestDto));
+
+            url = new URL(hmbserviceBaseUrl + fetchAccountTitleBasePath);
+            HttpURLConnection connection = getConnection(url);
+
+            connection.setRequestProperty("insecure", "true");
+
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setRequestProperty("UserId", userId);
+            connection.setRequestProperty("Password", password);
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("Content-Type", "application/json");
+
+
+            try(OutputStream os = connection.getOutputStream()) {
+                byte[] input = objectMapper.writeValueAsString(hmbFetchAccountTitleRequestDto).getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = connection.getResponseCode();
+
+            String responseBody = readInputStream(connection.getInputStream());
+            log.info("HMB Transaction Status Response : "+ responseBody );
+
+            if (responseCode == 200) {
+                hmbFetchAccountTitleResponseDto = objectMapper.readValue(responseBody, HMBFetchAccountTitleResponseDto.class);
+            } else {
+                System.out.println("Error: " + connection.getResponseMessage());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return hmbFetchAccountTitleResponseDto;
+    }
+
+    @Override
+    public SubmitIFTTransactionResponseDto callSubmitIFTTransactionApi(String authToken, SubmitIFTTransactionRequestDto submitIFTTransactionRequestDto) {
 
         URL url = null;
 
-        SubmitTransactionResponseDto submitTransactionResponseDto = null;
+        SubmitIFTTransactionResponseDto submitIFTTransactionResponseDto = null;
 
         try {
             log.info("HMB Submit IFT Transaction URL : "+hmbserviceBaseUrl + submitIFTTransactionBasePath);
-            log.info("HMB Submit IFT Transaction Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
+            log.info("HMB Submit IFT Transaction Request Payload : " + objectMapper.writeValueAsString(submitIFTTransactionRequestDto));
 
             url = new URL(hmbserviceBaseUrl + submitIFTTransactionBasePath);
             HttpURLConnection connection = getConnection(url);
@@ -290,7 +373,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
 
             try(OutputStream os = connection.getOutputStream()) {
-                byte[] input = objectMapper.writeValueAsString(submitTransactionRequestDto).getBytes("utf-8");
+                byte[] input = objectMapper.writeValueAsString(submitIFTTransactionRequestDto).getBytes("utf-8");
                 os.write(input, 0, input.length);
             }
 
@@ -302,7 +385,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             if (responseCode == 200) {
                 // If successful, read the response body
 
-                submitTransactionResponseDto = objectMapper.readValue(responseBody, SubmitTransactionResponseDto.class);
+                submitIFTTransactionResponseDto = objectMapper.readValue(responseBody, SubmitIFTTransactionResponseDto.class);
 
             } else {
                 // If not successful, print the error message
@@ -312,7 +395,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             e.printStackTrace();
         }
 
-        return submitTransactionResponseDto;
+        return submitIFTTransactionResponseDto;
 
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(List.of(MediaType.ALL));
@@ -334,15 +417,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     }
 
     @Override
-    public SubmitTransactionResponseDto callSubmitIBFTTransactionApi(String authToken, SubmitTransactionRequestDto submitTransactionRequestDto) throws Exception {
+    public SubmitIBFTTransactionResponseDto callSubmitIBFTTransactionApi(String authToken, SubmitIBFTTransactionRequestDto IBFTSubmitTransactionRequestDto) throws Exception {
 
         URL url = null;
 
-        SubmitTransactionResponseDto submitTransactionResponseDto = null;
+        SubmitIBFTTransactionResponseDto submitIBFTTransactionResponseDto = null;
 
         try {
             log.info("HMB Submit IBFT Transaction URL : "+hmbserviceBaseUrl + submitIBFTTransactionBasePath);
-            log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(submitTransactionRequestDto));
+            log.info("HMB IBFT Transfer Request Payload : " + objectMapper.writeValueAsString(IBFTSubmitTransactionRequestDto));
 
             url = new URL(hmbserviceBaseUrl + submitIBFTTransactionBasePath);
             HttpURLConnection connection = getConnection(url);
@@ -358,7 +441,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             connection.setRequestProperty("Content-Type", "application/json");
 
             try(OutputStream os = connection.getOutputStream()) {
-                byte[] input = objectMapper.writeValueAsString(submitTransactionRequestDto).getBytes("utf-8");
+                byte[] input = objectMapper.writeValueAsString(IBFTSubmitTransactionRequestDto).getBytes("utf-8");
                 os.write(input, 0, input.length);
             }
 
@@ -370,7 +453,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             if (responseCode == 200) {
                 // If successful, read the response body
 
-                submitTransactionResponseDto = objectMapper.readValue(responseBody, SubmitTransactionResponseDto.class);
+                submitIBFTTransactionResponseDto = objectMapper.readValue(responseBody, SubmitIBFTTransactionResponseDto.class);
 
             } else {
                 // If not successful, print the error message
@@ -380,7 +463,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             e.printStackTrace();
         }
 
-        return submitTransactionResponseDto;
+        return submitIBFTTransactionResponseDto;
 
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(List.of(MediaType.ALL));

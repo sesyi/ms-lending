@@ -26,9 +26,6 @@ public class LendingTransaction {
     @Column(name = "user_name")
     private String userName;
 
-    @Column(name = "identity_number")
-    private String identityNumber;
-
     @Column(name = "account_number")
     private String accountNumber;
 

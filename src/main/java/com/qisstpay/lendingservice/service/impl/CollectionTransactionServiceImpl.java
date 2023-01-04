@@ -3,8 +3,8 @@ package com.qisstpay.lendingservice.service.impl;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.dto.internal.response.CollectionBillResponseDto;
 import com.qisstpay.lendingservice.entity.CollectionTransaction;
+import com.qisstpay.lendingservice.entity.QpayPaymentTransaction;
 import com.qisstpay.lendingservice.error.errortype.BillErrorType;
-import com.qisstpay.lendingservice.error.errortype.LendingTransactionErrorType;
 import com.qisstpay.lendingservice.repository.CollectionTransactionRepository;
 import com.qisstpay.lendingservice.service.CollectionTransactionService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,31 +36,30 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
     public CollectionBillResponseDto geBill(Long id) {
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findById(id);
         if (collectionTransaction.isPresent()) {
+            QpayPaymentTransaction qpayPaymentTransaction = null;
+            if (collectionTransaction.get().getQpayPaymentTransaction().size() > 0) {
+                qpayPaymentTransaction = collectionTransaction.get().getQpayPaymentTransaction().get(collectionTransaction.get().getQpayPaymentTransaction().size() - 1);
+            }
             return CollectionBillResponseDto.builder()
                     .billId(collectionTransaction.get().getId())
                     .amount(collectionTransaction.get().getAmount())
+                    .chargedAmount(qpayPaymentTransaction == null ? null : qpayPaymentTransaction.getAmount())
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
                     .dueDate(new Timestamp(collectionTransaction.get().getDueDate().getTime()))
-                    .identityNumber(collectionTransaction.get().getConsumerNumber())
-                    .userName(collectionTransaction.get().getUserName())
+                    .collectionTransactionId(collectionTransaction.get().getServiceTransactionId())
+                    .transactionId(collectionTransaction.get().getTransactionStamp())
+                    .userName(collectionTransaction.get().getConsumer().getName())
                     .billStatus(collectionTransaction.get().getBillStatus())
                     .consumerId(collectionTransaction.get().getConsumer().getId().toString())
                     .consumerEmail(collectionTransaction.get().getConsumer().getEmail())
+                    .billingMonth(collectionTransaction.get().getBillingMonth())
+                    .paymentStatus(qpayPaymentTransaction == null ? null : qpayPaymentTransaction.getPaymentStatus())
+                    .gatewayType(qpayPaymentTransaction == null ? null : qpayPaymentTransaction.getGateway())
+                    .paidAt(qpayPaymentTransaction == null ? null : qpayPaymentTransaction.getUpdatedAt())
                     .build();
         } else {
             log.error(BillErrorType.ENABLE_TO_GET_BILL.getErrorMessage());
             throw new ServiceException(BillErrorType.ENABLE_TO_GET_BILL);
-        }
-    }
-
-    @Override
-    public Optional<CollectionTransaction> getByConsumerNumber(String consumerNumber) {
-        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByconsumerNumber(consumerNumber);
-        if (collectionTransaction.isPresent()) {
-            return collectionTransaction;
-        } else {
-            log.error(LendingTransactionErrorType.INVALID_IDENTITY_NUMBER.getErrorMessage());
-            throw new ServiceException(BillErrorType.INVALID_IDENTITY_NUMBER);
         }
     }
 

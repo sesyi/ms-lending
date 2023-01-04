@@ -72,6 +72,9 @@ public class QpayPaymentRequestDto {
     @JsonProperty("installments")
     private Integer installments;
 
+    @JsonProperty("ip_address")
+    private String ipAddress;
+
     @JsonProperty("gateway_credentials")
     private HashMap<String, String> gatewayCredentials;
 
@@ -80,4 +83,7 @@ public class QpayPaymentRequestDto {
 
     @JsonProperty("nift_otp")
     private NiftOtpRequestDto niftOtp;
+
+    @JsonProperty("source_metadata")
+    private SourceMetadataRequestDto sourceMetadata;
 }

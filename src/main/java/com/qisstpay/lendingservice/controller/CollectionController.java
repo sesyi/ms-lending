@@ -13,7 +13,6 @@ import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.enums.CallType;
-import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.security.ApiKeyAuth;
 import com.qisstpay.lendingservice.security.MFBUserAuth;
@@ -26,14 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -100,15 +92,23 @@ public class CollectionController {
     @GetMapping(GET_BILL)
     public CustomResponse<CollectionBillResponseDto> getCollectionBill(
             @RequestHeader(value = "x-api-key") String apiKey,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam Long billId
     ) {
         log.info(CALLING_CONTROLLER);
         log.info("In method" + GET_BILL + " with billId {}", billId);
-        Boolean check = ApiKeyAuth.verifyApiKey(apiKey, qpayApiKey);
-        if (check.equals(Boolean.FALSE)) {
-            log.info(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
-            throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+        if (authorizationHeader != null) {
+            Long userId = tokenParser.getUserIdFromToken(authorizationHeader);
+            Optional<User> lender = userService.getUserByUsername(userId);
+            ApiKeyAuth.verifyApiKey(lender, apiKey);
+        } else {
+            Boolean check = ApiKeyAuth.verifyApiKey(apiKey, qpayApiKey);
+            if (check.equals(Boolean.FALSE)) {
+                log.info(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
+                throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
+            }
         }
+
         CollectionBillResponseDto response = collectionTransactionService.geBill(billId);
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<CollectionBillResponseDto>builder()
@@ -140,20 +140,19 @@ public class CollectionController {
     public CustomResponse<QpayCollectionResponseDto> getQpayCollectionStatus(
             @RequestHeader(value = "x-api-key") String apiKey,
             @RequestParam Long billId,
-            @RequestParam PaymentGatewayType gatewayType,
             @RequestParam(required = false) String otp
     ) {
         log.info(CALLING_CONTROLLER);
-        log.info("In method" + GET_QPAY_COLLECTION_STATUS + " with billId: {}, gatewayType: {}", billId, gatewayType);
+        log.info("In method" + GET_QPAY_COLLECTION_STATUS + " with billId: {}", billId);
         Boolean check = ApiKeyAuth.verifyApiKey(apiKey, qpayApiKey);
         if (check.equals(Boolean.FALSE)) {
             log.info(AuthenticationErrorType.INVALID_API_KEY.getErrorMessage());
             throw new ServiceException(AuthenticationErrorType.INVALID_API_KEY);
         }
 
-        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: %s, gatewayType: %s", billId, gatewayType), ServiceType.QPAY, CallType.RECEIVED);
+        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: %s", billId), ServiceType.QPAY, CallType.RECEIVED);
 
-        QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, gatewayType, callLog, otp);
+        QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, callLog, otp);
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
                 .body(response).build();

@@ -30,13 +30,13 @@ public class LendingTransactionServiceImpl implements LendingTransactionService 
     }
 
     @Override
-    public Optional<LendingTransaction> geByIdentityNumber(String identityNumber) {
-        Optional<LendingTransaction> lendingTransaction = lendingTransactionRepository.findByIdentityNumber(identityNumber);
+    public Optional<LendingTransaction> geByTransactionStamp(String transactionStamp) {
+        Optional<LendingTransaction> lendingTransaction = lendingTransactionRepository.findByTransactionStamp(transactionStamp);
         if (lendingTransaction.isPresent()) {
             return lendingTransaction;
         } else {
-            log.error(LendingTransactionErrorType.INVALID_IDENTITY_NUMBER.getErrorMessage());
-            throw new ServiceException(LendingTransactionErrorType.INVALID_IDENTITY_NUMBER);
+            log.error(LendingTransactionErrorType.INVALID_TRANSACTION_NUMBER.getErrorMessage());
+            throw new ServiceException(LendingTransactionErrorType.INVALID_TRANSACTION_NUMBER);
         }
     }
 }
