@@ -637,6 +637,19 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         if(responseDescription.equals("Paid/Transferred".toLowerCase())){
             return TransferState.TRANSFER_SUCCESS;
         }
+
+        ///---------PENDING----------///
+        if(responseDescription.contains("Waiting for backoffice process".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
+        }
+        if(responseDescription.equals("Transaction Successfully Proceeded...".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
+        }
+        if(responseDescription.contains("waiting for core response".toLowerCase())){
+            return TransferState.GATEWAY_TRANSFER_PENDING;
+        }
+
+        ///---------FAILURES----------///
         if(responseDescription.contains("Insufficient funds".toLowerCase())){
             return TransferState.INSUFFICIENT_FUNDS;
         }
@@ -663,12 +676,6 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
         if(responseDescription.contains("Core UnSuccess Failed".toLowerCase())){
             return TransferState.SOMETHING_WENT_WRONG;
-        }
-        if(responseDescription.contains("waiting for core response".toLowerCase())){
-            return TransferState.GATEWAY_TRANSFER_PENDING;
-        }
-        if(responseDescription.contains("Waiting for backoffice process".toLowerCase())){
-            return TransferState.GATEWAY_TRANSFER_PENDING;
         }
 
         return TransferState.SOMETHING_WENT_WRONG;
