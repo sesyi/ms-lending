@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.FormParam;
@@ -161,7 +162,7 @@ public class CollectionController {
     }
 
     @PostMapping(path = QPAY_CALLBACK_STATUS, consumes = "application/x-www-form-urlencoded")
-    public CustomResponse<QpayCollectionResponseDto> getQpayCallbackStatus(
+    public ResponseEntity<String> getQpayCallbackStatus(
             @RequestParam(value = "order.id") String orderId,
             @RequestParam(value = "transaction.id") String transactionId,
             @RequestParam(value = "result") String result
@@ -171,10 +172,9 @@ public class CollectionController {
 
         LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("orderId: %s transactionId: %s result: %s", orderId, transactionId, result), ServiceType.QPAY, CallType.RECEIVED);
 
-        QpayCollectionResponseDto response = collectionService.qpayCallbackStatus(orderId, transactionId, result, callLog);
+        String response = collectionService.qpayCallbackStatus(orderId, transactionId, result, callLog);
         log.info(RESPONSE, response);
-        return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
-                .body(response).build();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(TEST)
