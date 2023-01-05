@@ -160,7 +160,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
     @Override
     public QpayPaymentResponseDto capture(QpayCaptureRequestDto captureRequestDto, LenderCallLog callLog) {
         log.info(CALLING_SERVICE);
-        log.info("In method status");
+        log.info("In method capture");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("x-api-key", "abc123!");
