@@ -56,6 +56,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     private String getTransactionBasePath = "/TransPaymentAPI/Transaction/GetStatus";
     private String fetchAccountTitleBasePath = "/TransPaymentAPI/Transaction/TitleFetch";
 
+    private static final String ACCOUNT_TITLE_FOR_UAT = "Test Account Title";
+
     @Autowired
     private BankRepository bankRepository;
 
@@ -97,15 +99,20 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
         );
 
+        if(!environment.equals("prod")){
+            return FetchTitleResponseDto.builder()
+                    .bankCode(fetchTitleRequestDto.getBankCode())
+                    .accountNumber(fetchTitleRequestDto.getAccountNumber())
+                    .accountTitle(ACCOUNT_TITLE_FOR_UAT)
+                    .build();
+        }
+
         HMBBank hmbBank = hmbBankRepository.findByBankId(bank.getId());
-
         String bankCode = hmbBank.getCode();
-
         String productCode = "IBFT";
         if(bank.getCode().equals("MPBL")){
             productCode = "IFT";
         }
-
         HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
 
         try {
@@ -199,8 +206,15 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         try {
-            stan = generateStan();
-            hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, transferRequestDto.getAccountNumber(), stan));
+            if(environment.equals("prod")){
+                stan = generateStan();
+                hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, transferRequestDto.getAccountNumber(), stan));
+            }else{
+                hmbFetchAccountTitleResponseDto = HMBFetchAccountTitleResponseDto.builder()
+                        .ResponseCode("00")
+                        .ResponseDescription(ACCOUNT_TITLE_FOR_UAT)
+                        .build();
+            }
 
             if(hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")){
                 transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
