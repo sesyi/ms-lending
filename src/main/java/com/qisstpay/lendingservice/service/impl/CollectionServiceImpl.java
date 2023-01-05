@@ -680,16 +680,18 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public QpayCollectionResponseDto qpayCallbackStatus(String orderId, String transactionId, String result, LenderCallLog callLog) {
+    public String qpayCallbackStatus(String orderId, String transactionId, String result, LenderCallLog callLog) {
         log.info(CALLING_SERVICE);
         log.info("In qpayCallbackStatus");
         if (result.equals("SUCCESS")) {
             Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geByServiceTransactionId(orderId);
             QpayCollectionResponseDto qpayCollectionResponseDto = qpayCollectionStatus(collectionTransaction.get(), callLog, "");
-            qpayCollectionResponseDto.setRedirectURL(String.format(qpayUrl, paymentURL, collectionTransaction.get().getId()));
-            return qpayCollectionResponseDto;
+            if (qpayCollectionResponseDto.getPaymentStatus().equals("Complete")) {
+                return String.format(qpayUrl, paymentURL, collectionTransaction.get().getId());
+            }
+            return qpayCollectionResponseDto.getPaymentStatus();
         }
-        return QpayCollectionResponseDto.builder().build();
+        return "Payment Failed";
     }
 
     public AbroadInquiryResponse abroadBillInquiryCall(AbroadInquiryRequest abroadInquiryRequest) {

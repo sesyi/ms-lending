@@ -29,5 +29,5 @@ public interface CollectionService {
 
     EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest, EPCallLog savedEpCallLog) throws ParseException;
 
-    QpayCollectionResponseDto qpayCallbackStatus(String orderId, String transactionId, String result, LenderCallLog callLog);
+    String qpayCallbackStatus(String orderId, String transactionId, String result, LenderCallLog callLog);
 }
