@@ -687,7 +687,8 @@ public class CollectionServiceImpl implements CollectionService {
             Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geByServiceTransactionId(orderId);
             QpayCollectionResponseDto qpayCollectionResponseDto = qpayCollectionStatus(collectionTransaction.get(), callLog, "");
             if (qpayCollectionResponseDto.getPaymentStatus().equals("Complete")) {
-                return String.format(qpayUrl, paymentURL, collectionTransaction.get().getId());
+                String link = String.format(qpayUrl, paymentURL, collectionTransaction.get().getId());
+                return String.format("<a href=\"%s\">%s</a>", link, link);
             }
             return qpayCollectionResponseDto.getPaymentStatus();
         }
