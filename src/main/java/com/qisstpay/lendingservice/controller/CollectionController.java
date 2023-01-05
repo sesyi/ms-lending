@@ -162,8 +162,8 @@ public class CollectionController {
 
     @PostMapping(path = QPAY_CALLBACK_STATUS, consumes = "application/x-www-form-urlencoded")
     public CustomResponse<QpayCollectionResponseDto> getQpayCallbackStatus(
-            @RequestParam(value = "order_id") String orderId,
-            @RequestParam(value = "transaction_id") String transactionId,
+            @RequestParam(value = "order.id") String orderId,
+            @RequestParam(value = "transaction.id") String transactionId,
             @RequestParam(value = "result") String result
     ) {
         log.info(CALLING_CONTROLLER);
