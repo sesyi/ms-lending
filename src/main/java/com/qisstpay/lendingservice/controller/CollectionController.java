@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import javax.ws.rs.FormParam;
 import java.util.Optional;
 
 @Slf4j
@@ -159,7 +160,7 @@ public class CollectionController {
                 .body(response).build();
     }
 
-    @PostMapping(QPAY_CALLBACK_STATUS)
+    @PostMapping(path = QPAY_CALLBACK_STATUS, consumes = "application/x-www-form-urlencoded")
     public CustomResponse<QpayCollectionResponseDto> getQpayCallbackStatus(
             @RequestParam(value = "order_id") String orderId,
             @RequestParam(value = "transaction_id") String transactionId,
