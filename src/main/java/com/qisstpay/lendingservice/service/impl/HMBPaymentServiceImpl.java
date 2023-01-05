@@ -127,7 +127,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         return FetchTitleResponseDto.builder()
                 .bankCode(fetchTitleRequestDto.getBankCode())
                 .accountNumber(fetchTitleRequestDto.getAccountNumber())
-                .accountTitle(hmbFetchAccountTitleResponseDto.getResponseDescription())
+                .accountTitle(hmbFetchAccountTitleResponseDto.getResponseDescription().trim())
                 .build();
     }
 
@@ -224,7 +224,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 }
 
             }else {
-                accountTitle = hmbFetchAccountTitleResponseDto.getResponseDescription();
+                accountTitle = hmbFetchAccountTitleResponseDto.getResponseDescription().trim();
             }
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
