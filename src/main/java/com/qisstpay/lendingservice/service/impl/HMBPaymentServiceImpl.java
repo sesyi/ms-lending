@@ -96,7 +96,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
         Bank bank = bankRepository.findByCode(fetchTitleRequestDto.getBankCode()).orElseThrow(
-                () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
+                () -> new CustomException(TransferState.INVALID_BANK_CODE.getCode(), TransferState.INVALID_BANK_CODE.getDescription())
         );
 
         if(!environment.equals("prod")){
@@ -152,7 +152,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
         if (transferRequestDto.getBankCode() == null) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is missing");
+            throw new CustomException(TransferState.INVALID_BANK_CODE.getCode(), "Bank Code is missing");
         }
 
         LendingTransaction lendingTransaction = new LendingTransaction();
@@ -180,7 +180,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         Bank bank = bankRepository.findByCode(transferRequestDto.getBankCode()).orElseThrow(
-                () -> new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is incorrect")
+                () -> new CustomException(TransferState.INVALID_BANK_CODE.getCode(), TransferState.INVALID_BANK_CODE.getDescription())
         );
 
         HMBBank hmbBank = hmbBankRepository.findByBankId(bank.getId());

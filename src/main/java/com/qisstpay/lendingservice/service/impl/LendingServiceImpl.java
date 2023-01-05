@@ -135,7 +135,7 @@ public class LendingServiceImpl implements LendingService {
         }
 
         if (StringUtils.isBlank(fetchTitleRequestDto.getBankCode())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Bank Code is missing");
+            throw new CustomException(TransferState.INVALID_BANK_CODE.getCode(), "Bank Code is missing");
         }
 
         return hmbPaymentService.fetchTitle(fetchTitleRequestDto, lenderCallLog);
