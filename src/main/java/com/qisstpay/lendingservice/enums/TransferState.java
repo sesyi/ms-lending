@@ -3,6 +3,7 @@ package com.qisstpay.lendingservice.enums;
 public enum TransferState {
 
     GATEWAY_TRANSFER_PENDING("0","PENDING","Transfer in progress"),
+    RELEASER_AUTHORIZATION_NEEDED("10","PENDING","Transfer to be authorized by releaser"),
 
     TRANSFER_SUCCESS("1","SUCCESS", "Transfer completed"),
 
@@ -18,10 +19,8 @@ public enum TransferState {
     CURRENCY_MISMATCH("109","FAILURE", "Currency mismatch for recipient"),
     RECIPIENT_ACCOUNT_NOT_FOUND("110","FAILURE", "Recipient account is not found"),
     RECIPIENT_ACCOUNT_INACTIVE("111","FAILURE", "Recipient account is inactive"),
-    RELEASER_AUTHORIZATION_NEEDED("112","PENDING","Transfer to be authorized by releaser"),
     RELEASER_REJECTED("113","FAILURE","Transfer rejected by releaser"),
     RECIPIENT_ACCOUNT_TITLE_MISMATCH("114","FAILURE","Mismatch in actual and provided account title"),
-
 
     CUSTOMER_NOT_FOUND("01", "CUSTOMER_NOT_FOUND", "RESPONSE_CUSTOMER_RELATIONSHIP_NOT_FOUND"),
     INVALID_DATA_EP("04", "Invalid Data (e.g userid, password, Bank Mnemonic provided wrong)", "Invalid Username & password, Bank Mnemoic");

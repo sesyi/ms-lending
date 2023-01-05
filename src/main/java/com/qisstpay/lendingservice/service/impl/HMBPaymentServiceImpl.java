@@ -88,7 +88,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
         }
 
-        String stan = generateStan(lenderCallLog.getId());
+        String stan = generateStan();
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
@@ -198,7 +198,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
         try {
-            stan = generateStan(lenderCallLog.getId());
+            stan = generateStan();
             hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, transferRequestDto.getAccountNumber(), stan));
 
             if(hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")){
@@ -232,7 +232,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         }
 
 
-        stan = generateStan(lenderCallLog.getId());
+        stan = generateStan();
 
         try {
             if(bank.getCode().equals("MPBL")){ //ift for habib metro to habib metro
@@ -279,7 +279,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
-        String stan = generateStan(lenderCallLog.getId());
+        String stan = generateStan();
 
         String transactionNo = lendingTransaction.getServiceTransactionId();
 
@@ -711,7 +711,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         return responseBody.toString();
     }
 
-    private String generateStan(Long lenderCallLogId){
+    private String generateStan(){
 
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -732,5 +732,4 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .append((new Date()).getTime()).toString()
                 .toString();
     }
-    
 }
