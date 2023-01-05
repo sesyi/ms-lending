@@ -11,6 +11,8 @@ public interface CollectionTransactionService {
 
     Optional<CollectionTransaction> geById(Long id);
 
+    Optional<CollectionTransaction> geByServiceTransactionId(String serviceTransactionId);
+
     CollectionBillResponseDto geBill(Long id);
 
     CollectionTransaction save(CollectionTransaction collectionTransaction);

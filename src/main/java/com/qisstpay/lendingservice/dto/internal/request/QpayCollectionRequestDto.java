@@ -20,7 +20,6 @@ public class QpayCollectionRequestDto {
     private String             expiryYear;
     private String             bankID;
     private String             cnic;
-    private String             redirectURL;
     private String             ipAddress;
     private PaymentGatewayType gateway;
 }

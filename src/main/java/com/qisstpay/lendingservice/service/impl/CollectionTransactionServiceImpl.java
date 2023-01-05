@@ -33,6 +33,17 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
     }
 
     @Override
+    public Optional<CollectionTransaction> geByServiceTransactionId(String serviceTransactionId) {
+        Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findByServiceTransactionId(serviceTransactionId);
+        if (collectionTransaction.isPresent()) {
+            return collectionTransaction;
+        } else {
+            log.error(BillErrorType.ENABLE_TO_GET_BILL.getErrorMessage());
+            throw new ServiceException(BillErrorType.ENABLE_TO_GET_BILL);
+        }
+    }
+
+    @Override
     public CollectionBillResponseDto geBill(Long id) {
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findById(id);
         if (collectionTransaction.isPresent()) {
