@@ -161,7 +161,6 @@ public class CollectionController {
 
     @PostMapping(QPAY_CALLBACK_STATUS)
     public CustomResponse<QpayCollectionResponseDto> getQpayCallbackStatus(
-            @RequestHeader(value = "x-api-key") String apiKey,
             @RequestParam(value = "order_id") String orderId,
             @RequestParam(value = "transaction_id") String transactionId,
             @RequestParam(value = "result") String result
