@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.commons.exception.CustomException;
+import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.HMBFetchAccountTitleRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitIBFTTransactionRequestDto;
@@ -110,18 +111,18 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         try {
             hmbFetchAccountTitleResponseDto = callFetchTitleApi(getTokenResponseDto.getToken(), modelConverter.convertToHMBFetchAccountTitleRequestDto(productCode, bankCode, fetchTitleRequestDto.getAccountNumber(), stan));
 
-            if (hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")) {
-                throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Invalid Account Details");
-            }
-
         } catch (Exception e) {
             updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.TRANSFER_FAILED.getDescription(), lenderCallLog);
             e.printStackTrace();
             throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
         }
 
-        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
+        if (hmbFetchAccountTitleResponseDto.getResponseCode().equals("-1")) {
+            TransferState transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
+            throw new ServiceException(new CustomException(transferState.getCode(), transferState.getDescription()));
+        }
 
+        updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
 
         return FetchTitleResponseDto.builder()
                 .bankCode(fetchTitleRequestDto.getBankCode())
