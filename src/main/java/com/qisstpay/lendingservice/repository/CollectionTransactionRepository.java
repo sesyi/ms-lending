@@ -13,4 +13,6 @@ public interface CollectionTransactionRepository extends JpaRepository<Collectio
     Optional<CollectionTransaction> findTopByConsumerAndTransactionStateOrderByCreatedAtDesc(Consumer consumer, TransactionState transactionState);
 
     Optional<CollectionTransaction> findByServiceTransactionId(String serviceTransactionId);
+
+    Optional<CollectionTransaction> findByTransactionStamp(String transactionStamp);
 }
