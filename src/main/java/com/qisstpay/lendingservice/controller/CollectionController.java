@@ -59,6 +59,7 @@ public class CollectionController {
 
     private static final String QPAY                       = "/qpay";
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
+    private static final String QPAY_CALLBACK_STATUS = "/qpay/callback";
     private static final String GET_QPAY_LINK              = "/qpay/link";
     private static final String GET_BILL                   = "/get/bill";
     private static final String TEST                       = "/test";
@@ -153,6 +154,24 @@ public class CollectionController {
         LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("billId: %s", billId), ServiceType.QPAY, CallType.RECEIVED);
 
         QpayCollectionResponseDto response = collectionService.qpayCollectionStatus(billId, callLog, otp);
+        log.info(RESPONSE, response);
+        return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
+                .body(response).build();
+    }
+
+    @PostMapping(QPAY_CALLBACK_STATUS)
+    public CustomResponse<QpayCollectionResponseDto> getQpayCallbackStatus(
+            @RequestHeader(value = "x-api-key") String apiKey,
+            @RequestParam(value = "order_id") String orderId,
+            @RequestParam(value = "transaction_id") String transactionId,
+            @RequestParam(value = "result") String result
+    ) {
+        log.info(CALLING_CONTROLLER);
+        log.info("In method" + GET_QPAY_COLLECTION_STATUS + " with orderId: {} transactionId: {} result: {}", orderId, transactionId, result);
+
+        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("orderId: %s transactionId: %s result: %s", orderId, transactionId, result), ServiceType.QPAY, CallType.RECEIVED);
+
+        QpayCollectionResponseDto response = collectionService.qpayCallbackStatus(orderId, transactionId, result, callLog);
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
                 .body(response).build();

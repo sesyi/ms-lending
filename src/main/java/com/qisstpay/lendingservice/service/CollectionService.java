@@ -8,6 +8,7 @@ import com.qisstpay.lendingservice.dto.internal.request.CollectionBillRequestDto
 import com.qisstpay.lendingservice.dto.internal.request.QpayCollectionRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayCollectionResponseDto;
 import com.qisstpay.lendingservice.dto.internal.response.QpayLinkResponseDto;
+import com.qisstpay.lendingservice.entity.CollectionTransaction;
 import com.qisstpay.lendingservice.entity.EPCallLog;
 import com.qisstpay.lendingservice.entity.LenderCallLog;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,11 @@ public interface CollectionService {
 
     QpayCollectionResponseDto qpayCollectionStatus(Long billId, LenderCallLog callLog, String otp);
 
+    QpayCollectionResponseDto qpayCollectionStatus(CollectionTransaction collectionTransaction, LenderCallLog callLog, String otp);
+
     EPCollectionInquiryResponse billInquiry(EPCollectionInquiryRequest epCollectionInquiryRequest, EPCallLog savedEpCallLog) throws ParseException;
 
     EPCollectionBillUpdateResponse billUpdate(EPCollectionBillUpdateRequest epCollectionBillUpdateRequest, EPCallLog savedEpCallLog) throws ParseException;
+
+    QpayCollectionResponseDto qpayCallbackStatus(String orderId, String transactionId, String result, LenderCallLog callLog);
 }
