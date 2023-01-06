@@ -264,7 +264,7 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In getQpayLink");
         try {
-            Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId());
+            Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId(),lenderCallLog.getUser().getId());
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             CollectionTransaction collectionTransaction = collectionTransactionService.save(CollectionTransaction.builder()
                     .amount(billRequestDto.getAmount())
