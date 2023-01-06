@@ -74,6 +74,8 @@ public class CollectionServiceImpl implements CollectionService {
     @Autowired
     private CollectionTransactionRepository collectionTransactionRepository;
 
+    private ResourceBundle responses;
+
     private final String CALLING_SERVICE = "Calling Collection Service";
 
     private final String qpayUrl = "%s/?bid=%s";
@@ -670,8 +672,8 @@ public class CollectionServiceImpl implements CollectionService {
             Optional<CollectionTransaction> collectionTransaction = collectionTransactionService.geByServiceTransactionId(orderId);
             QpayCollectionResponseDto qpayCollectionResponseDto = qpayCollectionStatus(collectionTransaction.get(), callLog, "");
             if (qpayCollectionResponseDto.getPaymentStatus().equals("Complete")) {
-                String link = String.format(qpayUrl, paymentURL, collectionTransaction.get().getId());
-                return String.format("<a href=\"%s\">%s</a>", link, link);
+                responses = ResourceBundle.getBundle("responses/Responses");
+                return responses.getString("HTML-0001");
             }
             return qpayCollectionResponseDto.getPaymentStatus();
         }
