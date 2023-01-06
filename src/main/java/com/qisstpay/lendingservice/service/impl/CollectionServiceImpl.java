@@ -264,23 +264,6 @@ public class CollectionServiceImpl implements CollectionService {
         try {
             Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId());
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
-            Optional<CollectionTransaction> collectionTransactionExist = collectionTransactionRepository.findByTransactionStamp(billRequestDto.getTransactionId());
-            if (collectionTransactionExist.isPresent()) {
-                if (!collectionTransactionExist.get().getAmount().equals(billRequestDto.getAmount())) {
-                    collectionTransactionExist.get().setDueDate(billRequestDto.getDueDate());
-                    collectionTransactionExist.get().setBillingMonth(billRequestDto.getBillingMonth());
-                    collectionTransactionExist.get().setAmount(billRequestDto.getAmount());
-                    collectionTransactionExist.get().setAmount(billRequestDto.getAmount());
-                    collectionTransactionExist.get().setAmountAfterDueDate(billRequestDto.getAmountAfterDueDate());
-                    collectionTransactionService.save(collectionTransactionExist.get());
-                }
-                if (collectionTransactionExist.get().getBillStatus().equals(BillStatusType.UNPAID)) {
-                    return QpayLinkResponseDto.builder()
-                            .message("Successfully generate link")
-                            .qpayLink(String.format(qpayUrl, paymentURL, collectionTransactionExist.get().getId()))
-                            .success(Boolean.TRUE).build();
-                }
-            }
             CollectionTransaction collectionTransaction = collectionTransactionService.save(CollectionTransaction.builder()
                     .amount(billRequestDto.getAmount())
                     .amountAfterDueDate(billRequestDto.getAmountAfterDueDate())
