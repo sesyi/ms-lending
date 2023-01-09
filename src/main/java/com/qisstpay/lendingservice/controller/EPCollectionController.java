@@ -9,6 +9,7 @@ import com.qisstpay.lendingservice.entity.EPCallLog;
 import com.qisstpay.lendingservice.entity.User;
 import com.qisstpay.lendingservice.enums.CallType;
 import com.qisstpay.lendingservice.enums.EndPointType;
+import com.qisstpay.lendingservice.enums.TransferState;
 import com.qisstpay.lendingservice.security.MFBUserAuth;
 import com.qisstpay.lendingservice.service.CollectionService;
 import com.qisstpay.lendingservice.service.LendingService;
@@ -60,7 +61,14 @@ public class EPCollectionController {
 
         // mfb(3rd-party) authentication
         Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        mfbUserAuth.verifyUser(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword());
+        if ( !mfbUserAuth.isUserVerified(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword()) ) {
+            return EPCollectionInquiryResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .responseMessage(TransferState.INVALID_DATA_EP.getState())
+                    .status(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
+        }
 
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionInquiryRequest.getBankMnemonic());
@@ -80,8 +88,14 @@ public class EPCollectionController {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        mfbUserAuth.verifyUser(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword());
-
+        if ( !mfbUserAuth.isUserVerified(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword()) ) {
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .identificationParameter(TransferState.INVALID_DATA_EP.getState())
+                    .reserved(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
+        }
         // add call logs
         log.info("adding call log for mfb user: {}, lender UCID: {}", user.get().getId(), epCollectionBillUpdateRequest.getBankMnemonic());
         EPCallLog savedEpLoginCallLog = lendingService.addEPCalLog(

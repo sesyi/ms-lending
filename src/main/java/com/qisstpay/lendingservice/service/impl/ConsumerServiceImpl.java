@@ -60,7 +60,7 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public Optional<Consumer> findByConsumerNumber(String consumerNumber) {
-        return consumerRepository.findByPhoneNumber(consumerNumber);
+        return consumerRepository.findByConsumerNumber(consumerNumber);
     }
 
     @Override

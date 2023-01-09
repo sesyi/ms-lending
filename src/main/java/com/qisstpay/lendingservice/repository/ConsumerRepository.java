@@ -26,4 +26,6 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long> {
 
     @Query(findByCnicOrPhoneNumber)
     List<Consumer> findByCnicOrPhoneNumber(String cnic, String phoneNumber);
+
+    Optional<Consumer> findByConsumerNumber(String consumerNumber);
 }

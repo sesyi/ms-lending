@@ -32,6 +32,15 @@ public class MFBUserAuth {
         }
     }
 
+    public boolean isUserVerified(String userName, String password) {
+
+        if (!checkUserCredentials(VerifyMFBRequestDto.builder().username(userName).password(password).build())) {
+            log.info("Token verification: {}", HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+        return true;
+    }
+
     private Boolean checkUserCredentials(final VerifyMFBRequestDto verifyMFBRequestDto) {
         try {
             HttpHeaders headers = new HttpHeaders();
