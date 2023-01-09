@@ -322,13 +322,17 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         return TransactionStateResponse
                 .builder()
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .code(transferState.getCode())
                 .state(transferState.getState())
                 .description(transferState.getDescription())
-                .amount(lendingTransaction.getAmount())
+
+                .consumerNumber(lendingTransaction.getConsumer().getConsumerNumber())
+                .userName(lendingTransaction.getConsumer().getName())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
                 .accountNumber(lendingTransaction.getAccountNumber())
-                .transactionId(lendingTransaction.getTransactionStamp())
+                .amount(lendingTransaction.getAmount())
+
                 .build();
     }
 
