@@ -442,7 +442,6 @@ public class LendingServiceImpl implements LendingService {
         LendingTransaction lendingTransaction = lendingTransactionRepository.findByTransactionStamp(transactionStamp).orElse(null);
 
         if (lendingTransaction != null) {
-            lendingTransaction.setTransactionStamp(CommonUtility.generateRandomTransactionStamp());
             ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
             if(serviceType.equals(ServiceType.EP)){
                 return checkEPStatus(lendingTransaction, lenderCallLog);
