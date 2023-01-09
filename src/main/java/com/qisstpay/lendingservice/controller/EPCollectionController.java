@@ -60,8 +60,9 @@ public class EPCollectionController {
         log.info(CALLING_COLLECTION_CONTROLLER);
 
         // mfb(3rd-party) authentication
+        EPCollectionInquiryResponse epCollectionInquiryResponse = new EPCollectionInquiryResponse();
         Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        if ( !mfbUserAuth.isUserVerified(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword()) ) {
+        if ( !mfbUserAuth.isUserVerified(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword(), epCollectionInquiryResponse) ) {
             return EPCollectionInquiryResponse
                     .builder()
                     .responseCode(TransferState.INVALID_DATA_EP.getCode())
@@ -87,8 +88,9 @@ public class EPCollectionController {
             @RequestBody EPCollectionBillUpdateRequest epCollectionBillUpdateRequest) throws ParseException {
         log.info(CALLING_COLLECTION_CONTROLLER);
         // mfb authentication
+        EPCollectionInquiryResponse epCollectionInquiryResponse = new EPCollectionInquiryResponse();
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        if ( !mfbUserAuth.isUserVerified(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword()) ) {
+        if ( !mfbUserAuth.isUserVerified(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword(), epCollectionInquiryResponse) ) {
             return EPCollectionBillUpdateResponse
                     .builder()
                     .responseCode(TransferState.INVALID_DATA_EP.getCode())
