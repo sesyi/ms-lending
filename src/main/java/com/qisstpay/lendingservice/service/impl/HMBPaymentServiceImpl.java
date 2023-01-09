@@ -220,6 +220,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
                 return TransferResponseDto
                         .builder()
+                        .transactionId(lendingTransaction.getTransactionStamp())
                         .code(transferState.getCode())
                         .state(transferState.getState())
                         .description(transferState.getDescription())
@@ -231,6 +232,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                     transferState = TransferState.RECIPIENT_ACCOUNT_TITLE_MISMATCH;
                     return TransferResponseDto
                             .builder()
+                            .transactionId(lendingTransaction.getTransactionStamp())
                             .code(transferState.getCode())
                             .state(transferState.getState())
                             .description(transferState.getDescription())
@@ -267,7 +269,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
             return TransferResponseDto
                     .builder()
-                  .code(transferState.getCode())
+                    .transactionId(lendingTransaction.getTransactionStamp())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
