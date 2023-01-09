@@ -148,6 +148,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             transferRequestDto.setAccountNumber(transferRequestDto.getAccountNo());
         }
 
+        if (!StringUtils.isBlank(transferRequestDto.getIdentityNumber()) && StringUtils.isBlank(transferRequestDto.getConsumerNumber())) {
+            transferRequestDto.setConsumerNumber(transferRequestDto.getIdentityNumber());
+        }
+
         if (StringUtils.isBlank(transferRequestDto.getAccountNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
