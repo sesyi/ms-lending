@@ -17,11 +17,11 @@ public class TransferRequestDto {
     private String cnic;
     private String phoneNumber;
     private String consumerNumber;
-    private String identityNumber; //to be removed later on when communicated to the lenders to use accountNumber
+    private String identityNumber; //TODO: to be removed later on when communicated to the lenders to use accountNumber
     private String bankCode;
     private String accountTitle;
     private String accountNumber;
-    private String accountNo; //to be removed later on when communicated to the lenders to use accountNumber
+    private String accountNo; //TODO: to be removed later on when communicated to the lenders to use accountNumber
     private double amount;
 
     @Override
