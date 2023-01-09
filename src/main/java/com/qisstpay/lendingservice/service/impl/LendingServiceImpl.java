@@ -459,11 +459,15 @@ public class LendingServiceImpl implements LendingService {
 
         TransactionStateResponse transactionStateResponse = TransactionStateResponse
                 .builder()
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .state(lendingTransaction.getLenderCall().getStatus().toString())
                 .description(lendingTransaction.getLenderCall().getError())
-                .amount(lendingTransaction.getAmount())
+
+                .consumerNumber(lendingTransaction.getConsumer().getConsumerNumber())
+                .userName(lendingTransaction.getConsumer().getName())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
-                .transactionId(lendingTransaction.getTransactionStamp())
+                .accountNumber(lendingTransaction.getAccountNumber())
+                .amount(lendingTransaction.getAmount())
                 .build();
         //  update lender call log
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);
