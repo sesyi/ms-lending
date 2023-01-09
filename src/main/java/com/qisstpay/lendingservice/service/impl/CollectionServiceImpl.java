@@ -398,7 +398,13 @@ public class CollectionServiceImpl implements CollectionService {
         log.info("Inquiry method has been invoked in CollectionServiceImpl class...");
 
         if (StringUtils.isBlank(epCollectionInquiryRequest.getConsumerNumber())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer number is missing.");
+            log.error(HttpStatus.BAD_REQUEST.toString(), "consumer number is missing.");
+            return EPCollectionInquiryResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .responseMessage(TransferState.INVALID_DATA_EP.getState())
+                    .status(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
         }
 
         Optional<Consumer> consumer = consumerService.findByConsumerNumber(epCollectionInquiryRequest.getConsumerNumber());
@@ -413,7 +419,13 @@ public class CollectionServiceImpl implements CollectionService {
         }
 
         if (StringUtils.isBlank(epCollectionInquiryRequest.getBankMnemonic())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender ucid is missing.");
+            log.error(HttpStatus.BAD_REQUEST.toString(), "lender ucid is missing.");
+            return EPCollectionInquiryResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .responseMessage(TransferState.INVALID_DATA_EP.getState())
+                    .status(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
         }
 
         Optional<User> lender = userService.getUserByUcid(epCollectionInquiryRequest.getBankMnemonic());
@@ -455,7 +467,12 @@ public class CollectionServiceImpl implements CollectionService {
             lendingService.updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.ABROAD_INQUIRY_FAILED.getDescription(), savedLenderCallLog);
             savedCollectionTransaction.setTransactionState(TransactionState.EXCEPTION);
             collectionTransactionService.save(savedCollectionTransaction);
-            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl + billInquiryUrl, new HttpEntity<>(abroadInquiryRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
+            return EPCollectionInquiryResponse
+                    .builder()
+                    .responseCode(TransferState.UNKNOWN_ERROR.getCode())
+                    .responseMessage(TransferState.UNKNOWN_ERROR.getState())
+                    .status(TransferState.UNKNOWN_ERROR.getDescription())
+                    .build();
         }
         if (!abroadInquiryResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
@@ -535,7 +552,13 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("Update method has been invoked in CollectionServiceImpl class...");
         if (StringUtils.isBlank(epCollectionBillUpdateRequest.getConsumerNumber())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "consumer number is missing.");
+            log.error(HttpStatus.BAD_REQUEST.toString(), "consumer number is missing.");
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .identificationParameter(TransferState.INVALID_DATA_EP.getState())
+                    .reserved(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
         }
 
         Optional<Consumer> consumer = consumerService.findByConsumerNumber(epCollectionBillUpdateRequest.getConsumerNumber());
@@ -550,7 +573,13 @@ public class CollectionServiceImpl implements CollectionService {
         }
 
         if (StringUtils.isBlank(epCollectionBillUpdateRequest.getBankMnemonic())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "lender ucid is missing.");
+            log.error(HttpStatus.BAD_REQUEST.toString(), "lender ucid is missing.");
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.INVALID_DATA_EP.getCode())
+                    .identificationParameter(TransferState.INVALID_DATA_EP.getState())
+                    .reserved(TransferState.INVALID_DATA_EP.getDescription())
+                    .build();
         }
 
         Optional<User> lender = userService.getUserByUcid(epCollectionBillUpdateRequest.getBankMnemonic());
@@ -566,7 +595,13 @@ public class CollectionServiceImpl implements CollectionService {
 
         Optional<CollectionTransaction> collectionTransaction = collectionTransactionRepository.findTopByConsumerAndTransactionStateOrderByCreatedAtDesc(consumer.get(), TransactionState.INQUIRY_SUCCESS);
         if (!collectionTransaction.isPresent()) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Either inquiry is not done, Or it has already been done.");
+            log.error(HttpStatus.BAD_REQUEST.toString(), "Either inquiry is not done, Or it has already been done.");
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.UNKNOWN_ERROR.getCode())
+                    .identificationParameter(TransferState.UNKNOWN_ERROR.getState())
+                    .reserved(TransferState.UNKNOWN_ERROR.getDescription())
+                    .build();
         }
 
         // persist collection transaction
@@ -602,8 +637,12 @@ public class CollectionServiceImpl implements CollectionService {
             lendingService.updateLenderCallLog(CallStatusType.EXCEPTION, QPResponseCode.ABROAD_BILL_UPDATE_FAILED.getDescription(), savedLenderCallLog);
             savedCollectionTransaction.setTransactionState(TransactionState.EXCEPTION);
             collectionTransactionService.save(savedCollectionTransaction);
-            throw new ServiceException(CommunicationErrorType.SOMETHING_WENT_WRONG, e, HttpMethod.POST.toString(), abroadBaseUrl + billUpdateUrl, new HttpEntity<>(abroadBillUpdateRequest), environment, SlackTagType.JAVA_PRODUCT, thirdPartyErrorsSlackChannel);
-        }
+            return EPCollectionBillUpdateResponse
+                    .builder()
+                    .responseCode(TransferState.UNKNOWN_ERROR.getCode())
+                    .identificationParameter(TransferState.UNKNOWN_ERROR.getState())
+                    .reserved(TransferState.UNKNOWN_ERROR.getDescription())
+                    .build();        }
 
         if (!abroadBillUpdateResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 
