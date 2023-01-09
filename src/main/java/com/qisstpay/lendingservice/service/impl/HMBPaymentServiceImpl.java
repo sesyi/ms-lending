@@ -330,8 +330,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .code(transferState.getCode())
                 .state(transferState.getState())
                 .description(transferState.getDescription())
-
-                .consumerNumber(lendingTransaction.getConsumer().getConsumerNumber())
+                
                 .userName(lendingTransaction.getConsumer().getName())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
                 .accountNumber(lendingTransaction.getAccountNumber())
