@@ -6,6 +6,7 @@ import com.qisstpay.commons.error.errortype.CommunicationErrorType;
 import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.config.cache.CacheHelper;
+import com.qisstpay.lendingservice.dto.communication.PhoneNumberFormatBody;
 import com.qisstpay.lendingservice.dto.communication.PhoneNumberResponseDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPLoginRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
@@ -144,10 +145,7 @@ public class LendingServiceImpl implements LendingService {
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
         log.info("In LendingServiceImpl class...");
-
-        if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
-        }
+        validateData(transferRequestDto,lenderCallLog);
 
         // Consumer sign-up, if not already
         Consumer savedConsumer = null;
@@ -172,6 +170,35 @@ public class LendingServiceImpl implements LendingService {
         }
 
         return null;
+    }
+
+    private void validateData(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) {
+
+        /*  phone number validation */
+
+        if (StringUtils.isBlank(transferRequestDto.getPhoneNumber())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "phone number is missing.");
+
+        }
+        PhoneNumberResponseDto phoneNumberResponseDto = null;
+        try {
+            phoneNumberResponseDto = communicationService.phoneFormat(transferRequestDto.getPhoneNumber());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+            lenderCallLog.setStatus(CallStatusType.FAILURE);
+            lenderCallLog.setError(ex.toString());
+            throw new ServiceException(CommunicationErrorType.COUNTRY_NOT_SUPPORTED);
+        } finally {
+            lenderCallRepository.save(lenderCallLog);
+        }
+        transferRequestDto.setPhoneNumber(phoneNumberResponseDto.getBody().getCountryCode() + phoneNumberResponseDto.getBody().getNationalNumber());
+
+        /* username validation */
+        if (StringUtils.isBlank(transferRequestDto.getUserName())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "user name is empty or missing.");
+
+        }
+
     }
 
     @Override
@@ -442,7 +469,6 @@ public class LendingServiceImpl implements LendingService {
         LendingTransaction lendingTransaction = lendingTransactionRepository.findByTransactionStamp(transactionStamp).orElse(null);
 
         if (lendingTransaction != null) {
-            lendingTransaction.setTransactionStamp(CommonUtility.generateRandomTransactionStamp());
             ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
             if(serviceType.equals(ServiceType.EP)){
                 return checkEPStatus(lendingTransaction, lenderCallLog);
@@ -460,11 +486,15 @@ public class LendingServiceImpl implements LendingService {
 
         TransactionStateResponse transactionStateResponse = TransactionStateResponse
                 .builder()
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .state(lendingTransaction.getLenderCall().getStatus().toString())
                 .description(lendingTransaction.getLenderCall().getError())
-                .amount(lendingTransaction.getAmount())
+
+                .consumerNumber(lendingTransaction.getConsumer().getConsumerNumber())
+                .userName(lendingTransaction.getConsumer().getName())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
-                .transactionId(lendingTransaction.getTransactionStamp())
+                .accountNumber(lendingTransaction.getAccountNumber())
+                .amount(lendingTransaction.getAmount())
                 .build();
         //  update lender call log
         updateLenderCallLog(CallStatusType.SUCCESS, QPResponseCode.SUCCESSFUL_EXECUTION.getDescription(), lenderCallLog);

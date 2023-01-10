@@ -25,8 +25,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.ws.rs.FormParam;
 import java.util.Optional;
 
 @Slf4j
@@ -59,6 +61,7 @@ public class CollectionController {
 
     private static final String QPAY                       = "/qpay";
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
+    private static final String QPAY_CALLBACK_STATUS = "/qpay/callback";
     private static final String GET_QPAY_LINK              = "/qpay/link";
     private static final String GET_BILL                   = "/get/bill";
     private static final String TEST                       = "/test";
@@ -156,6 +159,22 @@ public class CollectionController {
         log.info(RESPONSE, response);
         return CustomResponse.CustomResponseBuilder.<QpayCollectionResponseDto>builder()
                 .body(response).build();
+    }
+
+    @PostMapping(path = QPAY_CALLBACK_STATUS, consumes = "application/x-www-form-urlencoded")
+    public ResponseEntity<String> getQpayCallbackStatus(
+            @RequestParam(value = "order.id") String orderId,
+            @RequestParam(value = "transaction.id") String transactionId,
+            @RequestParam(value = "result") String result
+    ) {
+        log.info(CALLING_CONTROLLER);
+        log.info("In method" + GET_QPAY_COLLECTION_STATUS + " with orderId: {} transactionId: {} result: {}", orderId, transactionId, result);
+
+        LenderCallLog callLog = lendingCallService.saveLenderCall(String.format("orderId: %s transactionId: %s result: %s", orderId, transactionId, result), ServiceType.QPAY, CallType.RECEIVED);
+
+        String response = collectionService.qpayCallbackStatus(orderId, transactionId, result, callLog);
+        log.info(RESPONSE, response);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(TEST)

@@ -160,7 +160,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
     @Override
     public QpayPaymentResponseDto capture(QpayCaptureRequestDto captureRequestDto, LenderCallLog callLog) {
         log.info(CALLING_SERVICE);
-        log.info("In method status");
+        log.info("In method capture");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("x-api-key", "abc123!");
@@ -175,7 +175,7 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
         ResponseEntity<QpayPaymentResponseDto> response;
         try {
             response = restTemplate.postForEntity(captureURL, requestEntity, QpayPaymentResponseDto.class);
-            if (response.getStatusCode().equals(HttpStatus.OK)) {
+            if (response.getStatusCode().equals(HttpStatus.OK) || response.getStatusCodeValue() == 201) {
                 qPayPaymentCallLog.setStatus(CallStatusType.SUCCESS);
                 qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
                 qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));

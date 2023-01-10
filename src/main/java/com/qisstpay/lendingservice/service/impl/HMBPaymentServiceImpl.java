@@ -148,6 +148,10 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             transferRequestDto.setAccountNumber(transferRequestDto.getAccountNo());
         }
 
+        if (!StringUtils.isBlank(transferRequestDto.getIdentityNumber()) && StringUtils.isBlank(transferRequestDto.getConsumerNumber())) {
+            transferRequestDto.setConsumerNumber(transferRequestDto.getIdentityNumber());
+        }
+
         if (StringUtils.isBlank(transferRequestDto.getAccountNumber())) {
             throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "Account No is missing");
         }
@@ -220,6 +224,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 transferState = TransferState.RECIPIENT_ACCOUNT_NOT_FOUND;
                 return TransferResponseDto
                         .builder()
+                        .transactionId(lendingTransaction.getTransactionStamp())
                         .code(transferState.getCode())
                         .state(transferState.getState())
                         .description(transferState.getDescription())
@@ -231,6 +236,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                     transferState = TransferState.RECIPIENT_ACCOUNT_TITLE_MISMATCH;
                     return TransferResponseDto
                             .builder()
+                            .transactionId(lendingTransaction.getTransactionStamp())
                             .code(transferState.getCode())
                             .state(transferState.getState())
                             .description(transferState.getDescription())
@@ -267,7 +273,8 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
             return TransferResponseDto
                     .builder()
-                  .code(transferState.getCode())
+                    .transactionId(lendingTransaction.getTransactionStamp())
+                    .code(transferState.getCode())
                     .state(transferState.getState())
                     .description(transferState.getDescription())
                     .build();
@@ -319,13 +326,16 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
 
         return TransactionStateResponse
                 .builder()
+                .transactionId(lendingTransaction.getTransactionStamp())
                 .code(transferState.getCode())
                 .state(transferState.getState())
                 .description(transferState.getDescription())
-                .amount(lendingTransaction.getAmount())
+                
+                .userName(lendingTransaction.getConsumer().getName())
                 .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
                 .accountNumber(lendingTransaction.getAccountNumber())
-                .transactionId(lendingTransaction.getTransactionStamp())
+                .amount(lendingTransaction.getAmount())
+
                 .build();
     }
 

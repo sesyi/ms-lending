@@ -1,9 +1,11 @@
 package com.qisstpay.lendingservice.security;
 
 import com.qisstpay.commons.exception.CustomException;
+import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionInquiryResponse;
 import com.qisstpay.lendingservice.dto.internal.request.VerifyMFBRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqAuthRequestDto;
 import com.qisstpay.lendingservice.entity.User;
+import com.qisstpay.lendingservice.enums.TransferState;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,14 +27,23 @@ public class MFBUserAuth {
     RestTemplate restTemplate;
 
     public void verifyUser(String userName, String password) {
-
-        if (!checkUserCredentials(VerifyMFBRequestDto.builder().username(userName).password(password).build())) {
-            log.info("Token verification: {}", HttpStatus.UNAUTHORIZED);
-            throw new CustomException(HttpStatus.UNAUTHORIZED.toString(), String.format("Token verification: %s", HttpStatus.UNAUTHORIZED));
-        }
+//
+//        if (!checkUserCredentials(VerifyMFBRequestDto.builder().username(userName).password(password).build())) {
+//            log.info("Token verification: {}", HttpStatus.UNAUTHORIZED);
+//            throw new CustomException(HttpStatus.UNAUTHORIZED.toString(), String.format("Token verification: %s", HttpStatus.UNAUTHORIZED));
+//        }
     }
 
-    private Boolean checkUserCredentials(final VerifyMFBRequestDto verifyMFBRequestDto) {
+    public boolean isUserVerified(String userName, String password, EPCollectionInquiryResponse epCollectionInquiryResponse) {
+
+        if (!checkUserCredentials(VerifyMFBRequestDto.builder().username(userName).password(password).build(), epCollectionInquiryResponse)) {
+            log.info("Token verification: {}", HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+        return true;
+    }
+
+    private Boolean checkUserCredentials(final VerifyMFBRequestDto verifyMFBRequestDto, EPCollectionInquiryResponse epCollectionInquiryResponse) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -46,11 +57,14 @@ public class MFBUserAuth {
         } catch (HttpClientErrorException ex) {
             if (ex.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
                 log.info("Token verification: {}", HttpStatus.UNAUTHORIZED);
-                throw new CustomException(HttpStatus.UNAUTHORIZED.toString(), String.format("Token verification: %s", HttpStatus.UNAUTHORIZED.getReasonPhrase()));
+                epCollectionInquiryResponse.setResponseCode(TransferState.UNKNOWN_ERROR.getCode());
+                epCollectionInquiryResponse.setResponseMessage(TransferState.UNKNOWN_ERROR.getState());
+                epCollectionInquiryResponse.setStatus(TransferState.GATEWAY_TRANSFER_PENDING.getDescription());
             } else if (ex.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
                 log.info("Token verification: {}", HttpStatus.FORBIDDEN);
-                throw new CustomException(HttpStatus.FORBIDDEN.toString(), String.format("Token verification: %s", HttpStatus.FORBIDDEN.getReasonPhrase()));
-            }
+                epCollectionInquiryResponse.setResponseCode(TransferState.UNKNOWN_ERROR.getCode());
+                epCollectionInquiryResponse.setResponseMessage(TransferState.UNKNOWN_ERROR.getState());
+                epCollectionInquiryResponse.setStatus(TransferState.GATEWAY_TRANSFER_PENDING.getDescription());            }
         }
         return Boolean.FALSE;
     }

@@ -11,4 +11,8 @@ import java.util.Optional;
 @Repository
 public interface CollectionTransactionRepository extends JpaRepository<CollectionTransaction, Long> {
     Optional<CollectionTransaction> findTopByConsumerAndTransactionStateOrderByCreatedAtDesc(Consumer consumer, TransactionState transactionState);
+
+    Optional<CollectionTransaction> findByServiceTransactionId(String serviceTransactionId);
+
+    Optional<CollectionTransaction> findByTransactionStamp(String transactionStamp);
 }
