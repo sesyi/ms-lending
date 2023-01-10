@@ -3,6 +3,9 @@ package com.qisstpay.lendingservice.dto.internal.request;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.qisstpay.lendingservice.enums.TransferType;
 import lombok.*;
+import org.modelmapper.spi.ErrorMessage;
+
+import javax.validation.constraints.Pattern;
 
 @Getter
 @Setter
@@ -14,6 +17,7 @@ public class TransferRequestDto {
 
     private String userName;
     private TransferType type;
+    @Pattern(regexp = "^[0-9]{5}-[0-9]{7}-[0-9]$",message = "CNIC No must follow the XXXXX-XXXXXXX-X format!")
     private String cnic;
     private String phoneNumber;
     private String consumerNumber;
