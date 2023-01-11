@@ -19,6 +19,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -137,7 +138,7 @@ public class ModelConverter {
                 .productCode("IBFT")
                 .drAccountNo(hmbCredentials.getAccountNumber())
                 .drAccTitle(hmbCredentials.getAccountTitle())
-                .dateTime((LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))))
+                .dateTime(getHMBFormatDate())
                 .stan(stan)
                 .fileTemplate("IBFTE")
                 .makerID(hmbMakerId)
@@ -205,7 +206,7 @@ public class ModelConverter {
                 .productCode("IFT")
                 .drAccountNo(hmbCredentials.getAccountNumber())
                 .drAccTitle(hmbCredentials.getAccountTitle())
-                .dateTime((LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))))
+                .dateTime(getHMBFormatDate())
                 .stan(stan)
                 .fileTemplate("IFT")
                 .makerID(hmbMakerId)
@@ -226,7 +227,7 @@ public class ModelConverter {
                 .stan(stan)
                 .makerID(hmbMakerId)
                 .refNo(transactionNo)
-                .dateTime("20220523143445")
+                .dateTime(getHMBFormatDate())
                 .build();
     }
 
@@ -242,7 +243,8 @@ public class ModelConverter {
                 .productCode(productCode)
                 .drAccountNo(hmbCredentials.getAccountNumber())
                 .drAccTitle(hmbCredentials.getAccountTitle())
-                .dateTime((LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))))
+//                .dateTime("20220523143445")
+                .dateTime(getHMBFormatDate())
                 .stan(stan)
                 .fileTemplate("IFT")
                 .makerID(hmbMakerId)
@@ -255,5 +257,9 @@ public class ModelConverter {
                     add(transactionDto);
                 }})
                 .build();
+    }
+
+    private String getHMBFormatDate(){
+        return (LocalDateTime.now().atZone(ZoneId.of("IST")).minusMinutes(30).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
     }
 }
