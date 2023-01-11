@@ -28,14 +28,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.ws.rs.FormParam;
 import java.util.Optional;
 
 @Slf4j
 @RestController
 @RequestMapping("/collection/v1")
 @RequiredArgsConstructor
-@CrossOrigin
 public class CollectionController {
 
     @Autowired
@@ -61,7 +59,7 @@ public class CollectionController {
 
     private static final String QPAY                       = "/qpay";
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
-    private static final String QPAY_CALLBACK_STATUS = "/qpay/callback";
+    private static final String QPAY_CALLBACK_STATUS       = "/qpay/callback";
     private static final String GET_QPAY_LINK              = "/qpay/link";
     private static final String GET_BILL                   = "/get/bill";
     private static final String TEST                       = "/test";
