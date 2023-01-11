@@ -46,7 +46,7 @@ public class EPCallLog {
     @Column(name = "request")
     private String request;
 
-    @Column(name = "response")
+    @Column(name = "responses")
     private String response;
 
     @Column(name = "status")

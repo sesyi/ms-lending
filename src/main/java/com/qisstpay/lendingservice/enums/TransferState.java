@@ -24,6 +24,7 @@ public enum TransferState {
     INVALID_BANK_CODE("115","FAILURE","Bank Code is incorrect"),
 
     CUSTOMER_NOT_FOUND("01", "CUSTOMER_NOT_FOUND", "RESPONSE_CUSTOMER_RELATIONSHIP_NOT_FOUND"),
+    UNKNOWN_ERROR("03", "Unknown Error / Bad Transaction", "Unknown Error / Bad Transaction"),
     INVALID_DATA_EP("04", "Invalid Data (e.g userid, password, Bank Mnemonic provided wrong)", "Invalid Username & password, Bank Mnemoic");
 
 

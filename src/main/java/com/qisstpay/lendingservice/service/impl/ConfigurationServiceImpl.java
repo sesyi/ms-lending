@@ -3,6 +3,8 @@ package com.qisstpay.lendingservice.service.impl;
 import com.qisstpay.lendingservice.dto.internal.request.ConfigRequestDto;
 import com.qisstpay.lendingservice.dto.internal.response.MessageResponseDto;
 import com.qisstpay.lendingservice.entity.Configuration;
+import com.qisstpay.lendingservice.entity.User;
+import com.qisstpay.lendingservice.enums.ServiceType;
 import com.qisstpay.lendingservice.repository.ConfigurationRepository;
 import com.qisstpay.lendingservice.service.ConfigurationService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,13 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                 .success(Boolean.TRUE)
                 .message(String.format(MESSAGE, configRequestDto.getServiceType(), configRequestDto.getDescription()))
                 .build();
+    }
+
+    @Override
+    public Configuration getConfigurationByLenderIdAndServiceType(Long lenderId, ServiceType serviceType) {
+        User user = new User();
+        user.setId(lenderId);
+        return configurationRepository.findByLenderUserAndServiceTypeAndDefaultValueIsTrue(user, serviceType).orElse(null);
     }
 
 }

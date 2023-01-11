@@ -10,6 +10,6 @@ public interface LendingTransactionService {
 
     Optional<LendingTransaction> geById(Long id);
 
-    Optional<LendingTransaction> geByTransactionStamp(String transactionStamp);
+    Optional<LendingTransaction> geByTransactionStamp(String transactionStamp, Long lenderId);
 }
 
