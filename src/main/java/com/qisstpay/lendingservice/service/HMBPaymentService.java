@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.service;
 
+import com.qisstpay.lendingservice.dto.hmb.HMBCredentials;
 import com.qisstpay.lendingservice.dto.hmb.request.GetTransactionStatusRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.HMBFetchAccountTitleRequestDto;
 import com.qisstpay.lendingservice.dto.hmb.request.SubmitIBFTTransactionRequestDto;
@@ -21,9 +22,9 @@ public interface HMBPaymentService {
     TransactionStateResponse checkTransactionStatus(LendingTransaction lendingTransaction, LenderCallLog lenderCallLog);
 
     // remove in future
-    GetTokenResponseDto callGetTokenApi();
-    HMBFetchAccountTitleResponseDto callFetchTitleApi(String authToken, HMBFetchAccountTitleRequestDto getTransactionStatusRequestDto) throws Exception;
-    SubmitIFTTransactionResponseDto callSubmitIFTTransactionApi(String token, SubmitIFTTransactionRequestDto submitIFTTransactionRequestDto);
-    SubmitIBFTTransactionResponseDto callSubmitIBFTTransactionApi(String token, SubmitIBFTTransactionRequestDto IBFTSubmitTransactionRequestDto) throws Exception;
-    GetTransactionStatusResponseDto callGetStatusApi(String authToken, GetTransactionStatusRequestDto getTransactionStatusRequestDto) throws Exception;
+    GetTokenResponseDto callGetTokenApi(HMBCredentials hmbCredentials);
+    HMBFetchAccountTitleResponseDto callFetchTitleApi(HMBCredentials hmbCredentials, String authToken, HMBFetchAccountTitleRequestDto getTransactionStatusRequestDto) throws Exception;
+    SubmitIFTTransactionResponseDto callSubmitIFTTransactionApi(HMBCredentials hmbCredentials, String token, SubmitIFTTransactionRequestDto submitIFTTransactionRequestDto);
+    SubmitIBFTTransactionResponseDto callSubmitIBFTTransactionApi(HMBCredentials hmbCredentials, String token, SubmitIBFTTransactionRequestDto IBFTSubmitTransactionRequestDto) throws Exception;
+    GetTransactionStatusResponseDto callGetStatusApi(HMBCredentials hmbCredentials, String authToken, GetTransactionStatusRequestDto getTransactionStatusRequestDto) throws Exception;
 }

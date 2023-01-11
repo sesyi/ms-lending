@@ -21,6 +21,10 @@ public class Configuration {
     @Column(name = "id")
     private Long id;
 
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="lender_user_id")
+    private User lenderUser;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "service_type")
     private ServiceType serviceType;
@@ -31,8 +35,14 @@ public class Configuration {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "credentials")
+    private String credentials;
+
     @Column(name = "active_status")
     private Boolean activeStatus;
+
+    @Column(name = "is_default")
+    private Boolean defaultValue;
 
     @CreationTimestamp
     @Column(name = "created_at")
