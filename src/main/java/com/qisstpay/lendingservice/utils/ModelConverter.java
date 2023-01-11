@@ -260,6 +260,7 @@ public class ModelConverter {
     }
 
     private String getHMBFormatDate(){
-        return (LocalDateTime.now().atZone(ZoneId.of("IST")).minusMinutes(30).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        String dateInString = (LocalDateTime.now().atZone(ZoneId.of("GMT+05:00")).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        return dateInString;
     }
 }
