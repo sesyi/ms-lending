@@ -33,12 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -199,8 +201,31 @@ public class LendingServiceImpl implements LendingService {
 
         }
 
-    }
+        /* cnic validation*/
 
+
+        if (StringUtils.isBlank(transferRequestDto.getCnic())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic is missing or empty.");
+
+
+        }
+        else if(!IsValidCNIC(transferRequestDto.getCnic())){
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic must follow the XXXXX-XXXXXXX-X format!");
+        }
+
+    }
+    private boolean IsValidCNIC(String cnic)
+    {
+        if(!cnic.isBlank()){
+        String cnicRegex = "^[0-9]{5}-[0-9]{7}-[0-9]$";
+        Pattern pattern = Pattern.compile(cnicRegex);
+        Matcher matcher = pattern.matcher(cnic);
+
+        return matcher.matches();
+
+        }
+    return false;
+    }
     @Override
     public TransferResponseDto transferV2(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, User user) throws JsonProcessingException {
         log.info("In LendingServiceImpl class...");

@@ -17,7 +17,6 @@ public class TransferRequestDto {
 
     private String userName;
     private TransferType type;
-    @Pattern(regexp = "^[0-9]{5}-[0-9]{7}-[0-9]$",message = "CNIC No must follow the XXXXX-XXXXXXX-X format!")
     private String cnic;
     private String phoneNumber;
     private String consumerNumber;
