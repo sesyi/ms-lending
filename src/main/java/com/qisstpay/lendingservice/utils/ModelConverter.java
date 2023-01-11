@@ -2,6 +2,7 @@ package com.qisstpay.lendingservice.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qisstpay.lendingservice.dto.hmb.HMBCredentials;
 import com.qisstpay.lendingservice.dto.hmb.request.*;
 import com.qisstpay.lendingservice.dto.internal.request.CreditScoreRequestDto;
 import com.qisstpay.lendingservice.dto.tasdeeq.request.TasdeeqReportDataRequestDto;
@@ -80,7 +81,7 @@ public class ModelConverter {
         return modelMapper.map(creditScoreRequestDto, TasdeeqReportDataRequestDto.class);
     }
 
-    public SubmitIBFTTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(String benAccountBankCode,  String benAccountTitle, String benAccountNo, String transactionNo, String stan, double amount) {
+    public SubmitIBFTTransactionRequestDto convertToSubmitTransactionRequestDtoIBFT(HMBCredentials hmbCredentials, String benAccountBankCode,  String benAccountTitle, String benAccountNo, String transactionNo, String stan, double amount) {
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -131,8 +132,8 @@ public class ModelConverter {
         return SubmitIBFTTransactionRequestDto.builder()
                 .channelID("CMS")
                 .productCode("IBFT")
-                .drAccountNo(donorAccountNumber)
-                .drAccTitle(donorAccountTitle)
+                .drAccountNo(hmbCredentials.getAccountNumber())
+                .drAccTitle(hmbCredentials.getAccountTitle())
                 .dateTime("20220523143445")
                 .stan(stan)
                 .fileTemplate("IBFTE")
@@ -148,7 +149,7 @@ public class ModelConverter {
                 .build();
     }
 
-    public SubmitIFTTransactionRequestDto convertToSubmitTransactionRequestDtoIFT(String benAccountBankCode,  String benAccountTitle, String benAccountNo, String transactionNo, String stan, double amount) {
+    public SubmitIFTTransactionRequestDto convertToSubmitTransactionRequestDtoIFT(HMBCredentials hmbCredentials, String benAccountBankCode,  String benAccountTitle, String benAccountNo, String transactionNo, String stan, double amount) {
 
         InvoiceDto invoiceDto = InvoiceDto.builder().
                 DOCNO("")
@@ -199,8 +200,8 @@ public class ModelConverter {
         return SubmitIFTTransactionRequestDto.builder()
                 .channelID("CMS")
                 .productCode("IFT")
-                .drAccountNo(donorAccountNumber)
-                .drAccTitle(donorAccountTitle)
+                .drAccountNo(hmbCredentials.getAccountNumber())
+                .drAccTitle(hmbCredentials.getAccountTitle())
                 .dateTime("20220523143445")
                 .stan(stan)
                 .fileTemplate("IFT")
@@ -226,7 +227,7 @@ public class ModelConverter {
                 .build();
     }
 
-    public HMBFetchAccountTitleRequestDto convertToHMBFetchAccountTitleRequestDto(String productCode, String benAccountBankCode, String benAccountNo, String stan){
+    public HMBFetchAccountTitleRequestDto convertToHMBFetchAccountTitleRequestDto(HMBCredentials hmbCredentials, String productCode, String benAccountBankCode, String benAccountNo, String stan){
 
         TransactionDto transactionDto = TransactionDto.builder()
                 .BENEACNO(benAccountNo)
@@ -236,8 +237,8 @@ public class ModelConverter {
         return HMBFetchAccountTitleRequestDto.builder()
                 .channelID("CMS")
                 .productCode(productCode)
-                .drAccountNo(donorAccountNumber)
-                .drAccTitle(donorAccountTitle)
+                .drAccountNo(hmbCredentials.getAccountNumber())
+                .drAccTitle(hmbCredentials.getAccountTitle())
                 .dateTime("20220523143445")
                 .stan(stan)
                 .fileTemplate("IFT")
