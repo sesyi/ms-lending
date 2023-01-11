@@ -18,7 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 
 @Component
@@ -134,7 +137,7 @@ public class ModelConverter {
                 .productCode("IBFT")
                 .drAccountNo(hmbCredentials.getAccountNumber())
                 .drAccTitle(hmbCredentials.getAccountTitle())
-                .dateTime("20220523143445")
+                .dateTime((LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))))
                 .stan(stan)
                 .fileTemplate("IBFTE")
                 .makerID(hmbMakerId)
@@ -202,7 +205,7 @@ public class ModelConverter {
                 .productCode("IFT")
                 .drAccountNo(hmbCredentials.getAccountNumber())
                 .drAccTitle(hmbCredentials.getAccountTitle())
-                .dateTime("20220523143445")
+                .dateTime((LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))))
                 .stan(stan)
                 .fileTemplate("IFT")
                 .makerID(hmbMakerId)
@@ -239,7 +242,7 @@ public class ModelConverter {
                 .productCode(productCode)
                 .drAccountNo(hmbCredentials.getAccountNumber())
                 .drAccTitle(hmbCredentials.getAccountTitle())
-                .dateTime("20220523143445")
+                .dateTime((LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))))
                 .stan(stan)
                 .fileTemplate("IFT")
                 .makerID(hmbMakerId)
