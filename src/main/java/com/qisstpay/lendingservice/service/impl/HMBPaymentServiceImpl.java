@@ -92,7 +92,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     @Override
     public FetchTitleResponseDto fetchTitle(FetchTitleRequestDto fetchTitleRequestDto, LenderCallLog lenderCallLog) {
 
-        HMBCredentials hmbCredentials = getHmbCredentials(lenderCallLog.getUser().getUserId());
+        HMBCredentials hmbCredentials = getHmbCredentials(lenderCallLog.getUser().getId());
 
         GetTokenResponseDto getTokenResponseDto = callGetTokenApi(hmbCredentials);
 
