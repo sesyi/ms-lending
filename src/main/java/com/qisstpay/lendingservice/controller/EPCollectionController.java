@@ -1,6 +1,5 @@
 package com.qisstpay.lendingservice.controller;
 
-import com.qisstpay.commons.response.CustomResponse;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionBillUpdateRequest;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPCollectionInquiryRequest;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPCollectionBillUpdateResponse;
@@ -17,10 +16,8 @@ import com.qisstpay.lendingservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,11 +29,10 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/1.0/Payments")
 @RequiredArgsConstructor
-@CrossOrigin
 public class EPCollectionController {
 
-    private static final String INQUIRY                    = "/BillInquiry";
-    private static final String UPDATE                     = "/BillPayment";
+    private static final String INQUIRY = "/BillInquiry";
+    private static final String UPDATE  = "/BillPayment";
 
     @Autowired
     private CollectionService collectionService;
@@ -53,7 +49,6 @@ public class EPCollectionController {
     private static final String CALLING_COLLECTION_CONTROLLER = "Calling Collection Controller";
 
 
-
     @PostMapping(INQUIRY)
     public EPCollectionInquiryResponse inquiry(
             @RequestBody EPCollectionInquiryRequest epCollectionInquiryRequest) throws ParseException {
@@ -62,7 +57,7 @@ public class EPCollectionController {
         // mfb(3rd-party) authentication
         EPCollectionInquiryResponse epCollectionInquiryResponse = new EPCollectionInquiryResponse();
         Optional<User> user = userService.getUserByUsername(epCollectionInquiryRequest.getUsername());
-        if ( !mfbUserAuth.isUserVerified(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword(), epCollectionInquiryResponse) ) {
+        if (!mfbUserAuth.isUserVerified(epCollectionInquiryRequest.getUsername(), epCollectionInquiryRequest.getPassword(), epCollectionInquiryResponse)) {
             return EPCollectionInquiryResponse
                     .builder()
                     .responseCode(TransferState.INVALID_DATA_EP.getCode())
@@ -90,7 +85,7 @@ public class EPCollectionController {
         // mfb authentication
         EPCollectionInquiryResponse epCollectionInquiryResponse = new EPCollectionInquiryResponse();
         Optional<User> user = userService.getUserByUsername(epCollectionBillUpdateRequest.getUsername());
-        if ( !mfbUserAuth.isUserVerified(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword(), epCollectionInquiryResponse) ) {
+        if (!mfbUserAuth.isUserVerified(epCollectionBillUpdateRequest.getUsername(), epCollectionBillUpdateRequest.getPassword(), epCollectionInquiryResponse)) {
             return EPCollectionBillUpdateResponse
                     .builder()
                     .responseCode(TransferState.INVALID_DATA_EP.getCode())
