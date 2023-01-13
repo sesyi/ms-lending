@@ -204,7 +204,7 @@ public class LendingServiceImpl implements LendingService {
         }
 
         /* cnic validation*/
-        if (transferRequestDto.getType().equals(TransferType.HMB)) {
+        if (transferRequestDto.getType() == null && transferRequestDto.getType().equals(TransferType.HMB)) {
             if (StringUtils.isBlank(transferRequestDto.getCnic())) {
                 throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic is missing or empty.");
 
