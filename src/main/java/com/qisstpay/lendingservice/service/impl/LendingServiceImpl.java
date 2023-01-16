@@ -71,11 +71,11 @@ public class LendingServiceImpl implements LendingService {
     private static final String SUCCESS_STATUS_CODE = "0";
 
     private final String xChanelHeaderKey = "X-Channel";
-    private final String xChanelHeaderVal = "subgateway";
+    private final String xChanelHeaderVal = "apigrazcash";
     private final String xClientIdHeaderKey = "X-IBM-Client-Id";
-    private final String xClientIdHeaderVal = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
+    private final String xClientIdHeaderVal = "4c55c83f-a050-4c77-99b2-f9c9fe809934";
     private final String xClientSecretHeaderKey = "X-IBM-Client-Secret";
-    private final String xClientSecretHeaderVal = "I4lR4yW0uP4yW3eQ7rR4vL0bK0pX6mV5cS7cN4iL7rC6pG2cA1";
+    private final String xClientSecretHeaderVal = "oQ2bJ3dK0sI0eY8sU6yN5gY6fM2xJ3pF4mJ5sS7xS4bG1dB0lV";
     private final String xHashValueKey = "X-Hash-Value";
     private final String CALLING_LENDING_SERVICE = "Calling lending Service";
 
