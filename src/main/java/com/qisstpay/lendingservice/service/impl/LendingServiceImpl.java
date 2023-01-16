@@ -1,6 +1,7 @@
 package com.qisstpay.lendingservice.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.commons.enums.SlackTagType;
 import com.qisstpay.commons.error.errortype.CommunicationErrorType;
 import com.qisstpay.commons.exception.CustomException;
@@ -8,6 +9,7 @@ import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.config.cache.CacheHelper;
 import com.qisstpay.lendingservice.dto.communication.PhoneNumberFormatBody;
 import com.qisstpay.lendingservice.dto.communication.PhoneNumberResponseDto;
+import com.qisstpay.lendingservice.dto.easypaisa.EPCredentials;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPLoginRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
@@ -59,12 +61,6 @@ public class LendingServiceImpl implements LendingService {
 
     @Value("${ep.endpoints.transfer}")
     private String epTransferUrl;
-
-    @Value("${ep.config.msisdn}")
-    private String msisdn;
-
-    @Value("${ep.config.pin}")
-    private String pin;
 
     @Value("${environment}")
     private String environment;
@@ -124,10 +120,11 @@ public class LendingServiceImpl implements LendingService {
     private LendingCallService lendingCallService;
 
     @Autowired
-    private BankRepository bankRepository;
+    private ConfigurationService configurationService;
 
     @Autowired
-    private HMBBankRepository hmbBankRepository;
+    ObjectMapper objectMapper;
+
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -274,11 +271,13 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setServiceType(ServiceType.EP);
         LendingTransaction savedLendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
 
+        EPCredentials epCredentials = getEPCredentials(lenderCallLog.getUser().getId());
+
         /**
          *  ep login call
          */
         EPLoginRequestDto epLoginRequestDto = new EPLoginRequestDto();
-        epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload(msisdn + ":" + pin));
+        epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload(epCredentials.getMsisdn() + ":" + epCredentials.getPin()));
 
         // add ep call logs
         EPCallLog savedEpLoginCallLog = addEPCalLog(
@@ -332,10 +331,10 @@ public class LendingServiceImpl implements LendingService {
         /**
          *  ep inquiry call
          */
-        final String xHashValueVal = encryptionUtil.getEncryptedPayload(msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin);
+        final String xHashValueVal = encryptionUtil.getEncryptedPayload(epCredentials.getMsisdn() + "~" + epLoginResponse.getTimestamp() + "~" + epCredentials.getPin());
         EPRequestDto epRequestDto = new EPRequestDto();
         epRequestDto.setAmount(transferRequestDto.getAmount());
-        epRequestDto.setSubscriberMSISDN(msisdn);
+        epRequestDto.setSubscriberMSISDN(epCredentials.getMsisdn());
         epRequestDto.setReceiverMSISDN(transferRequestDto.getPhoneNumber());
 
         // add ep call logs
@@ -632,4 +631,24 @@ public class LendingServiceImpl implements LendingService {
                 });
         return epTransferResponse.getBody();
     }
+
+    private EPCredentials getEPCredentials(Long lenderId) {
+        Configuration configuration = configurationService.getConfigurationByLenderIdAndServiceType(lenderId, ServiceType.EP);
+
+        if(configuration == null){
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Invalid Configurations");
+        }
+
+        String credentials = configuration.getCredentials();
+
+        EPCredentials epCredentials = null;
+        try {
+            epCredentials = objectMapper.readValue(credentials, EPCredentials.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Invalid Configurations");
+        }
+        return epCredentials;
+    }
+
 }
