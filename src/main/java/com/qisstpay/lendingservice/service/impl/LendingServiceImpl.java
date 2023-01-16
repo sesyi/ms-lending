@@ -1,6 +1,7 @@
 package com.qisstpay.lendingservice.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qisstpay.commons.enums.SlackTagType;
 import com.qisstpay.commons.error.errortype.CommunicationErrorType;
 import com.qisstpay.commons.exception.CustomException;
@@ -8,6 +9,7 @@ import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.config.cache.CacheHelper;
 import com.qisstpay.lendingservice.dto.communication.PhoneNumberFormatBody;
 import com.qisstpay.lendingservice.dto.communication.PhoneNumberResponseDto;
+import com.qisstpay.lendingservice.dto.easypaisa.EPCredentials;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPLoginRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.request.EPRequestDto;
 import com.qisstpay.lendingservice.dto.easypaisa.response.EPInquiryResponseDto;
@@ -36,11 +38,13 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -58,12 +62,6 @@ public class LendingServiceImpl implements LendingService {
     @Value("${ep.endpoints.transfer}")
     private String epTransferUrl;
 
-    @Value("${ep.config.msisdn}")
-    private String msisdn;
-
-    @Value("${ep.config.pin}")
-    private String pin;
-
     @Value("${environment}")
     private String environment;
 
@@ -72,13 +70,13 @@ public class LendingServiceImpl implements LendingService {
 
     private static final String SUCCESS_STATUS_CODE = "0";
 
-    private final String xChanelHeaderKey        = "X-Channel";
-    private final String xChanelHeaderVal        = "subgateway";
-    private final String xClientIdHeaderKey      = "X-IBM-Client-Id";
-    private final String xClientIdHeaderVal      = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
-    private final String xClientSecretHeaderKey  = "X-IBM-Client-Secret";
-    private final String xClientSecretHeaderVal  = "I4lR4yW0uP4yW3eQ7rR4vL0bK0pX6mV5cS7cN4iL7rC6pG2cA1";
-    private final String xHashValueKey           = "X-Hash-Value";
+    private final String xChanelHeaderKey = "X-Channel";
+    private final String xChanelHeaderVal = "subgateway";
+    private final String xClientIdHeaderKey = "X-IBM-Client-Id";
+    private final String xClientIdHeaderVal = "0d9fe5ca-8147-4b05-a9af-c7ef2e0df3af";
+    private final String xClientSecretHeaderKey = "X-IBM-Client-Secret";
+    private final String xClientSecretHeaderVal = "I4lR4yW0uP4yW3eQ7rR4vL0bK0pX6mV5cS7cN4iL7rC6pG2cA1";
+    private final String xHashValueKey = "X-Hash-Value";
     private final String CALLING_LENDING_SERVICE = "Calling lending Service";
 
     @Autowired
@@ -122,10 +120,11 @@ public class LendingServiceImpl implements LendingService {
     private LendingCallService lendingCallService;
 
     @Autowired
-    private BankRepository bankRepository;
+    private ConfigurationService configurationService;
 
     @Autowired
-    private HMBBankRepository hmbBankRepository;
+    ObjectMapper objectMapper;
+
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -147,7 +146,7 @@ public class LendingServiceImpl implements LendingService {
     @Override
     public TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog) throws JsonProcessingException {
         log.info("In LendingServiceImpl class...");
-        validateData(transferRequestDto,lenderCallLog);
+        validateData(transferRequestDto, lenderCallLog);
 
         // Consumer sign-up, if not already
         Consumer savedConsumer = null;
@@ -164,7 +163,7 @@ public class LendingServiceImpl implements LendingService {
             consumer = existingConsumer.get();
         }
 
-        if (transferRequestDto.getType() ==null || transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
+        if (transferRequestDto.getType() == null || transferRequestDto.getType().equals(TransferType.EASYPAISA)) {
             return transferThroughEP(transferRequestDto, lenderCallLog, consumer);
         } else if (transferRequestDto.getType().equals(TransferType.HMB)) {
             return hmbPaymentService.transfer(transferRequestDto, lenderCallLog, consumer);
@@ -202,30 +201,29 @@ public class LendingServiceImpl implements LendingService {
         }
 
         /* cnic validation*/
+        if (transferRequestDto.getType() != null && transferRequestDto.getType().equals(TransferType.HMB)) {
+            if (StringUtils.isBlank(transferRequestDto.getCnic())) {
+                throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic is missing or empty.");
 
 
-        if (StringUtils.isBlank(transferRequestDto.getCnic())) {
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic is missing or empty.");
-
-
+            } else if (!IsValidCNIC(transferRequestDto.getCnic())) {
+                throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic must follow the XXXXX-XXXXXXX-X format!");
+            }
         }
-        else if(!IsValidCNIC(transferRequestDto.getCnic())){
-            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "cnic must follow the XXXXX-XXXXXXX-X format!");
-        }
-
     }
-    private boolean IsValidCNIC(String cnic)
-    {
-        if(!cnic.isBlank()){
-        String cnicRegex = "^[0-9]{5}-[0-9]{7}-[0-9]$";
-        Pattern pattern = Pattern.compile(cnicRegex);
-        Matcher matcher = pattern.matcher(cnic);
 
-        return matcher.matches();
+    private boolean IsValidCNIC(String cnic) {
+        if (!cnic.isBlank()) {
+            String cnicRegex = "^[0-9]{5}-[0-9]{7}-[0-9]$";
+            Pattern pattern = Pattern.compile(cnicRegex);
+            Matcher matcher = pattern.matcher(cnic);
+
+            return matcher.matches();
 
         }
-    return false;
+        return false;
     }
+
     @Override
     public TransferResponseDto transferV2(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, User user) throws JsonProcessingException {
         log.info("In LendingServiceImpl class...");
@@ -235,7 +233,7 @@ public class LendingServiceImpl implements LendingService {
         }
 
         LenderPaymentGateway lenderPaymentGateway = lenderPaymentGatewayRepository.findByIsDefaultTrue()
-                .orElseThrow(()-> new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "No Default Payment Service for Lender"));
+                .orElseThrow(() -> new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "No Default Payment Service for Lender"));
 
 
         // Consumer sign-up, if not already
@@ -273,11 +271,13 @@ public class LendingServiceImpl implements LendingService {
         lendingTransaction.setServiceType(ServiceType.EP);
         LendingTransaction savedLendingTransaction = lendingTransactionRepository.saveAndFlush(lendingTransaction);
 
+        EPCredentials epCredentials = getEPCredentials(lenderCallLog.getUser().getId());
+
         /**
          *  ep login call
          */
         EPLoginRequestDto epLoginRequestDto = new EPLoginRequestDto();
-        epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload(msisdn + ":" + pin));
+        epLoginRequestDto.setLoginPayload(encryptionUtil.getEncryptedPayload(epCredentials.getMsisdn() + ":" + epCredentials.getPin()));
 
         // add ep call logs
         EPCallLog savedEpLoginCallLog = addEPCalLog(
@@ -331,10 +331,10 @@ public class LendingServiceImpl implements LendingService {
         /**
          *  ep inquiry call
          */
-        final String xHashValueVal = encryptionUtil.getEncryptedPayload(msisdn + "~" + epLoginResponse.getTimestamp() + "~" + pin);
+        final String xHashValueVal = encryptionUtil.getEncryptedPayload(epCredentials.getMsisdn() + "~" + epLoginResponse.getTimestamp() + "~" + epCredentials.getPin());
         EPRequestDto epRequestDto = new EPRequestDto();
         epRequestDto.setAmount(transferRequestDto.getAmount());
-        epRequestDto.setSubscriberMSISDN(msisdn);
+        epRequestDto.setSubscriberMSISDN(epCredentials.getMsisdn());
         epRequestDto.setReceiverMSISDN(transferRequestDto.getPhoneNumber());
 
         // add ep call logs
@@ -495,9 +495,9 @@ public class LendingServiceImpl implements LendingService {
 
         if (lendingTransaction != null) {
             ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
-            if(serviceType.equals(ServiceType.EP)){
+            if (serviceType.equals(ServiceType.EP)) {
                 return checkEPStatus(lendingTransaction, lenderCallLog);
-            }else if(serviceType.equals(ServiceType.HMB)){
+            } else if (serviceType.equals(ServiceType.HMB)) {
                 return hmbPaymentService.checkTransactionStatus(lendingTransaction, lenderCallLog);
             }
         }
@@ -631,4 +631,24 @@ public class LendingServiceImpl implements LendingService {
                 });
         return epTransferResponse.getBody();
     }
+
+    private EPCredentials getEPCredentials(Long lenderId) {
+        Configuration configuration = configurationService.getConfigurationByLenderIdAndServiceType(lenderId, ServiceType.EP);
+
+        if(configuration == null){
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Invalid Configurations");
+        }
+
+        String credentials = configuration.getCredentials();
+
+        EPCredentials epCredentials = null;
+        try {
+            epCredentials = objectMapper.readValue(credentials, EPCredentials.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Invalid Configurations");
+        }
+        return epCredentials;
+    }
+
 }
