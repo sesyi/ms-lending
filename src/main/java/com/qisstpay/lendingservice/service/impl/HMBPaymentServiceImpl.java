@@ -720,6 +720,16 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     }
 
     private HMBCredentials getHmbCredentials(Long lenderId) {
+
+        if(!environment.equals("prod")){
+            return HMBCredentials.builder()
+                    .userId("EFAPI")
+                    .password("CRA")
+                    .accountTitle("Test Account Title")
+                    .accountNumber("6996429311714235925")
+                    .build();
+        }
+
         Configuration configuration = configurationService.getConfigurationByLenderIdAndServiceType(lenderId, ServiceType.HMB);
 
         if(configuration == null){
