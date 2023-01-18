@@ -171,7 +171,7 @@ public class CollectionServiceImpl implements CollectionService {
             paymentRequestDto = QpayPaymentRequestDto.builder()
                     .accountNumber(collectionRequestDto.getAccountNumber())
                     .customerName(collectionTransaction.getConsumer().getName())
-                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmountWithinDueDate() : collectionTransaction.getAmountAfterDueDate())
                     .country("PK")
                     .currency("PKR")
                     .customerEmail(collectionRequestDto.getCustomerEmail())
@@ -210,7 +210,7 @@ public class CollectionServiceImpl implements CollectionService {
             paymentRequestDto = QpayPaymentRequestDto.builder()
                     .accountNumber(collectionRequestDto.getAccountNumber())
                     .customerName(collectionTransaction.getConsumer().getName())
-                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmountWithinDueDate() : collectionTransaction.getAmountAfterDueDate())
                     .country("PK")
                     .currency("PKR")
                     .locale("en-us")
@@ -237,7 +237,7 @@ public class CollectionServiceImpl implements CollectionService {
             paymentRequestDto = QpayPaymentRequestDto.builder()
                     .accountNumber(collectionRequestDto.getAccountNumber())
                     .customerName(collectionTransaction.getConsumer().getName())
-                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmountWithinDueDate() : collectionTransaction.getAmountAfterDueDate())
                     .country("PK")
                     .currency("PKR")
                     .locale("en-us")
@@ -267,7 +267,7 @@ public class CollectionServiceImpl implements CollectionService {
             Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId(),lenderCallLog.getUser().getId());
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             CollectionTransaction collectionTransaction = collectionTransactionService.save(CollectionTransaction.builder()
-                    .amount(billRequestDto.getAmount())
+                    .amountWithinDueDate(billRequestDto.getAmount())
                     .amountAfterDueDate(billRequestDto.getAmountAfterDueDate())
                     .consumer(lendingTransaction.get().getConsumer())
                     .dueDate(billRequestDto.getDueDate())
@@ -521,7 +521,7 @@ public class CollectionServiceImpl implements CollectionService {
         // update collection transaction
         savedCollectionTransaction.setTransactionState(TransactionState.INQUIRY_SUCCESS);
         savedCollectionTransaction.setAmountAfterDueDate(Double.valueOf(abroadInquiryResponse.getAmountAfterDueDate()));
-        savedCollectionTransaction.setAmount(Double.valueOf(abroadInquiryResponse.getAmountPaid()));
+        savedCollectionTransaction.setAmountCollected(Double.valueOf(abroadInquiryResponse.getAmountPaid()));
         savedCollectionTransaction.setAmountWithinDueDate(Double.valueOf(abroadInquiryResponse.getAmountWithinDueDate()));
         savedCollectionTransaction.setBillingMonth(abroadInquiryResponse.getBillingMonth());
         savedCollectionTransaction.setBillStatus(abroadInquiryResponse.getBillStatus() == "U" ? BillStatusType.UNPAID : BillStatusType.PAID);
@@ -608,7 +608,7 @@ public class CollectionServiceImpl implements CollectionService {
         collectionTransaction.get().setConsumer(consumer.get());
         collectionTransaction.get().setServiceTransactionId(epCollectionBillUpdateRequest.getTranAuthId());
         collectionTransaction.get().setDatePaid(getDateFromString(epCollectionBillUpdateRequest.getTranDate()));
-        collectionTransaction.get().setAmount(Double.valueOf(epCollectionBillUpdateRequest.getTransactionAmount()));
+        collectionTransaction.get().setAmountCollected(Double.valueOf(epCollectionBillUpdateRequest.getTransactionAmount()));
         collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
         collectionTransaction.get().setEpCallLog(savedEpCallLog);
         CollectionTransaction savedCollectionTransaction = collectionTransactionService.save(collectionTransaction.get());
