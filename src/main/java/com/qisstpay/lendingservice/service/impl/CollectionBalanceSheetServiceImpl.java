@@ -39,27 +39,27 @@ public class CollectionBalanceSheetServiceImpl implements CollectionBalanceSheet
         List<CollectionBalanceSheet> collectionBalanceSheets = new ArrayList<>();
         collectionBalanceSheets.add(
                 CollectionBalanceSheet.builder()
-                        .debit(collectionTransaction.getAmountCollected())
+                        .credit(collectionTransaction.getAmountCollected())
                         .user(collectionTransaction.getLenderCall().getUser())
                         .collectionTransactionId(collectionTransaction.getServiceTransactionId())
                         .disbursementTransactionStamp(collectionTransaction.getTransactionStamp())
-                        .shortDescription(String.format("Debit Against CollectionTransactionId: %s, disbursementTransactionId: %s LenderId: %s, DateTime: %s", collectionTransaction.getServiceTransactionId(), collectionTransaction.getTransactionStamp(), collectionTransaction.getLenderCall().getUser(), dtf.format(LocalDateTime.now())))
+                        .shortDescription(String.format("CollectionTransactionId: %s, disbursementTransactionId: %s, LenderId: %s, DateTime: %s", collectionTransaction.getServiceTransactionId(), collectionTransaction.getTransactionStamp(), collectionTransaction.getLenderCall().getUser().getId(), dtf.format(LocalDateTime.now())))
                         .build());
         collectionBalanceSheets.add(
                 CollectionBalanceSheet.builder()
-                        .credit(gatewayFee)
+                        .debit(gatewayFee)
                         .user(collectionTransaction.getLenderCall().getUser())
                         .collectionTransactionId(collectionTransaction.getServiceTransactionId())
                         .disbursementTransactionStamp(collectionTransaction.getTransactionStamp())
-                        .shortDescription(String.format("Credit For GatewayType: %s GatewayFee: %s, CollectionTransactionId: %s DateTime: %s", collectionTransaction.getPaymentGateway().getName(), gatewayPer, collectionTransaction.getServiceTransactionId(), dtf.format(LocalDateTime.now())))
+                        .shortDescription(String.format("GatewayFee: %s, GatewayType: %s, CollectionTransactionId: %s, DateTime: %s", gatewayPer, collectionTransaction.getPaymentGateway().getName(), collectionTransaction.getServiceTransactionId(), dtf.format(LocalDateTime.now())))
                         .build());
         collectionBalanceSheets.add(
                 CollectionBalanceSheet.builder()
-                        .credit(20d)
+                        .debit(20d)
                         .user(collectionTransaction.getLenderCall().getUser())
                         .collectionTransactionId(collectionTransaction.getServiceTransactionId())
                         .disbursementTransactionStamp(collectionTransaction.getTransactionStamp())
-                        .shortDescription("Credit For Qpay Collection Fee: 20 PKR")
+                        .shortDescription("Qpay Collection Fee: 20 PKR")
                         .build());
         save(collectionBalanceSheets);
     }
