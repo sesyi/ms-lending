@@ -681,6 +681,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             return TransferState.GATEWAY_TRANSFER_PENDING;
         }
         if(responseDescription.equals("Transaction Successfully Proceeded...".toLowerCase())){
+            if(!environment.equals("prod")){
+                return TransferState.TRANSFER_SUCCESS;
+            }
             return TransferState.GATEWAY_TRANSFER_PENDING;
         }
         if(responseDescription.contains("waiting for core response".toLowerCase())){

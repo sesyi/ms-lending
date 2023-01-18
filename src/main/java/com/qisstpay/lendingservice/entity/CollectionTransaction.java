@@ -1,6 +1,7 @@
 package com.qisstpay.lendingservice.entity;
 
 import com.qisstpay.lendingservice.enums.BillStatusType;
+import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,7 +27,7 @@ public class CollectionTransaction {
     private Long id;
 
     @Column(name = "amount")
-    private Double amount;
+    private Double amountCollected;
 
     @Column(name = "amount_after_due_date")
     private Double amountAfterDueDate;
@@ -58,6 +59,10 @@ public class CollectionTransaction {
 
     @Column(name = "transaction_stamp")
     private String transactionStamp;
+
+    @Column(name = "payment gateway")
+    @Enumerated(EnumType.STRING)
+    private PaymentGatewayType paymentGateway;
 
     @Column(name = "created_at")
     @CreationTimestamp

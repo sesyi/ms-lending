@@ -40,6 +40,9 @@ public class User {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private List<MFBCallLog> mfbCallLogs;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private List<CollectionBalanceSheet> collectionBalanceSheets;
+
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private StatusType status;
