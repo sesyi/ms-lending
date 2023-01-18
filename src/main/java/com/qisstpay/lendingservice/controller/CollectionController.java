@@ -57,7 +57,7 @@ public class CollectionController {
     @Value("${auth.api-key.qpay}")
     private String qpayApiKey;
 
-    private static final String QPAY                       = "/qpay";
+    private static final String QPAY                       = "/qpay/payment";
     private static final String GET_QPAY_COLLECTION_STATUS = "/qpay/status";
     private static final String QPAY_CALLBACK_STATUS       = "/qpay/callback";
     private static final String GET_QPAY_LINK              = "/qpay/link";

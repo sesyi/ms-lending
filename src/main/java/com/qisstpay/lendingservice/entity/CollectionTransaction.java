@@ -1,6 +1,8 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qisstpay.lendingservice.enums.BillStatusType;
+import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,8 +27,8 @@ public class CollectionTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "amount")
-    private Double amount;
+    @Column(name = "collected_amount")
+    private Double amountCollected;
 
     @Column(name = "amount_after_due_date")
     private Double amountAfterDueDate;
@@ -59,6 +61,10 @@ public class CollectionTransaction {
     @Column(name = "transaction_stamp")
     private String transactionStamp;
 
+    @Column(name = "payment_gateway")
+    @Enumerated(EnumType.STRING)
+    private PaymentGatewayType paymentGateway;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private Timestamp createdAt;
@@ -87,4 +93,9 @@ public class CollectionTransaction {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "collectionTransaction")
     private List<QpayPaymentTransaction> qpayPaymentTransaction;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "lender_id", referencedColumnName = "id")
+    @JsonIgnore
+    private User user;
 }
