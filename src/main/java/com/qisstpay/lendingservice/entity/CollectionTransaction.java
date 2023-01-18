@@ -1,5 +1,6 @@
 package com.qisstpay.lendingservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qisstpay.lendingservice.enums.BillStatusType;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
@@ -92,4 +93,9 @@ public class CollectionTransaction {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "collectionTransaction")
     private List<QpayPaymentTransaction> qpayPaymentTransaction;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "lender_id", referencedColumnName = "id")
+    @JsonIgnore
+    private User user;
 }
