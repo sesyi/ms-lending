@@ -60,7 +60,7 @@ public class CollectionTransaction {
     @Column(name = "transaction_stamp")
     private String transactionStamp;
 
-    @Column(name = "payment gateway")
+    @Column(name = "payment_gateway")
     @Enumerated(EnumType.STRING)
     private PaymentGatewayType paymentGateway;
 
