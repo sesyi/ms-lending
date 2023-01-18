@@ -26,7 +26,7 @@ public class CollectionTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "amount")
+    @Column(name = "collected_amount")
     private Double amountCollected;
 
     @Column(name = "amount_after_due_date")
