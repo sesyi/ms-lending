@@ -4,6 +4,7 @@ import com.qisstpay.lendingservice.dto.internal.response.GetBanksListResponseDto
 import com.qisstpay.lendingservice.entity.Bank;
 import com.qisstpay.lendingservice.entity.CollectionBalanceSheet;
 import com.qisstpay.lendingservice.entity.CollectionTransaction;
+import com.qisstpay.lendingservice.entity.LenderCallLog;
 
 import java.util.List;
 

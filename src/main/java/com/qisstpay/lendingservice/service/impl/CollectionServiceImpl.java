@@ -31,6 +31,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -299,6 +300,7 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
+    @Transactional
     public QpayCollectionResponseDto qpayCollectionStatus(CollectionTransaction collectionTransaction, LenderCallLog callLog, String otp) {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
@@ -338,7 +340,6 @@ public class CollectionServiceImpl implements CollectionService {
                     collectionTransaction.setTransactionState(TransactionState.COMPLETED);
                 }
             }
-            collectionTransactionService.save(collectionTransaction);
         }
         if (!qpayPaymentTransaction.getGateway().equals(PaymentGatewayType.NIFT)) {
             String statusUrl = String.format("/%s?gateway=%s", collectionTransaction.getServiceTransactionId(), qpayPaymentTransaction.getGateway().getName());
@@ -357,8 +358,8 @@ public class CollectionServiceImpl implements CollectionService {
                 collectionTransaction.setBillStatus(BillStatusType.UNPAID);
                 collectionTransaction.setTransactionState(TransactionState.FAILURE);
             }
-            collectionTransactionService.save(collectionTransaction);
         }
+        collectionTransactionService.save(collectionTransaction);
         if (collectionTransaction.getBillStatus().equals(BillStatusType.PAID)) {
             collectionBalanceSheetService.createBalanceEntryAndSave(collectionTransaction);
         }
