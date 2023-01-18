@@ -122,7 +122,6 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
         } finally {
             qpayPaymentCallRepository.save(qPayPaymentCallLog);
             collectionTransactionService.save(collectionTransaction);
-            collectionBalanceSheetService.save(collectionTransaction);
         }
     }
 

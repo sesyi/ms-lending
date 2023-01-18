@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -20,7 +22,7 @@ public class CollectionBalanceSheetServiceImpl implements CollectionBalanceSheet
     private CollectionBalanceSheetRepository collectionBalanceSheetRepository;
 
     @Override
-    public void save(CollectionTransaction collectionTransaction) {
+    public void createBalanceEntryAndSave(CollectionTransaction collectionTransaction) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         Double gatewayFee = 0d;
         String gatewayPer = "";
@@ -34,7 +36,8 @@ public class CollectionBalanceSheetServiceImpl implements CollectionBalanceSheet
             gatewayFee = collectionTransaction.getAmountCollected() * 0.025;
             gatewayPer = "2.5%";
         }
-        collectionBalanceSheetRepository.save(
+        List<CollectionBalanceSheet> collectionBalanceSheets = new ArrayList<>();
+        collectionBalanceSheets.add(
                 CollectionBalanceSheet.builder()
                         .debit(collectionTransaction.getAmountCollected())
                         .user(collectionTransaction.getLenderCall().getUser())
@@ -42,7 +45,7 @@ public class CollectionBalanceSheetServiceImpl implements CollectionBalanceSheet
                         .disbursementTransactionStamp(collectionTransaction.getTransactionStamp())
                         .shortDescription(String.format("Debit Against CollectionTransactionId: %s, disbursementTransactionId: %s LenderId: %s, DateTime: %s", collectionTransaction.getServiceTransactionId(), collectionTransaction.getTransactionStamp(), collectionTransaction.getLenderCall().getUser(), dtf.format(LocalDateTime.now())))
                         .build());
-        collectionBalanceSheetRepository.save(
+        collectionBalanceSheets.add(
                 CollectionBalanceSheet.builder()
                         .credit(gatewayFee)
                         .user(collectionTransaction.getLenderCall().getUser())
@@ -50,7 +53,7 @@ public class CollectionBalanceSheetServiceImpl implements CollectionBalanceSheet
                         .disbursementTransactionStamp(collectionTransaction.getTransactionStamp())
                         .shortDescription(String.format("Credit For GatewayType: %s GatewayFee: %s, CollectionTransactionId: %s DateTime: %s", collectionTransaction.getPaymentGateway().getName(), gatewayPer, collectionTransaction.getServiceTransactionId(), dtf.format(LocalDateTime.now())))
                         .build());
-        collectionBalanceSheetRepository.save(
+        collectionBalanceSheets.add(
                 CollectionBalanceSheet.builder()
                         .credit(20d)
                         .user(collectionTransaction.getLenderCall().getUser())
@@ -58,5 +61,11 @@ public class CollectionBalanceSheetServiceImpl implements CollectionBalanceSheet
                         .disbursementTransactionStamp(collectionTransaction.getTransactionStamp())
                         .shortDescription("Credit For Qpay Collection Fee: 20 PKR")
                         .build());
+        save(collectionBalanceSheets);
+    }
+
+    @Override
+    public void save(List<CollectionBalanceSheet> collectionBalanceSheets) {
+        collectionBalanceSheetRepository.saveAll(collectionBalanceSheets);
     }
 }

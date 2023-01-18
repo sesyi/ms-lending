@@ -69,6 +69,9 @@ public class CollectionServiceImpl implements CollectionService {
     private CollectionTransactionService collectionTransactionService;
 
     @Autowired
+    private CollectionBalanceSheetService collectionBalanceSheetService;
+
+    @Autowired
     private LendingService lendingService;
 
     @Autowired
@@ -343,6 +346,7 @@ public class CollectionServiceImpl implements CollectionService {
                 collectionTransaction.setTransactionState(TransactionState.FAILURE);
             }
             collectionTransactionService.save(collectionTransaction);
+            collectionBalanceSheetService.createBalanceEntryAndSave(collectionTransaction);
         }
         return QpayCollectionResponseDto.builder()
                 .authorizedPayment(qpayPaymentTransaction.getAuthorizedPayment())
