@@ -38,6 +38,9 @@ public class User {
     private List<LenderCallLog> lenderCallLogs;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private List<CollectionTransaction> collectionTransactions;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private List<MFBCallLog> mfbCallLogs;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
