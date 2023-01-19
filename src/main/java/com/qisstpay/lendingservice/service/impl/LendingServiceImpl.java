@@ -65,17 +65,25 @@ public class LendingServiceImpl implements LendingService {
     @Value("${environment}")
     private String environment;
 
+    @Value("${ep.header.channel}")
+    private String epChannelHeaderValue;
+
+    @Value("${ep.header.client.id}")
+    private String epClientIDHeaderValue;
+
+    @Value("${ep.header.client.secret}")
+    private String epClientSecretHeaderValue;
+
     @Value("${message.slack.channel.third-party-errors}")
     private String thirdPartyErrorsSlackChannel;
 
     private static final String SUCCESS_STATUS_CODE = "0";
 
     private final String xChanelHeaderKey = "X-Channel";
-    private final String xChanelHeaderVal = "apigrazcash";
+
     private final String xClientIdHeaderKey = "X-IBM-Client-Id";
-    private final String xClientIdHeaderVal = "4c55c83f-a050-4c77-99b2-f9c9fe809934";
+
     private final String xClientSecretHeaderKey = "X-IBM-Client-Secret";
-    private final String xClientSecretHeaderVal = "oQ2bJ3dK0sI0eY8sU6yN5gY6fM2xJ3pF4mJ5sS7xS4bG1dB0lV";
     private final String xHashValueKey = "X-Hash-Value";
     private final String CALLING_LENDING_SERVICE = "Calling lending Service";
 
@@ -585,9 +593,9 @@ public class LendingServiceImpl implements LendingService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(xChanelHeaderKey, xChanelHeaderVal);
-        headers.add(xClientIdHeaderKey, xClientIdHeaderVal);
-        headers.add(xClientSecretHeaderKey, xClientSecretHeaderVal);
+        headers.add(xChanelHeaderKey, epChannelHeaderValue);
+        headers.add(xClientIdHeaderKey, epClientIDHeaderValue);
+        headers.add(xClientSecretHeaderKey, epClientSecretHeaderValue);
         HttpEntity request = new HttpEntity(epLoginResponseDto, headers);
 
         ResponseEntity<EPLoginResponseDto> epLoginResponse =
@@ -600,9 +608,9 @@ public class LendingServiceImpl implements LendingService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(xChanelHeaderKey, xChanelHeaderVal);
-        headers.add(xClientIdHeaderKey, xClientIdHeaderVal);
-        headers.add(xClientSecretHeaderKey, xClientSecretHeaderVal);
+        headers.add(xChanelHeaderKey, epChannelHeaderValue);
+        headers.add(xClientIdHeaderKey, epClientIDHeaderValue);
+        headers.add(xClientSecretHeaderKey, epClientSecretHeaderValue);
         headers.add(xHashValueKey, xHashValueVal);
         HttpEntity request = new HttpEntity(epRequestDto, headers);
 
@@ -616,16 +624,11 @@ public class LendingServiceImpl implements LendingService {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.ALL));
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(xChanelHeaderKey, xChanelHeaderVal);
-        headers.add(xClientIdHeaderKey, xClientIdHeaderVal);
-        headers.add(xClientSecretHeaderKey, xClientSecretHeaderVal);
+        headers.add(xChanelHeaderKey, epChannelHeaderValue);
+        headers.add(xClientIdHeaderKey, epClientIDHeaderValue);
+        headers.add(xClientSecretHeaderKey, epClientSecretHeaderValue);
         headers.add(xHashValueKey, xHashValueVal);
         HttpEntity request = new HttpEntity(epRequestDto, headers);
-//        try {
-//            String json = new ObjectMapper().writeValueAsString(epRequestDto);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
         ResponseEntity<EPTransferResposneDto> epTransferResponse =
                 restTemplate.exchange(epTransferUrl, HttpMethod.POST, request, new ParameterizedTypeReference<>() {
                 });
@@ -652,3 +655,4 @@ public class LendingServiceImpl implements LendingService {
     }
 
 }
+
