@@ -12,7 +12,9 @@ import com.qisstpay.lendingservice.enums.EndPointType;
 import com.qisstpay.lendingservice.enums.PaymentGatewayType;
 import com.qisstpay.lendingservice.enums.TransactionState;
 import com.qisstpay.lendingservice.error.errortype.PaymentErrorType;
+import com.qisstpay.lendingservice.repository.CollectionBalanceSheetRepository;
 import com.qisstpay.lendingservice.repository.QpayPaymentCallRepository;
+import com.qisstpay.lendingservice.service.CollectionBalanceSheetService;
 import com.qisstpay.lendingservice.service.CollectionTransactionService;
 import com.qisstpay.lendingservice.service.QpayPaymentService;
 import com.qisstpay.lendingservice.utils.ModelConverter;
@@ -34,6 +36,9 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
 
     @Autowired
     private QpayPaymentCallRepository qpayPaymentCallRepository;
+
+    @Autowired
+    private CollectionBalanceSheetService collectionBalanceSheetService;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -81,6 +86,8 @@ public class QpayPaymentServiceImpl implements QpayPaymentService {
                 qPayPaymentCallLog.setMessage(Objects.requireNonNull(response.getBody()).getServiceMessage());
                 qPayPaymentCallLog.setStatusCode(String.valueOf(response.getStatusCode()));
                 collectionTransaction.setServiceTransactionId(response.getBody().getGatewayResponse().getGatewayResponseId());
+                collectionTransaction.setAmountCollected(paymentRequestDto.getAmount());
+                collectionTransaction.setPaymentGateway(gateway);
                 QpayPaymentTransaction qpayPaymentTransaction = QpayPaymentTransaction.builder()
                         .furtherAction(response.getBody().getFurtherAction())
                         .authorizedPayment(response.getBody().getGatewayResponse().getAuthorizedPayment())

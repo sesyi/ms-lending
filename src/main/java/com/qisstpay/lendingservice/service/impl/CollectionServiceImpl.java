@@ -1,8 +1,5 @@
 package com.qisstpay.lendingservice.service.impl;
 
-import com.qisstpay.commons.enums.SlackTagType;
-import com.qisstpay.commons.error.errortype.CommunicationErrorType;
-import com.qisstpay.commons.exception.CustomException;
 import com.qisstpay.commons.exception.ServiceException;
 import com.qisstpay.lendingservice.dto.Abroad.AbroadBillUpdateRequest;
 import com.qisstpay.lendingservice.dto.Abroad.AbroadBillUpdateResponse;
@@ -34,6 +31,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -67,6 +65,9 @@ public class CollectionServiceImpl implements CollectionService {
 
     @Autowired
     private CollectionTransactionService collectionTransactionService;
+
+    @Autowired
+    private CollectionBalanceSheetService collectionBalanceSheetService;
 
     @Autowired
     private LendingService lendingService;
@@ -171,7 +172,7 @@ public class CollectionServiceImpl implements CollectionService {
             paymentRequestDto = QpayPaymentRequestDto.builder()
                     .accountNumber(collectionRequestDto.getAccountNumber())
                     .customerName(collectionTransaction.getConsumer().getName())
-                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmountWithinDueDate() : collectionTransaction.getAmountAfterDueDate())
                     .country("PK")
                     .currency("PKR")
                     .customerEmail(collectionRequestDto.getCustomerEmail())
@@ -210,7 +211,7 @@ public class CollectionServiceImpl implements CollectionService {
             paymentRequestDto = QpayPaymentRequestDto.builder()
                     .accountNumber(collectionRequestDto.getAccountNumber())
                     .customerName(collectionTransaction.getConsumer().getName())
-                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmountWithinDueDate() : collectionTransaction.getAmountAfterDueDate())
                     .country("PK")
                     .currency("PKR")
                     .locale("en-us")
@@ -237,7 +238,7 @@ public class CollectionServiceImpl implements CollectionService {
             paymentRequestDto = QpayPaymentRequestDto.builder()
                     .accountNumber(collectionRequestDto.getAccountNumber())
                     .customerName(collectionTransaction.getConsumer().getName())
-                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmount() : collectionTransaction.getAmountAfterDueDate())
+                    .amount(collectionTransaction.getDueDate().compareTo(new Timestamp(System.currentTimeMillis())) > 0 ? collectionTransaction.getAmountWithinDueDate() : collectionTransaction.getAmountAfterDueDate())
                     .country("PK")
                     .currency("PKR")
                     .locale("en-us")
@@ -264,10 +265,10 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In getQpayLink");
         try {
-            Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId(),lenderCallLog.getUser().getId());
+            Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId(), lenderCallLog.getUser().getId());
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             CollectionTransaction collectionTransaction = collectionTransactionService.save(CollectionTransaction.builder()
-                    .amount(billRequestDto.getAmount())
+                    .amountWithinDueDate(billRequestDto.getAmount())
                     .amountAfterDueDate(billRequestDto.getAmountAfterDueDate())
                     .consumer(lendingTransaction.get().getConsumer())
                     .dueDate(billRequestDto.getDueDate())
@@ -299,6 +300,7 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
+    @Transactional
     public QpayCollectionResponseDto qpayCollectionStatus(CollectionTransaction collectionTransaction, LenderCallLog callLog, String otp) {
         log.info(CALLING_SERVICE);
         log.info("In collectTroughQpay");
@@ -307,7 +309,22 @@ public class CollectionServiceImpl implements CollectionService {
             throw new ServiceException(PaymentErrorType.ENABLE_TO_GET_STATUS);
         }
         QpayPaymentTransaction qpayPaymentTransaction = collectionTransaction.getQpayPaymentTransaction().get(collectionTransaction.getQpayPaymentTransaction().size() > 1 ? collectionTransaction.getQpayPaymentTransaction().size() - 1 : 0);
-        if (!qpayPaymentTransaction.getGateway().equals(PaymentGatewayType.EASYPAISA) && collectionTransaction.getBillStatus().equals(BillStatusType.UNPAID)) {
+        if (collectionTransaction.getBillStatus().equals(BillStatusType.PAID)) {
+            return QpayCollectionResponseDto.builder()
+                    .authorizedPayment(qpayPaymentTransaction.getAuthorizedPayment())
+                    .gateway(qpayPaymentTransaction.getGateway())
+                    .status(qpayPaymentTransaction.getGatewayStatus())
+                    .source(qpayPaymentTransaction.getGatewaySource())
+                    .furtherAction(qpayPaymentTransaction.getFurtherAction())
+                    .redirectURL(qpayPaymentTransaction.getRedirectURL())
+                    .billId(collectionTransaction.getId())
+                    .billStatus(collectionTransaction.getBillStatus())
+                    .transactionId(collectionTransaction.getServiceTransactionId())
+                    .message(qpayPaymentTransaction.getGatewayMessage())
+                    .paymentStatus(qpayPaymentTransaction.getPaymentStatus())
+                    .build();
+        }
+        if (!qpayPaymentTransaction.getGateway().equals(PaymentGatewayType.EASYPAISA)) {
             QpayPaymentResponseDto capture = qpayPaymentService.capture(
                     getCaptureRequestPayload(otp, qpayPaymentTransaction, collectionTransaction), callLog);
             if (capture.getSuccess().equals(Boolean.TRUE)) {
@@ -318,14 +335,13 @@ public class CollectionServiceImpl implements CollectionService {
                 qpayPaymentTransaction.setGatewayStatus(capture.getGatewayResponse().getGatewayStatus());
                 qpayPaymentTransaction.setGatewayMessage(capture.getGatewayResponse().getGatewayMessage());
                 qpayPaymentTransaction.setPaymentStatus(capture.getGatewayResponse().getPaymentStatus());
-                if (capture.getGatewayResponse().getPaymentStatus().equals("Complete") && collectionTransaction.getBillStatus().equals(BillStatusType.UNPAID)) {
+                if (capture.getGatewayResponse().getPaymentStatus().equals("Complete")) {
                     collectionTransaction.setBillStatus(BillStatusType.PAID);
                     collectionTransaction.setTransactionState(TransactionState.COMPLETED);
                 }
             }
-            collectionTransactionService.save(collectionTransaction);
         }
-        if (!qpayPaymentTransaction.getGateway().equals(PaymentGatewayType.NIFT) && collectionTransaction.getBillStatus().equals(BillStatusType.UNPAID)) {
+        if (!qpayPaymentTransaction.getGateway().equals(PaymentGatewayType.NIFT)) {
             String statusUrl = String.format("/%s?gateway=%s", collectionTransaction.getServiceTransactionId(), qpayPaymentTransaction.getGateway().getName());
             QpayPaymentResponseDto status = qpayPaymentService.status(statusUrl, callLog);
             qpayPaymentTransaction.setAuthorizedPayment(status.getGatewayResponse().getAuthorizedPayment());
@@ -335,14 +351,17 @@ public class CollectionServiceImpl implements CollectionService {
             qpayPaymentTransaction.setGatewayStatus(status.getGatewayResponse().getGatewayStatus());
             qpayPaymentTransaction.setGatewayMessage(status.getGatewayResponse().getGatewayMessage());
             qpayPaymentTransaction.setPaymentStatus(status.getGatewayResponse().getPaymentStatus());
-            if (status.getGatewayResponse().getPaymentStatus().equals("Complete") && collectionTransaction.getBillStatus().equals(BillStatusType.UNPAID)) {
+            if (status.getGatewayResponse().getPaymentStatus().equals("Complete")) {
                 collectionTransaction.setBillStatus(BillStatusType.PAID);
                 collectionTransaction.setTransactionState(TransactionState.COMPLETED);
             } else if (collectionTransaction.getBillStatus().equals(BillStatusType.UNPAID)) {
                 collectionTransaction.setBillStatus(BillStatusType.UNPAID);
                 collectionTransaction.setTransactionState(TransactionState.FAILURE);
             }
-            collectionTransactionService.save(collectionTransaction);
+        }
+        collectionTransactionService.save(collectionTransaction);
+        if (collectionTransaction.getBillStatus().equals(BillStatusType.PAID)) {
+            collectionBalanceSheetService.createBalanceEntryAndSave(collectionTransaction);
         }
         return QpayCollectionResponseDto.builder()
                 .authorizedPayment(qpayPaymentTransaction.getAuthorizedPayment())
@@ -521,7 +540,7 @@ public class CollectionServiceImpl implements CollectionService {
         // update collection transaction
         savedCollectionTransaction.setTransactionState(TransactionState.INQUIRY_SUCCESS);
         savedCollectionTransaction.setAmountAfterDueDate(Double.valueOf(abroadInquiryResponse.getAmountAfterDueDate()));
-        savedCollectionTransaction.setAmount(Double.valueOf(abroadInquiryResponse.getAmountPaid()));
+        savedCollectionTransaction.setAmountCollected(Double.valueOf(abroadInquiryResponse.getAmountPaid()));
         savedCollectionTransaction.setAmountWithinDueDate(Double.valueOf(abroadInquiryResponse.getAmountWithinDueDate()));
         savedCollectionTransaction.setBillingMonth(abroadInquiryResponse.getBillingMonth());
         savedCollectionTransaction.setBillStatus(abroadInquiryResponse.getBillStatus() == "U" ? BillStatusType.UNPAID : BillStatusType.PAID);
@@ -608,7 +627,7 @@ public class CollectionServiceImpl implements CollectionService {
         collectionTransaction.get().setConsumer(consumer.get());
         collectionTransaction.get().setServiceTransactionId(epCollectionBillUpdateRequest.getTranAuthId());
         collectionTransaction.get().setDatePaid(getDateFromString(epCollectionBillUpdateRequest.getTranDate()));
-        collectionTransaction.get().setAmount(Double.valueOf(epCollectionBillUpdateRequest.getTransactionAmount()));
+        collectionTransaction.get().setAmountCollected(Double.valueOf(epCollectionBillUpdateRequest.getTransactionAmount()));
         collectionTransaction.get().setTransactionState(TransactionState.IN_PROGRESS);
         collectionTransaction.get().setEpCallLog(savedEpCallLog);
         CollectionTransaction savedCollectionTransaction = collectionTransactionService.save(collectionTransaction.get());
@@ -642,7 +661,8 @@ public class CollectionServiceImpl implements CollectionService {
                     .responseCode(TransferState.UNKNOWN_ERROR.getCode())
                     .identificationParameter(TransferState.UNKNOWN_ERROR.getState())
                     .reserved(TransferState.UNKNOWN_ERROR.getDescription())
-                    .build();        }
+                    .build();
+        }
 
         if (!abroadBillUpdateResponse.getResponseCode().equals(SUCCESS_STATUS_CODE)) {
 

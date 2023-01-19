@@ -681,6 +681,9 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             return TransferState.GATEWAY_TRANSFER_PENDING;
         }
         if(responseDescription.equals("Transaction Successfully Proceeded...".toLowerCase())){
+            if(!environment.equals("prod")){
+                return TransferState.TRANSFER_SUCCESS;
+            }
             return TransferState.GATEWAY_TRANSFER_PENDING;
         }
         if(responseDescription.contains("waiting for core response".toLowerCase())){
@@ -720,6 +723,16 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
     }
 
     private HMBCredentials getHmbCredentials(Long lenderId) {
+
+        if(!environment.equals("prod")){
+            return HMBCredentials.builder()
+                    .userId("EFAPI")
+                    .password("CRA")
+                    .accountTitle("Test Account Title")
+                    .accountNumber("6996429311714235925")
+                    .build();
+        }
+
         Configuration configuration = configurationService.getConfigurationByLenderIdAndServiceType(lenderId, ServiceType.HMB);
 
         if(configuration == null){
