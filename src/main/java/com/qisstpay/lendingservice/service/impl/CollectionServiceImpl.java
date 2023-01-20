@@ -138,7 +138,7 @@ public class CollectionServiceImpl implements CollectionService {
                 account = Optional.ofNullable(
                         consumerAccountService.createAccount(
                                 collectionRequestDto.getAccountNumber(),
-                                bankService.getByCode(collectionRequestDto.getBankID()),
+                                bankService.getByNIFTCode(collectionRequestDto.getBankID()),
                                 collectionTransaction.get().getConsumer()));
             }
             if (collectionTransaction.get().getConsumer().getEmail() == null) {
@@ -389,7 +389,7 @@ public class CollectionServiceImpl implements CollectionService {
                                     NiftTransactionRequestDto.builder()
                                             .otp(otp)
                                             .refTransactionId(qpayPaymentTransaction.getTransactionId())
-                                            .bankId(qpayPaymentTransaction.getConsumerAccount().getBank().getCode())
+                                            .bankId(qpayPaymentTransaction.getConsumerAccount().getBank().getNiftCode())
                                             .serviceTransactionId(collectionTransaction.getServiceTransactionId())
                                             .build()).build())
                     .id("")
