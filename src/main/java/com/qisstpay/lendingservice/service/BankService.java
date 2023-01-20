@@ -7,5 +7,5 @@ public interface BankService {
 
     GetBanksListResponseDto getBanks();
 
-    Bank getByCode(String code);
+    Bank getByNIFTCode(String code);
 }

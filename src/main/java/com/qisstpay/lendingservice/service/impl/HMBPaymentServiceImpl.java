@@ -104,7 +104,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBCallLog hmbCallLog = HMBCallLog.builder().build();
         hmbCallLog = hmbCallLogRepository.save(hmbCallLog);
 
-        Bank bank = bankRepository.findByCode(fetchTitleRequestDto.getBankCode()).orElseThrow(
+        Bank bank = bankRepository.findByHmbCode(fetchTitleRequestDto.getBankCode()).orElseThrow(
                 () -> new CustomException(TransferState.INVALID_BANK_CODE.getCode(), TransferState.INVALID_BANK_CODE.getDescription())
         );
 
@@ -119,7 +119,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         HMBBank hmbBank = hmbBankRepository.findByBankId(bank.getId());
         String bankCode = hmbBank.getCode();
         String productCode = "IBFT";
-        if(bank.getCode().equals("MPBL")){
+        if(bank.getHmbCode().equals("MPBL")){
             productCode = "IFT";
         }
         HMBFetchAccountTitleResponseDto hmbFetchAccountTitleResponseDto = null;
@@ -194,7 +194,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
             throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
         }
 
-        Bank bank = bankRepository.findByCode(transferRequestDto.getBankCode()).orElseThrow(
+        Bank bank = bankRepository.findByHmbCode(transferRequestDto.getBankCode()).orElseThrow(
                 () -> new CustomException(TransferState.INVALID_BANK_CODE.getCode(), TransferState.INVALID_BANK_CODE.getDescription())
         );
 
@@ -216,7 +216,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         hmbCallLogForFetchTitle = hmbCallLogRepository.save(hmbCallLog);
 
         String productCode = "IBFT";
-        if(bank.getCode().equals("MPBL")){
+        if(bank.getHmbCode().equals("MPBL")){
             productCode = "IFT";
         }
 
@@ -267,7 +267,7 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
         stan = generateStan();
 
         try {
-            if(bank.getCode().equals("MPBL")){ //ift for habib metro to habib metro
+            if(bank.getHmbCode().equals("MPBL")){ //ift for habib metro to habib metro
                 SubmitIFTTransactionResponseDto submitIFTTransactionResponseDto = null;
                 submitIFTTransactionResponseDto = callSubmitIFTTransactionApi(hmbCredentials, getTokenResponseDto.getToken(),modelConverter.convertToSubmitTransactionRequestDtoIFT(hmbCredentials, bankCode, accountTitle, transferRequestDto.getAccountNumber(), transactionNo, stan, transferRequestDto.getAmount()));
                 transferState = getStatusFromStatusDescription(submitIFTTransactionResponseDto.getResponseCode(), submitIFTTransactionResponseDto.getResponseDescription());
