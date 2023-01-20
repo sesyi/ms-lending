@@ -3,7 +3,6 @@ package com.qisstpay.lendingservice.entity;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Entity
 @Getter
@@ -22,8 +21,11 @@ public class Bank {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "code")
-    private String code;
+    @Column(name = "hmb_code")
+    private String hmbCode;
+
+    @Column(name = "nift_code")
+    private String niftCode;
 
     @Column(name = "country_id")
     private Long countryId;

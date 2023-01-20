@@ -25,13 +25,13 @@ public class BankServiceImpl implements BankService {
     @Override
     public GetBanksListResponseDto getBanks() {
         return GetBanksListResponseDto.builder().banks(
-                bankRepository.findAll().stream().filter(bank -> StringUtils.isNotBlank(bank.getCode())).map(bank -> BankResponseDto.builder().name(bank.getName()).bankCode(bank.getCode()).build()).collect(Collectors.toList())
+                bankRepository.findAll().stream().filter(bank -> StringUtils.isNotBlank(bank.getHmbCode())).map(bank -> BankResponseDto.builder().name(bank.getName()).bankCode(bank.getHmbCode()).build()).collect(Collectors.toList())
         ).build();
     }
 
     @Override
-    public Bank getByCode(String code) {
-        Optional<Bank> bank = bankRepository.findByCode(code);
+    public Bank getByNIFTCode(String code) {
+        Optional<Bank> bank = bankRepository.findByNiftCode(code);
         if (bank.isPresent()) {
             return bank.get();
         } else {
