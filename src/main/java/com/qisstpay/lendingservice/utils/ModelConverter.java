@@ -124,7 +124,7 @@ public class ModelConverter {
                 .ADVISING("")
                 .PRINTLOC("")
                 .REF1("").REF2("").REF3("").REF4("").REF5("")
-                .REF6("").REF7("").REF8("").REF9("").REF10("")
+                .REF6("").REF7("").REF8("").REF9("Loan").REF10("")
                 .REF11("").REF12("").REF13("").REF14("").REF15("")
                 .REF16("").REF17("").REF18("").REF19("").REF20("")
                 .invoices(new ArrayList<>() {{
