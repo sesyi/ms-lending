@@ -265,12 +265,27 @@ public class CollectionServiceImpl implements CollectionService {
         log.info(CALLING_SERVICE);
         log.info("In getQpayLink");
         try {
-            Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId(), lenderCallLog.getUser().getId());
+            Consumer consumer = null;
+            if (billRequestDto.getTransactionId() == null) {
+                Optional<Consumer> existingConsumer = consumerService.findByCnic(billRequestDto.getConsumerCnic());
+                if (!existingConsumer.isPresent()) {
+                    consumer = consumerService.save(
+                            Consumer.builder()
+                                    .cnic(billRequestDto.getConsumerCnic())
+                                    .phoneNumber(billRequestDto.getConsumerPhoneNumber())
+                                    .name(billRequestDto.getConsumerName()).build());
+                } else {
+                    consumer = existingConsumer.get();
+                }
+            } else {
+                Optional<LendingTransaction> lendingTransaction = lendingTransactionService.geByTransactionStamp(billRequestDto.getTransactionId(), lenderCallLog.getUser().getId());
+                consumer = lendingTransaction.get().getConsumer();
+            }
             lenderCallLog.setStatus(CallStatusType.SUCCESS);
             CollectionTransaction collectionTransaction = collectionTransactionService.save(CollectionTransaction.builder()
                     .amountWithinDueDate(billRequestDto.getAmount())
                     .amountAfterDueDate(billRequestDto.getAmountAfterDueDate())
-                    .consumer(lendingTransaction.get().getConsumer())
+                    .consumer(consumer)
                     .dueDate(billRequestDto.getDueDate())
                     .billingMonth(billRequestDto.getBillingMonth())
                     .billStatus(BillStatusType.UNPAID)

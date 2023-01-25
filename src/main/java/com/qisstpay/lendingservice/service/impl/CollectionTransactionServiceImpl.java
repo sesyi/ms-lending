@@ -64,7 +64,7 @@ public class CollectionTransactionServiceImpl implements CollectionTransactionSe
             }
             return CollectionBillResponseDto.builder()
                     .billId(collectionTransaction.get().getId())
-                    .amount(collectionTransaction.get().getAmountCollected())
+                    .amount(collectionTransaction.get().getAmountWithinDueDate())
                     .chargedAmount(qpayPaymentTransaction == null ? null : qpayPaymentTransaction.getAmount())
                     .amountAfterDueDate(collectionTransaction.get().getAmountAfterDueDate())
                     .dueDate(new Timestamp(collectionTransaction.get().getDueDate().getTime()))
