@@ -352,6 +352,50 @@ public class HMBPaymentServiceImpl implements HMBPaymentService {
                 .build();
     }
 
+    @Override
+    public TransactionStateResponse checkTransactionStatusInternal(LendingTransaction lendingTransaction) {
+
+        HMBCredentials hmbCredentials = null;
+
+        if(!environment.equals("prod")){
+            hmbCredentials = HMBCredentials.builder().userId("EFAPI").password("CRA").accountTitle("Test Account Title").accountNumber("6996429311714235925").build();
+        }else {
+            hmbCredentials = HMBCredentials.builder().userId("QPBPLAPI").password("QPBPL@1").accountTitle("QISTTPAY BNPL (PRIVATE) LIMITED (LENDING 03)").accountNumber("6063120643714105741").build();
+        }
+
+        String stan = generateStan();
+
+        String transactionNo = lendingTransaction.getServiceTransactionId();
+
+        GetTokenResponseDto getTokenResponseDto = callGetTokenApi(hmbCredentials);
+        if(getTokenResponseDto == null || getTokenResponseDto.getToken() == null){
+            throw new CustomException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), "Something Went Wrong");
+        }
+
+        GetTransactionStatusResponseDto getTransactionStatusResponseDto = null;
+        try {
+            getTransactionStatusResponseDto = callGetStatusApi(hmbCredentials, getTokenResponseDto.getToken(), modelConverter.convertToGetTransactionStatusRequestDto(stan, transactionNo));
+        } catch (Exception e) {
+            throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "transaction status request failed");
+        }
+
+        TransferState transferState = getStatusFromStatusDescription(getTransactionStatusResponseDto.getResponseCode(), getTransactionStatusResponseDto.getResponseDescription());
+
+        return TransactionStateResponse
+                .builder()
+                .transactionId(lendingTransaction.getTransactionStamp())
+                .code(transferState.getCode())
+                .state(transferState.getState())
+                .description(transferState.getDescription())
+
+                .userName(lendingTransaction.getConsumer().getName())
+                .phoneNumber(lendingTransaction.getConsumer().getPhoneNumber())
+                .accountNumber(lendingTransaction.getAccountNumber())
+                .amount(lendingTransaction.getAmount())
+                .build();
+    }
+
+
     private HttpURLConnection getConnection(URL url) throws IOException {
         if(environment.equals("prod")) {
             HttpsURLConnection httpsConnection = (HttpsURLConnection) url.openConnection();

@@ -20,6 +20,7 @@ public interface HMBPaymentService {
     FetchTitleResponseDto fetchTitle(FetchTitleRequestDto fetchTitleRequestDto, LenderCallLog lenderCallLog);
     TransferResponseDto transfer(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, Consumer consumer);
     TransactionStateResponse checkTransactionStatus(LendingTransaction lendingTransaction, LenderCallLog lenderCallLog);
+    TransactionStateResponse checkTransactionStatusInternal(LendingTransaction lendingTransaction);
 
     // remove in future
     GetTokenResponseDto callGetTokenApi(HMBCredentials hmbCredentials);

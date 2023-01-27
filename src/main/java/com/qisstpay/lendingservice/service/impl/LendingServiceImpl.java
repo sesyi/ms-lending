@@ -515,6 +515,18 @@ public class LendingServiceImpl implements LendingService {
         throw new CustomException(HttpStatus.BAD_REQUEST.toString(), "transaction not found.");
     }
 
+    @Override
+    public TransactionStateResponse checkStatusInternal(String transactionStamp) {
+
+        LendingTransaction lendingTransaction = lendingTransactionRepository.findByTransactionStamp(transactionStamp).orElse(null);
+        ServiceType serviceType = lendingTransaction.getLenderCall().getServiceType();
+
+        if (serviceType.equals(ServiceType.HMB))
+            return hmbPaymentService.checkTransactionStatusInternal(lendingTransaction);
+
+        return TransactionStateResponse.builder().build();
+    }
+
     private TransactionStateResponse checkEPStatus(LendingTransaction lendingTransaction, LenderCallLog lenderCallLog) {
 
         TransactionStateResponse transactionStateResponse = TransactionStateResponse
