@@ -16,4 +16,7 @@ public class CollectionBillRequestDto {
     private String    transactionId;
     private String    billingMonth;
     private Timestamp dueDate;
+    private String    consumerCnic;
+    private String    consumerPhoneNumber;
+    private String    consumerName;
 }

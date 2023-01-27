@@ -45,6 +45,7 @@ public class LendingController {
     private static final String FETCH_ACCOUNT_TITLE     = "/titlefetch";
     private static final String TRANSFER                = "/transfer";
     private static final String STATUS                  = "/status/{transactionId}";
+    private static final String STATUS_INTERNAL         = "/statusinternal/{transactionId}";
     private static final String CREDIT_SCORE            = "/credit/score";
 
     private static final String CALLING_LENDING_CONTROLLER = "Calling LendingController";
@@ -105,6 +106,15 @@ public class LendingController {
                 .body(lendingService.checkStatus(transactionStamp, lenderCallLog)).build();
     }
 
+    @GetMapping(STATUS_INTERNAL)
+    public CustomResponse<TransactionStateResponse> statusInternal(
+            @PathVariable("transactionId") String transactionStamp,
+            @RequestHeader(value = "Authorization") String authorizationHeader
+    ) {
+        return CustomResponse.CustomResponseBuilder.<TransactionStateResponse>builder()
+                .body(lendingService.checkStatusInternal(transactionStamp)).build();
+    }
+
     @PostMapping(CREDIT_SCORE)
     public CustomResponse<CreditScoreResponseDto> getScore(
             @RequestHeader(value = "x-api-key") String apiKey,
@@ -122,6 +132,5 @@ public class LendingController {
         return CustomResponse.CustomResponseBuilder.<CreditScoreResponseDto>builder()
                 .body(response).build();
     }
-
 
 }
