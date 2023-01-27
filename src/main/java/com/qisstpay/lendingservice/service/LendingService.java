@@ -29,6 +29,7 @@ public interface LendingService {
     TransferResponseDto transferV2(TransferRequestDto transferRequestDto, LenderCallLog lenderCallLog, User user) throws JsonProcessingException;
 
     TransactionStateResponse checkStatus(String transactionId, LenderCallLog lenderCallLog);
+    TransactionStateResponse checkStatusInternal(String transactionId);
 
     CreditScoreResponseDto checkCreditScore(CreditScoreRequestDto creditScoreRequestDto, LenderCallLog lenderCallLogx) throws JsonProcessingException;
 
